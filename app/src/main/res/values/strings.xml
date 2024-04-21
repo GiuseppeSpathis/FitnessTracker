@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">FitnessTracker</string>
-    <string name="search">filtra</string>
+    <string name="search">inserisci un nome</string>
     <string name="icon_person">imagine di una persona</string>
     <string name="icon_share">icona per condividere</string>
     <string name="icon_message">icona per messaggiare</string>

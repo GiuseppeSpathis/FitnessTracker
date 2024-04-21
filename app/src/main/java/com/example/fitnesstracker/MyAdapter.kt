@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.R
 
-class MyAdapter(private val personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
     inner class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var iconPerson: ImageView = view.findViewById(R.id.iconPerson)
@@ -45,5 +45,10 @@ class MyAdapter(private val personList: List<Person>) : RecyclerView.Adapter<MyA
 
     override fun getItemCount(): Int {
         return personList.size
+    }
+
+    fun updateList(newList: List<Person>) {
+        personList = newList
+        notifyDataSetChanged()
     }
 }

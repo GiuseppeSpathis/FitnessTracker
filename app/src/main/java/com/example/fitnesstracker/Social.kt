@@ -3,6 +3,8 @@ package com.example.fitnesstracker
 import MyAdapter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
@@ -13,22 +15,18 @@ import androidx.recyclerview.widget.RecyclerView
 class Social : AppCompatActivity() {
 
 
-    companion object{ //questo companion in futuro non ci dovra' essere
+    companion object { //questo companion in futuro non ci dovra' essere
         val personList = listOf(
             Person("Mario", "male"),
             Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
-            Person("Mariossadasdasdasd", "male"),Person("Mariossadasdasdasd", "male"),
+            Person("Mariossadasdasdasd", "male"), Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
-            Person("Mariossadasdasdasd", "male"),Person("Mariossadasdasdasd", "male"),
+            Person("Mariossadasdasdasd", "male"), Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
-            Person("Mariossadasdasdasd", "male"),Person("Mariossadasdasdasd", "male"),
-
-
-
-
+            Person("Mariossadasdasdasd", "male"), Person("Mariossadasdasdasd", "male"),
 
 
             Person("Maria", "female")
@@ -58,6 +56,22 @@ class Social : AppCompatActivity() {
 
 
 
+        search.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                //nothing
+            }
 
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                //nothing
+            }
+
+            override fun afterTextChanged(s: Editable) {
+                val filteredList = personList.filter { person ->
+                    person.name.contains(s.toString(), ignoreCase = true)
+                }
+                myAdapter.updateList(filteredList)
+            }
+
+        })
     }
 }
