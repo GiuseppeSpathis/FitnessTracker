@@ -1,14 +1,18 @@
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitnesstracker.Person
+import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
+import Utils.checkGender
 
 class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
@@ -29,10 +33,12 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val person = personList[position]
         holder.name.text = person.name
-        if (person.gender == "male") {
-            holder.iconPerson.setImageResource(R.drawable.male)
-        } else {
-            holder.iconPerson.setImageResource(R.drawable.female)
+        checkGender(person.gender, holder.iconPerson)
+        holder.name.setOnClickListener {
+            val intent = Intent(it.context, PersonProfile::class.java)
+            intent.putExtra("name", person.name)
+            intent.putExtra("gender", person.gender)
+            it.context.startActivity(intent)
         }
         holder.message.setOnClickListener{
             Toast.makeText(it.context, "vuoi messaggiare", Toast.LENGTH_SHORT).show() //da modificare in futuro

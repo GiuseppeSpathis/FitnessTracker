@@ -5,10 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.widget.Button
+
 import android.widget.EditText
-import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -27,6 +25,7 @@ class Social : AppCompatActivity() {
             Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"),
             Person("Mariossadasdasdasd", "male"), Person("Mariossadasdasdasd", "male"),
+            Person("Mariossadasdasdasd", "other"), Person("Mariossadasdasdasd", "male"),
 
 
             Person("Maria", "female")
