@@ -69,6 +69,7 @@ dependencies {
     implementation("androidx.room:room-common:2.6.1")
     implementation("com.google.firebase:firebase-database:20.3.1")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.firebase:firebase-appcheck-ktx:17.1.2")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -83,6 +84,9 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     implementation("androidx.fragment:fragment-ktx:1.5.5")
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation ("com.google.android.recaptcha:recaptcha:18.5.0-beta02")
+    implementation ("com.google.android.gms:play-services-safetynet:18.0.1")
+    implementation ("com.google.firebase:firebase-appcheck-safetynet:16.0.0-beta06")
 
     implementation("com.github.Spikeysanju:MotionToast:1.4")
 

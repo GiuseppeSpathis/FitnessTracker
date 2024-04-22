@@ -1,18 +1,18 @@
 package com.example.fitnesstracker
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.widget.AbsSpinner
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatSpinner
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.safetynet.SafetyNetAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
@@ -42,6 +42,11 @@ class RegistrationActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         genderSpinner.adapter = adapter
 
+        val firebaseAppCheck: FirebaseAppCheck = FirebaseAppCheck.getInstance()
+        firebaseAppCheck.installAppCheckProviderFactory(
+            SafetyNetAppCheckProviderFactory.getInstance()
+        )
+
         registerButton.setOnClickListener{
             val email = email.text.toString()
             val username = username.text.toString()
@@ -57,30 +62,34 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun registerUser(email: String, username: String, password: String, gender: String){
-        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this){ task ->
-            if(task.isSuccessful){
-                val uid = auth.currentUser!!.uid
 
-                saveUserData(uid, email, username, gender)
-                Toast.makeText(this, "Registrazione avvenuta con successo!", Toast.LENGTH_SHORT).show()
-                Handler(Looper.getMainLooper()).postDelayed({
-                    startActivity(Intent(this, MainActivity::class.java))
-                    finish()
-                }, 3000)
-            } else {
-                Toast.makeText(this, "Errore durate la registrazione", Toast.LENGTH_SHORT).show()
-            }
-        }
+                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this){ task ->
+                    if(task.isSuccessful){
+                        val uid = auth.currentUser!!.uid
+                        saveUserData(uid, email, username, gender)
+                        Toast.makeText(this, "Registrazione avvenuta con successo!", Toast.LENGTH_SHORT).show()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }, 1000)
+                    } else {
+                        println("ciao123")
+                        Toast.makeText(this, "Errore durate la registrazione", Toast.LENGTH_SHORT).show()
+                    }
+                }
     }
 
     private fun saveUserData(uid: String, email: String, username: String, gender: String){
-        val database = FirebaseDatabase.getInstance().reference
+        println("coao")
+        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
         val user = User(email, username, gender)
 
         database.child("users").child(uid).setValue(user).addOnSuccessListener {
+            println("ciaooooo")
             Log.d("RegistrationActivity", "Dati utente salvati con successo")
         }
             .addOnFailureListener{error ->
+                error.printStackTrace()
                 Log.e("RegistrationActivity", "Errore nel salvataggio dei dati", error)
                 Toast.makeText(this, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
             }

@@ -11,6 +11,10 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class LoginActivity : AppCompatActivity() {
 
@@ -40,6 +44,21 @@ class LoginActivity : AppCompatActivity() {
                 if(task.isSuccessful) {
                     val user = auth.currentUser
                     updateUI(user)
+                    val uid = FirebaseAuth.getInstance().currentUser!!.uid
+                    val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
+                    database.child("users").child(uid).addListenerForSingleValueEvent(object :
+                        ValueEventListener {
+                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                            val user = dataSnapshot.getValue(LoggedUser::class.java)
+                            LoggedUser.username = user?.username ?: ""
+                            LoggedUser.gender = user?.gender ?: ""
+                            LoggedUser.email = user?.email ?: ""
+                        }
+
+                        override fun onCancelled(databaseError: DatabaseError) {
+
+                        }
+                    })
                 } else {
                     updateUI(null)
                 }
@@ -54,7 +73,7 @@ class LoginActivity : AppCompatActivity() {
             Handler(Looper.getMainLooper()).postDelayed({
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
-            }, 3000)
+            }, 2000)
 
         } else {
             Toast.makeText(baseContext, "Errore durante il login", Toast.LENGTH_SHORT).show()
