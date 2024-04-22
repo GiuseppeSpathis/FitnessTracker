@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.Patterns
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -14,7 +15,10 @@ import androidx.appcompat.widget.AppCompatSpinner
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.safetynet.SafetyNetAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -53,7 +57,10 @@ class RegistrationActivity : AppCompatActivity() {
             val password = password.text.toString()
             val selectedGender = genderSpinner.selectedItem.toString()
 
-            registerUser(email, username, password, selectedGender)
+            if(validateInput(email, username, password)){
+                registerUser(email, username, password, selectedGender)
+            }
+
         }
         goBack.setOnClickListener{
             startActivity(Intent(this, LoginActivity::class.java))
@@ -73,19 +80,17 @@ class RegistrationActivity : AppCompatActivity() {
                             finish()
                         }, 1000)
                     } else {
-                        println("ciao123")
+
                         Toast.makeText(this, "Errore durate la registrazione", Toast.LENGTH_SHORT).show()
                     }
                 }
     }
 
     private fun saveUserData(uid: String, email: String, username: String, gender: String){
-        println("coao")
         val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
         val user = User(email, username, gender)
 
         database.child("users").child(uid).setValue(user).addOnSuccessListener {
-            println("ciaooooo")
             Log.d("RegistrationActivity", "Dati utente salvati con successo")
         }
             .addOnFailureListener{error ->
@@ -93,6 +98,45 @@ class RegistrationActivity : AppCompatActivity() {
                 Log.e("RegistrationActivity", "Errore nel salvataggio dei dati", error)
                 Toast.makeText(this, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun validateInput(email: String, username: String, password: String): Boolean {
+        val emailPattern = Patterns.EMAIL_ADDRESS // For email validation
+        val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
+
+        if (!emailPattern.matcher(email).matches()) {
+            Toast.makeText(this, "Formato email non valido", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (!passwordPattern.matches(password)) {
+            Toast.makeText(this, "La password deve contenere: almeno una maiuscola, un numero e un carattere speciale", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
+        var exists : Boolean
+        exists = false
+        database.child("users").orderByChild("email").equalTo(email).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    // Email already exists
+                    Toast.makeText(this@RegistrationActivity, "Email già utilizzata", Toast.LENGTH_SHORT).show()
+                    exists = true
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+
+            }
+        })
+
+        if(exists){
+            return false
+        }
+
+
+        return true
     }
 
     data class User(val email: String, val username: String,val gender: String)
