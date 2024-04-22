@@ -5,4 +5,10 @@
     <string name="icon_share">icona per condividere</string>
     <string name="icon_message">icona per messaggiare</string>
     <string name="name">nome</string>
+    <string-array name="gender_array">
+        <item>Maschio</item>
+        <item>Femmina</item>
+        <item>Altro</item>
+    </string-array>
+
 </resources>

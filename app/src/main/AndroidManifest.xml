@@ -15,6 +15,14 @@
         <activity
             android:name=".PersonProfile"
             android:exported="false" />
+        <activity android:name=".HomeActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".RegistrationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
         <activity
             android:name=".Social"
             android:exported="false" />
