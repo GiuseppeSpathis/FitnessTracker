@@ -89,6 +89,7 @@ dependencies {
     implementation ("com.google.firebase:firebase-appcheck-safetynet:16.0.0-beta06")
 
     implementation("com.github.Spikeysanju:MotionToast:1.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
 }
 

@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatSpinner
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.safetynet.SafetyNetAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -19,6 +20,10 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -57,8 +62,14 @@ class RegistrationActivity : AppCompatActivity() {
             val password = password.text.toString()
             val selectedGender = genderSpinner.selectedItem.toString()
 
-            if(validateInput(email, username, password)){
-                registerUser(email, username, password, selectedGender)
+            lifecycleScope.launch {
+                if (validateInput(email, username, password)) {
+                    try {
+                        registerUser(email, username, password, selectedGender)
+                    } catch (e: Exception) {
+                        Toast.makeText(this@RegistrationActivity, "Errore durante la registrazione", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
 
         }
@@ -68,40 +79,51 @@ class RegistrationActivity : AppCompatActivity() {
 
     }
 
-    private fun registerUser(email: String, username: String, password: String, gender: String){
+    private suspend fun registerUser(email: String, username: String, password: String, gender: String){
+        try {
+            withContext(Dispatchers.IO) {
+                auth.createUserWithEmailAndPassword(email, password).await()
+                val uid = auth.currentUser!!.uid
+                saveUserData(uid, email, username, gender)
 
-                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this){ task ->
-                    if(task.isSuccessful){
-                        val uid = auth.currentUser!!.uid
-                        saveUserData(uid, email, username, gender)
-                        Toast.makeText(this, "Registrazione avvenuta con successo!", Toast.LENGTH_SHORT).show()
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            startActivity(Intent(this, MainActivity::class.java))
-                            finish()
-                        }, 1000)
-                    } else {
-
-                        Toast.makeText(this, "Errore durate la registrazione", Toast.LENGTH_SHORT).show()
-                    }
+                // Switch to main thread for Toast
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@RegistrationActivity, "Registrazione avvenuta con successo!", Toast.LENGTH_SHORT).show()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        startActivity(Intent(this@RegistrationActivity, MainActivity::class.java))
+                        finish()
+                    }, 1000)
                 }
-    }
-
-    private fun saveUserData(uid: String, email: String, username: String, gender: String){
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-        val user = User(email, username, gender)
-
-        database.child("users").child(uid).setValue(user).addOnSuccessListener {
-            Log.d("RegistrationActivity", "Dati utente salvati con successo")
-        }
-            .addOnFailureListener{error ->
-                error.printStackTrace()
-                Log.e("RegistrationActivity", "Errore nel salvataggio dei dati", error)
-                Toast.makeText(this, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
             }
+        } catch (e: Exception) {
+            Log.e("RegistrationActivity", "Registration failed", e)
+
+            // Switch to main thread for Toast
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, "Errore durante la registrazione", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
-    private fun validateInput(email: String, username: String, password: String): Boolean {
-        val emailPattern = Patterns.EMAIL_ADDRESS // For email validation
+    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String): Boolean {
+        try {
+            withContext(Dispatchers.IO) {
+                val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
+                val user = User(email, username, gender)
+
+                database.child("users").child(uid).setValue(user).await()
+            }
+            return true
+        } catch (e: Exception) {
+            Log.e("RegistrationActivity", "Error saving user data", e)
+            Toast.makeText(this@RegistrationActivity, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT)
+                .show()
+            return false
+        }
+    }
+
+    private suspend fun validateInput(email: String, username: String, password: String): Boolean {
+        val emailPattern = Patterns.EMAIL_ADDRESS
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
 
         if (!emailPattern.matcher(email).matches()) {
@@ -114,30 +136,31 @@ class RegistrationActivity : AppCompatActivity() {
             return false
         }
 
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-        var exists : Boolean
-        exists = false
-        database.child("users").orderByChild("email").equalTo(email).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // Email already exists
-                    Toast.makeText(this@RegistrationActivity, "Email già utilizzata", Toast.LENGTH_SHORT).show()
-                    exists = true
-                }
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-
-            }
-        })
-
-        if(exists){
+        // Check if email exists using coroutine helper
+        if (emailExists(email)) {
+            Toast.makeText(this, "Email già utilizzata", Toast.LENGTH_SHORT).show()
             return false
         }
 
-
-        return true
+        return true // Validation successful
     }
+
+    // Helper function to check email existence (suspending)
+    private suspend fun emailExists(email: String): Boolean {
+        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
+
+        // Use a suspending function inside coroutines (e.g., withContext)
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = database.child("users").orderByChild("email").equalTo(email).get().await()
+                result.exists()
+            } catch (e: Exception) {
+                Log.e("RegistrationActivity", "Error checking email existence", e)
+                false // Handle error appropriately
+            }
+        }
+    }
+
 
     data class User(val email: String, val username: String,val gender: String)
 
