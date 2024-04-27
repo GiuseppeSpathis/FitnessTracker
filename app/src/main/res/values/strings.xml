@@ -11,5 +11,8 @@
         <item>Altro</item>
     </string-array>
     <string name="db_connection">"https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app"</string>
-
+    <string name="successo">successo</string>
+    <string name="fallimento">non avvenuto con successo</string>
+    <string name="info">info</string>
+    <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
 </resources>

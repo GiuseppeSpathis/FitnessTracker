@@ -13,6 +13,7 @@ import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
 import Utils.checkGender
+import Utils.sendMessage
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
@@ -22,6 +23,7 @@ import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.core.content.res.ResourcesCompat
+import com.example.fitnesstracker.LoggedUser
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 
@@ -44,7 +46,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val person = personList[position]
         holder.name.text = person.name
-        checkGender(person.gender, holder.iconPerson)
+        checkGender(person.gender, holder.iconPerson, holder.itemView.context)
         holder.name.setOnClickListener {
             val intent = Intent(it.context, PersonProfile::class.java)
             intent.putExtra("name", person.name)
@@ -70,7 +72,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
 
     private fun showDialog(context: Context, name: String) {
         val builder = AlertDialog.Builder(context, R.style.DialogTheme)
-        builder.setTitle("Invia un toast a $name")
+        builder.setTitle("Invia un messaggio a $name")
 
         val input = EditText(context)
         val layout = LinearLayout(context)
@@ -103,12 +105,15 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString() //in futuro questo toastMessage devi inviare un toast a quell'utente
 
+                sendMessage(it.context, LoggedUser.username, toastMessage, LoggedUser.gender)
+
                 dialog.dismiss()
 
-                if(context is Activity){
+                if(context is Activity){ //questo toast deve essere mandato all'altro account, non a me
+
                     MotionToast.createColorToast(context,
-                        "Successo",
-                        "il toast é stato inviato con successo",
+                        context.resources.getString(R.string.successo),
+                        context.resources.getString(R.string.messaggio_inviato),
                         MotionToastStyle.SUCCESS,
                         MotionToast.GRAVITY_BOTTOM,
                         MotionToast.LONG_DURATION,
@@ -129,6 +134,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
 
         dialog.show()
     }
+
 
 
 }
