@@ -21,7 +21,7 @@ class PersonProfile : AppCompatActivity() {
         name = findViewById(R.id.personName)
         name.text = intent.getStringExtra("name")
         image = findViewById(R.id.imagePerson)
-        checkGender(gender!!, image)
+        checkGender(gender!!, image, this)
 
     }
 }

@@ -9,7 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 class MainActivity : ComponentActivity() {
 
 
-    private lateinit var social: Button
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,12 +17,10 @@ class MainActivity : ComponentActivity() {
         val auth = FirebaseAuth.getInstance()
 
         setContentView(R.layout.activity_main)
-        startActivity(Intent(this, LoginActivity::class.java))
-       // social = findViewById<Button>(R.id.socialButton)
-        /*
-        social.setOnClickListener {
-            startActivity(Intent(this, Social::class.java))
-        }*/
+        //startActivity(Intent(this, LoginActivity::class.java))
+        startActivity(Intent(this, HomeActivity::class.java)) //da togliere in futuro
+
+
     }
 
 
