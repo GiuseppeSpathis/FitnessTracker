@@ -11,5 +11,11 @@
         <item>Altro</item>
     </string-array>
     <string name="db_connection">"https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app"</string>
+    <string-array name="activity_array">
+        <item>Passeggiata</item>
+        <item>Corsa</item>
+        <item>Guidare</item>
+        <item>Stare fermo</item>
+    </string-array>
 
 </resources>

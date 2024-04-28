@@ -2,4 +2,7 @@
     <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowBackground">@drawable/edit_text_border</item>
     </style>
+    <style name="MySpinnerStyle" parent="@android:style/Widget.TextView.SpinnerItem">
+        <item name="android:textSize">30sp</item>
+    </style>
 </resources>

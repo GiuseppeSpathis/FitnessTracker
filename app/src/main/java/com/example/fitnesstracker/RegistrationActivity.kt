@@ -1,9 +1,13 @@
 package com.example.fitnesstracker
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.util.Patterns
 import android.widget.ArrayAdapter
@@ -12,7 +16,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatSpinner
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.room.util.newStringBuilder
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.safetynet.SafetyNetAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -24,6 +30,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.net.InetAddress
+import java.net.NetworkInterface
+import android.Manifest.permission.ACCESS_WIFI_STATE
+import androidx.core.content.ContextCompat
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -34,6 +44,8 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var genderSpinner: AppCompatSpinner
     private lateinit var registerButton: Button
     private lateinit var goBack : Button
+    private val REQUEST_WIFI_PERMISSION_CODE = 101
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.registration_fragment)
@@ -84,7 +96,13 @@ class RegistrationActivity : AppCompatActivity() {
             withContext(Dispatchers.IO) {
                 auth.createUserWithEmailAndPassword(email, password).await()
                 val uid = auth.currentUser!!.uid
-                saveUserData(uid, email, username, gender)
+                if (ContextCompat.checkSelfPermission(this@RegistrationActivity, ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+                    requestWifiPermission()
+                    return@withContext
+                }
+                val mac = getMacAddress(this@RegistrationActivity)
+                Log.d("RegistrationActivity", "Retrieved macAddress: $mac") // Print macAddress for debugging
+                saveUserData(uid, email, username, gender, mac)
 
                 // Switch to main thread for Toast
                 withContext(Dispatchers.Main) {
@@ -105,11 +123,11 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String): Boolean {
+    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String, mac: String): Boolean {
         try {
             withContext(Dispatchers.IO) {
                 val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-                val user = User(email, username, gender)
+                val user = User(email, username, gender, mac)
 
                 database.child("users").child(uid).setValue(user).await()
             }
@@ -161,7 +179,29 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
+    private fun requestWifiPermission() {
+        // Implement logic to request permission from the user
+        println("ciaoooo")
+        ActivityCompat.requestPermissions(this, arrayOf(ACCESS_WIFI_STATE), REQUEST_WIFI_PERMISSION_CODE)
+    }
 
-    data class User(val email: String, val username: String,val gender: String)
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getMacAddress(this)
+        } else {
+           println("No access")
+        }
+    }
+
+    private fun getMacAddress(context: Context): String {
+       val wifiManager = context.getSystemService(WIFI_SERVICE) as WifiManager
+        val mac = wifiManager.connectionInfo.macAddress
+        return mac
+    }
+
+
+
+    data class User(val email: String, val username: String,val gender: String, val macAddress: String)
 
 }
