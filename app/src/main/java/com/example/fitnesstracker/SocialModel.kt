@@ -2,6 +2,9 @@ package com.example.fitnesstracker
 
 class SocialModel {
 
+
+
+
     private var personList: MutableList<Person> = mutableListOf(  //questo array in futuro non ci dovra' essere
         Person("Mario", "Maschio"),
         Person("Mariossa", "Maschio"),
@@ -15,8 +18,12 @@ class SocialModel {
         return personList.toList()
     }
 
-    fun updateList(address: Int){ //da chiamare dal broadcast receiver
+    fun updateList(address: String?): Boolean{ //da chiamare dal broadcast receiver
         //si fa la chiamata al database per vedere se esiste quel dispositivo
+        //se esiste aggiorna la lista e  ritora true
+        if(address == null)
+            return false
+        return true
     }
 
     fun filterList(filter: String):  List<Person>{
@@ -25,5 +32,7 @@ class SocialModel {
         }
         return filteredList.toList()
     }
+
+
 
 }

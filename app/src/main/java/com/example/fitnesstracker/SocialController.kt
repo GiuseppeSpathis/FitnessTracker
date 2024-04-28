@@ -18,9 +18,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.registerReceiver
+import pl.droidsonroids.gif.GifDrawable
 
 
-class SocialController (private val SocialActivity: AppCompatActivity) {
+class SocialController (private val SocialInterface: SocialInterface) {
 
     companion object {
         private const val REQUEST_BLUETOOTH_CONNECT  = 1
@@ -28,13 +29,18 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
 
     }
 
-    private val SocialModel = SocialModel()
+    private val socialModel = SocialModel()
 
     private val bluetoothAdapter: BluetoothAdapter? by lazy(LazyThreadSafetyMode.NONE) {
-        val bluetoothManager = SocialActivity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothManager = SocialInterface.getActivity().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
     }
 
+    @SuppressLint("MissingPermission")
+    private fun startDiscovery(){
+        SocialInterface.startAnimation()
+        bluetoothAdapter?.startDiscovery()
+    }
 
     private val receiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
@@ -52,25 +58,29 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
 
                     }
-                    //SocialModel.updateList(device?.address)
+
+                    val found = socialModel.updateList(device?.address)
+                    if(found){
+                        SocialInterface.listUpdated(getPersonlist())
+                    }
                     Toast.makeText(context, "Dispositivo trovato: ${device?.name}, MAC: ${device?.address}", Toast.LENGTH_LONG).show() //da togliere in futuro
 
                 }
             }
         }}
 
-    @SuppressLint("MissingPermission")
-    private val enableBtResultLauncher = SocialActivity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+    private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialActivity)){
-                bluetoothAdapter?.startDiscovery()
+            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity())){
+                startDiscovery()
             }
             else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ActivityCompat.requestPermissions(SocialActivity, arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+                    ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
                 }
                 else {
-                    bluetoothAdapter?.startDiscovery()
+                    startDiscovery()
                 }
             }
         }
@@ -79,10 +89,10 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
 
     private fun requestBluetoothConnectAndScanPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialActivity))
+            if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity()))
             {
 
-                ActivityCompat.requestPermissions(SocialActivity, arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
+                ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
             } else {
                 // Il permesso è già stato concesso, puoi procedere con l'abilitazione del Bluetooth
                 enableBluetooth()
@@ -100,7 +110,7 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
     }
 
 
-    @SuppressLint("MissingPermission")
+
     fun handleBluetoothPermissionResult(requestCode: Int, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_BLUETOOTH_CONNECT -> {
@@ -111,7 +121,7 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
                         enableBluetooth()
                     } else {
                         // Permission denied, handle the case where the user denies permission
-                        Toast.makeText(SocialActivity, "Permesso BLUETOOTH_CONNECT negato", Toast.LENGTH_LONG).show()
+                        Toast.makeText(SocialInterface.getActivity(), "Permesso BLUETOOTH_CONNECT negato", Toast.LENGTH_LONG).show()
                     }
                 }
                 return
@@ -121,46 +131,63 @@ class SocialController (private val SocialActivity: AppCompatActivity) {
                     val permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
                     if (permissionGranted) {
                         // Permission is granted, start Bluetooth discovery
-                        bluetoothAdapter?.startDiscovery()
+                        startDiscovery()
                     } else {
                         // Permission denied, handle the case where the user denies permission
-                        Toast.makeText(SocialActivity, "Permesso BLUETOOTH_SCAN negato", Toast.LENGTH_LONG).show()
+                        Toast.makeText(SocialInterface.getActivity(), "Permesso BLUETOOTH_SCAN negato", Toast.LENGTH_LONG).show()
                     }
                 }
                 return
             }
         }
     }
-    @SuppressLint("MissingPermission")
+
     fun startBluetooth (){
         // Registra il BroadcastReceiver per ricevere i dispositivi trovati
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        SocialActivity.registerReceiver(receiver, filter)
+        SocialInterface.getActivity().registerReceiver(receiver, filter)
         // Controlla se il Bluetooth è abilitato, altrimenti richiedi all'utente di abilitarlo
         if (bluetoothAdapter?.isEnabled == false) {
             requestBluetoothConnectAndScanPermission()
         } else {
-            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialActivity)){
-                bluetoothAdapter?.startDiscovery()
+
+            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity())){
+
+                startDiscovery()
             }
             else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ActivityCompat.requestPermissions(SocialActivity, arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+                    ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
                 }
                 else {
-                    bluetoothAdapter?.startDiscovery()
+                    startDiscovery()
                 }
             }
         }
     }
 
     fun getPersonlist(): List<Person>{
-        return SocialModel.getPersonsList()
+        return socialModel.getPersonsList()
     }
 
     fun filterList(filter: String): List<Person> {
-        return SocialModel.filterList(filter)
+        return socialModel.filterList(filter)
     }
 
+    fun getfoundDevices(personlist: List<Person>): String{
+        return when(val number = personlist.size){
+            0 -> {
+                ""
+            }
+
+            1 -> {
+                "$number persona trovata"
+            }
+
+            else -> {
+                "$number persone trovate"
+            }
+        }
+    }
 
 }

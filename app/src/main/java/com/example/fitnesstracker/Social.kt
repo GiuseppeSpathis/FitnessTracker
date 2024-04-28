@@ -1,31 +1,38 @@
 package com.example.fitnesstracker
 
 import MyAdapter
-import Utils.hasPermission
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.content.BroadcastReceiver
+
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.IntentFilter
-import android.os.Build
+import android.view.View
+import android.view.animation.LinearInterpolator
+import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.recyclerview.widget.LinearLayoutManager
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import okhttp3.internal.wait
+import pl.droidsonroids.gif.GifDrawable
+import pl.droidsonroids.gif.GifImageView
+import android.os.Handler
+import android.os.Looper
+import androidx.recyclerview.widget.LinearLayoutManager
 
-class Social : AppCompatActivity() {
+
+interface SocialInterface {
+    fun listUpdated(personList: List<Person>)
+    fun getActivity(): AppCompatActivity
+
+    fun startAnimation()
+}
+
+
+
+class Social : AppCompatActivity(), SocialInterface {
 
 
 
@@ -37,11 +44,10 @@ class Social : AppCompatActivity() {
     private lateinit var myRecyclerView: RecyclerView
 
 
-    lateinit var socialController: SocialController
+    private lateinit var socialController: SocialController
 
 
-
-
+    private lateinit var gifDrawable: GifDrawable
 
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -49,44 +55,75 @@ class Social : AppCompatActivity() {
         socialController.handleBluetoothPermissionResult(requestCode, grantResults)
     }
 
+    private lateinit var nDevices: TextView
 
 
+    override fun listUpdated(personList: List<Person>) {
+        nDevices.text = socialController.getfoundDevices(personList)
+        myAdapter.updateList(personList)
+    }
 
+    override fun getActivity(): AppCompatActivity {
+        return this
+    }
+
+    override fun startAnimation(){
+        gifDrawable.start()
+        val handler = Handler(Looper.getMainLooper())
+
+        // Invia un Runnable che verrà eseguito dopo meno di un minuto, gira sul mainThread
+        handler.postDelayed({
+
+            setContentView(R.layout.activity_social)
+            search = findViewById(R.id.search)
+            myRecyclerView = findViewById(R.id.myRecyclerView)
+            myRecyclerView.adapter = myAdapter
+            myRecyclerView.layoutManager = LinearLayoutManager(this)
+
+            search.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                    //niente
+                }
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    //niente
+                }
+                override fun afterTextChanged(s: Editable) {
+                    myAdapter.updateList(socialController.filterList(s.toString()))
+                }
+            })
+
+        }, 1 * 10 * 1000L)  // meno di un minuto
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_social)
+        setContentView(R.layout.bluetooth)
+
+
+        val gifImageView: GifImageView = findViewById(R.id.bluetoothGif)
+        gifDrawable = gifImageView.drawable as GifDrawable
+
+        nDevices = findViewById(R.id.n_devices)
+
+        gifDrawable.stop()
+
+        gifImageView.setOnClickListener {
+            socialController.startBluetooth()
+        }
+
 
         socialController = SocialController(this)
 
-        search = findViewById<EditText>(R.id.search)
-
-
-        myRecyclerView = findViewById(R.id.myRecyclerView)
 
         myAdapter = MyAdapter(socialController.getPersonlist())
 
 
-        myRecyclerView.adapter = myAdapter
-        myRecyclerView.layoutManager = LinearLayoutManager(this)
 
 
 
-        search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                //niente
-            }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                //niente
-            }
-            override fun afterTextChanged(s: Editable) {
-                myAdapter.updateList(socialController.filterList(s.toString()))
-            }
-        })
 
-
-        socialController.startBluetooth()
 
     }
 

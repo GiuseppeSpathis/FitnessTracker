@@ -15,4 +15,5 @@
     <string name="fallimento">non avvenuto con successo</string>
     <string name="info">info</string>
     <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
+    <string name="scan_devices">rileva dispositivi vicini a te</string>
 </resources>

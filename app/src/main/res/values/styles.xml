@@ -2,4 +2,5 @@
     <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowBackground">@drawable/edit_text_border</item>
     </style>
+
 </resources>
