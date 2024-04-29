@@ -4,4 +4,5 @@ object  LoggedUser {
     var username : String = ""
     var gender : String = ""
     var email : String = ""
+    var macAddress : String = ""
 }

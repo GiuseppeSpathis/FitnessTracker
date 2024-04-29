@@ -179,6 +179,9 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
+
+
+
     private fun requestWifiPermission() {
         // Implement logic to request permission from the user
         println("ciaoooo")
@@ -202,6 +205,6 @@ class RegistrationActivity : AppCompatActivity() {
 
 
 
-    data class User(val email: String, val username: String,val gender: String, val macAddress: String)
+    data class User(val email: String?, val username: String?,val gender: String?, val macAddress: String?)
 
 }

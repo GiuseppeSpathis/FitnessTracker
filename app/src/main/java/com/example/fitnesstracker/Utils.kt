@@ -1,6 +1,7 @@
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
@@ -8,6 +9,11 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import com.example.fitnesstracker.R
+import com.example.fitnesstracker.RegistrationActivity
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 object Utils {
 
@@ -60,6 +66,35 @@ object Utils {
     fun hasPermission(permission: String, context: Context) : Boolean {
         return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
+
+
+     suspend fun findUserByMacAddress(macAddress: String): RegistrationActivity.User? {
+        val database = FirebaseDatabase.getInstance("https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app").reference
+        return try {
+            val query = database.child("users").orderByChild("macAddress").equalTo(macAddress).get().await()
+            val userMap = query.value as? Map<String, Any>
+            val user = userMap?.values?.firstOrNull() as? Map<String, Any>
+            // Assuming your User class has appropriate properties (e.g., id, name, email)
+            val userUsername = user?.get("username") as? String
+            val userEmail = user?.get("email") as? String
+            val userMac = user?.get("macAddress") as? String
+            val userGender = user?.get("gender") as? String
+
+
+            RegistrationActivity.User(
+                userEmail,
+                userUsername,
+                userGender,
+                userMac
+            )
+        } catch (e: Exception) {
+            Log.e("RegistrationActivity", "Errore durante la ricerca dell'utente tramite macAddress", e)
+            null
+        }
+    }
+
+
+
 
 
 }
