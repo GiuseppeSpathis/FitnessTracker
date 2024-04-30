@@ -7,6 +7,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,6 +19,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.registerReceiver
+import androidx.core.content.res.ResourcesCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
+import java.io.IOException
+import java.util.UUID
+
 //import pl.droidsonroids.gif.GifDrawable
 
 
@@ -29,12 +40,18 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
     }
 
+
+
     private val socialModel = SocialModel()
 
     private val bluetoothAdapter: BluetoothAdapter? by lazy(LazyThreadSafetyMode.NONE) {
         val bluetoothManager = SocialInterface.getActivity().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
     }
+
+
+
+
 
     @SuppressLint("MissingPermission")
     private fun startDiscovery(){
@@ -58,16 +75,22 @@ class SocialController (private val SocialInterface: SocialInterface) {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
 
                     }
-
-                    val found = socialModel.updateList(device?.address)
-                    if(found){
-                        SocialInterface.listUpdated(getPersonlist())
+                    if(device?.address != null){
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val found = socialModel.updateList(device)
+                            if(found){
+                                withContext(Dispatchers.Main) {
+                                    SocialInterface.listUpdated(getPersonlist())
+                                    //Toast.makeText(context, "Dispositivo trovato: ${device?.name}, MAC: ${device?.address}", Toast.LENGTH_LONG).show() //da togliere in futuro
+                                }
+                            }
+                        }
                     }
-                    Toast.makeText(context, "Dispositivo trovato: ${device?.name}, MAC: ${device?.address}", Toast.LENGTH_LONG).show() //da togliere in futuro
-
                 }
             }
-        }}
+        }
+    }
+
 
 
     private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

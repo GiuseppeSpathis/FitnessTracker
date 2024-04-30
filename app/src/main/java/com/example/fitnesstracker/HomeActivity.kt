@@ -19,12 +19,16 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.Intent
+import android.widget.Button
 
 
 class HomeActivity : AppCompatActivity() {
    // private lateinit var mMap: GoogleMap
    // private lateinit var fusedLocationClient: FusedLocationProviderClient
    // private val REQUEST_CODE_PERMISSIONS = 101
+
+    private lateinit var socialButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +50,10 @@ class HomeActivity : AppCompatActivity() {
         val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
         spinnerActivity.adapter = adapter
 
+        socialButton = findViewById(R.id.socialButton)
+        socialButton.setOnClickListener{
+            startActivity(Intent(this, Social::class.java))
+        }
      /*   fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         val mapView = findViewById<MapView>(R.id.map)
         mapView.onCreate(savedInstanceState)

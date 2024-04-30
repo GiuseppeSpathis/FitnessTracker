@@ -40,7 +40,9 @@ class Social : AppCompatActivity(), SocialInterface {
 
     private lateinit var search: EditText
 
-    private lateinit var myAdapter: MyAdapter
+    private lateinit var noPeople: TextView
+
+    lateinit var myAdapter: MyAdapter
     private lateinit var myRecyclerView: RecyclerView
 
 
@@ -61,6 +63,12 @@ class Social : AppCompatActivity(), SocialInterface {
     override fun listUpdated(personList: List<Person>) {
         nDevices.text = socialController.getfoundDevices(personList)
         myAdapter.updateList(personList)
+
+        if(this::noPeople.isInitialized && search.visibility != View.VISIBLE && socialController.getPersonlist().isNotEmpty()) {
+            noPeople.visibility = View.GONE
+            search.visibility = View.VISIBLE
+        }
+
     }
 
     override fun getActivity(): AppCompatActivity {
@@ -75,7 +83,14 @@ class Social : AppCompatActivity(), SocialInterface {
         handler.postDelayed({
 
             setContentView(R.layout.activity_social)
+            noPeople = findViewById(R.id.noPeople)
             search = findViewById(R.id.search)
+
+            if(socialController.getPersonlist().isNotEmpty() && search.visibility != View.VISIBLE){
+                noPeople.visibility = View.GONE
+                search.visibility = View.VISIBLE
+            }
+
             myRecyclerView = findViewById(R.id.myRecyclerView)
             myRecyclerView.adapter = myAdapter
             myRecyclerView.layoutManager = LinearLayoutManager(this)

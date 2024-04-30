@@ -1,28 +1,42 @@
 package com.example.fitnesstracker
 
+import Utils.findUserByMacAddress
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
+import androidx.core.content.res.ResourcesCompat
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
+import java.io.IOException
+import java.util.UUID
+
 class SocialModel {
 
 
 
 
-    private var personList: MutableList<Person> = mutableListOf(  //questo array in futuro non ci dovra' essere
-        Person("Mario", "Maschio"),
-        Person("Mariossa", "Maschio"),
-        Person("Mariossa", "Maschio"),
-        Person("Mar", "other"),
-        Person("Mariossad", "male"),
-        Person("Maria", "Femmina")
+
+
+    private var personList: MutableList<Person> = mutableListOf(
+
     )
 
     fun getPersonsList(): List<Person>{
         return personList.toList()
     }
 
-    fun updateList(address: String?): Boolean{ //da chiamare dal broadcast receiver
-        //si fa la chiamata al database per vedere se esiste quel dispositivo
-        //se esiste aggiorna la lista e  ritora true
-        if(address == null)
-            return false
+    suspend fun updateList(device: BluetoothDevice?): Boolean{ //da chiamare dal broadcast receiver
+/*
+        val user = device?.address?.let { findUserByMacAddress(it) }
+        if (user != null) {
+            if(user.username != null && user.gender != null && user.macAddress !=null) {
+                personList.add(Person(user.username, user.gender, device))
+                return true
+            }
+        }
+        return false
+        */
+        personList.add(Person("pippo", "Maschio", device))
         return true
     }
 
@@ -32,6 +46,7 @@ class SocialModel {
         }
         return filteredList.toList()
     }
+
 
 
 
