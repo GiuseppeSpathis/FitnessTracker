@@ -22,9 +22,9 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 
 
 class HomeActivity : AppCompatActivity() {
-    private lateinit var mMap: GoogleMap
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private val REQUEST_CODE_PERMISSIONS = 101
+   // private lateinit var mMap: GoogleMap
+   // private lateinit var fusedLocationClient: FusedLocationProviderClient
+   // private val REQUEST_CODE_PERMISSIONS = 101
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,17 +46,17 @@ class HomeActivity : AppCompatActivity() {
         val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
         spinnerActivity.adapter = adapter
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+     /*   fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         val mapView = findViewById<MapView>(R.id.map)
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync{googleMap ->
             mMap = googleMap
             checkLocationPermissions()
 
-        }
+        }*/
 
     }
-
+/*
     private fun checkLocationPermissions() {
         if(ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED){
             requestLocationPermission()
@@ -125,7 +125,7 @@ class HomeActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         findViewById<MapView>(R.id.map).onDestroy()
-    }
+    } */
 
 
 

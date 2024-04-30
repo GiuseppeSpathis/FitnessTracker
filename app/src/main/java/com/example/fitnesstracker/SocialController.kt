@@ -18,7 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.registerReceiver
-import pl.droidsonroids.gif.GifDrawable
+//import pl.droidsonroids.gif.GifDrawable
 
 
 class SocialController (private val SocialInterface: SocialInterface) {

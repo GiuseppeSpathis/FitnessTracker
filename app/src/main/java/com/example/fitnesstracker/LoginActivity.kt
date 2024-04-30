@@ -87,6 +87,7 @@ class LoginActivity : AppCompatActivity() {
             Toast.makeText(baseContext, "Login successfull", Toast.LENGTH_SHORT).show()
 
             Handler(Looper.getMainLooper()).postDelayed({
+                //startActivity(Intent(this, HomeActivity::class.java))
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
             }, 2000)

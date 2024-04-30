@@ -17,8 +17,8 @@ class MainActivity : ComponentActivity() {
         val auth = FirebaseAuth.getInstance()
 
         setContentView(R.layout.activity_main)
-        //startActivity(Intent(this, LoginActivity::class.java))
-        startActivity(Intent(this, HomeActivity::class.java)) //da togliere in futuro
+        startActivity(Intent(this, LoginActivity::class.java))
+        //startActivity(Intent(this, HomeActivity::class.java)) //da togliere in futuro
 
 
     }
