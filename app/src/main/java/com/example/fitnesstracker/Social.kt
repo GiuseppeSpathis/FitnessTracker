@@ -107,7 +107,7 @@ class Social : AppCompatActivity(), SocialInterface {
                 }
             })
 
-        }, 1 * 10 * 1000L)  // meno di un minuto
+        }, 1 * 8 * 1000L)  // meno di un minuto
 
     }
 

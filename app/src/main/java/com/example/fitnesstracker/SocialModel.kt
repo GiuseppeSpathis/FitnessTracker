@@ -26,7 +26,7 @@ class SocialModel {
     }
 
     suspend fun updateList(device: BluetoothDevice?): Boolean{ //da chiamare dal broadcast receiver
-/*
+
         val user = device?.address?.let { findUserByMacAddress(it) }
         if (user != null) {
             if(user.username != null && user.gender != null && user.macAddress !=null) {
@@ -35,9 +35,9 @@ class SocialModel {
             }
         }
         return false
-        */
-        personList.add(Person("pippo", "Maschio", device))
-        return true
+
+        //personList.add(Person("pippo", "Maschio", device))
+        //return true
     }
 
     fun filterList(filter: String):  List<Person>{

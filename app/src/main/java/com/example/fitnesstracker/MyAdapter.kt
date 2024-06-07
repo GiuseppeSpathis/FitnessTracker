@@ -13,7 +13,8 @@ import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
 import Utils.checkGender
-import Utils.sendMessage
+import Utils.receiveMessage
+import Utils.socketError
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
@@ -31,13 +32,18 @@ import com.example.fitnesstracker.SocialModel
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
+import kotlin.concurrent.thread
 
 class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
     private var you_are_connected = false
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private lateinit var socket: BluetoothSocket
+    private lateinit var outputStream: OutputStream
+    private lateinit var inputStream: InputStream
 
     inner class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var iconPerson: ImageView = view.findViewById(R.id.iconPerson)
@@ -85,7 +91,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
 
             }
             else {
-                connect2device(person.device, it.context as Activity, holder)
+                connect2device(person.device, it.context as Activity, holder, person)
             }
         }
         holder.disconnect.setOnClickListener {
@@ -136,13 +142,10 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString() //in futuro questo toastMessage devi inviare un toast a quell'utente
+                sendMessage(toastMessage, context as Activity)
 
-                sendMessage(it.context, LoggedUser.username, toastMessage, LoggedUser.gender)
 
                 dialog.dismiss()
-
-                if(context is Activity){ //questo toast deve essere mandato all'altro account, non a me
-
                     MotionToast.createColorToast(context,
                         context.resources.getString(R.string.successo),
                         context.resources.getString(R.string.messaggio_inviato),
@@ -150,7 +153,6 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
                         MotionToast.GRAVITY_BOTTOM,
                         MotionToast.LONG_DURATION,
                         ResourcesCompat.getFont(context, www.sanju.motiontoast.R.font.helvetica_regular))
-                }
             }
 
             input.addTextChangedListener(object : TextWatcher {
@@ -172,6 +174,8 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
         Thread {
             try {
                 socket.close()
+                outputStream.close()
+                inputStream.close()
 
                 activity.runOnUiThread {
 
@@ -196,16 +200,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
             catch (e: IOException) {
 
                 activity.runOnUiThread {
-                    e.message?.let {
-                        MotionToast.createColorToast(
-                            activity,
-                            activity.resources.getString(R.string.error),
-                            it,
-                            MotionToastStyle.ERROR,
-                            MotionToast.GRAVITY_BOTTOM,
-                            MotionToast.LONG_DURATION,
-                            ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
-                    }
+                    socketError(e, activity)
                 }
 
             }
@@ -213,7 +208,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
     }
 
     @SuppressLint("MissingPermission")
-    fun connect2device(device: BluetoothDevice?, activity: Activity, holder: MyViewHolder){
+    fun connect2device(device: BluetoothDevice?, activity: Activity, holder: MyViewHolder, person: Person){
         Thread {
             try {
                 if (device != null) {
@@ -239,27 +234,57 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
 
                         you_are_connected = true
 
+                        outputStream = socket.outputStream
+
+                        receiveFromSocket(activity, person.name, person.gender)
+
                     }
                 }
 
             }
             catch (e: IOException){
-
                 activity.runOnUiThread {
-                    e.message?.let {
-                        MotionToast.createColorToast(
-                            activity,
-                            activity.resources.getString(R.string.error),
-                            it,
-                            MotionToastStyle.ERROR,
-                            MotionToast.GRAVITY_BOTTOM,
-                            MotionToast.LONG_DURATION,
-                            ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
-                    }
+                    socketError(e, activity)
                 }
 
 
             }
+
+        }.start()
+
+    }
+
+    private fun sendMessage(message: String, activity: Activity) {
+        Thread {
+            try {
+                outputStream.write(message.toByteArray())
+            } catch (e: IOException) {
+                socketError(e, activity)
+            }
+        }.start()
+
+    }
+
+    private fun receiveFromSocket(activity: Activity, username: String, gender: String) {
+        Thread {
+            try {
+                inputStream = socket.inputStream
+                val buffer = ByteArray(1024)  // buffer store for the stream
+                var bytes: Int // bytes returned from read()
+
+                // Keep listening to the InputStream until an exception occurs
+                while (true) {
+                    // Read from the InputStream
+                    bytes = inputStream.read(buffer)
+                    val incomingMessage = String(buffer, 0, bytes)
+                    receiveMessage(activity, username, incomingMessage, gender)
+                }
+            } catch (e: IOException) {
+                println(e.message)
+                if(e.message != "bt socket closed, read return: -1")
+                    socketError(e, activity)
+            }
+
 
         }.start()
 
