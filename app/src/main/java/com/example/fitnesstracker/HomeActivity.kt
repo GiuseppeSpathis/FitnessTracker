@@ -1,46 +1,54 @@
 package com.example.fitnesstracker
 
-import android.annotation.SuppressLint
+
+import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Spinner
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.content.Intent
-import android.widget.Button
+import org.osmdroid.api.IMapController
+import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 
-class HomeActivity : AppCompatActivity() {
-   // private lateinit var mMap: GoogleMap
-   // private lateinit var fusedLocationClient: FusedLocationProviderClient
-   // private val REQUEST_CODE_PERMISSIONS = 101
+
+class HomeActivity : AppCompatActivity(), MapListener {
 
     private lateinit var socialButton: Button
+    private lateinit var map: MapView
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val REQUEST_PERMISSION_REQUEST_CODE = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
+        // Carica le configurazioni di OSMDroid
+        Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
+
         val imageProfile = findViewById<ImageView>(R.id.image_profile)
-        val gender = LoggedUser.gender
+        var gender = LoggedUser.gender
+        gender = "Maschio"
         println(gender)
-        when(gender){
+        when (gender) {
             "Maschio" -> imageProfile.setImageResource(R.drawable.male)
             "Femmina" -> imageProfile.setImageResource(R.drawable.female)
-             else -> imageProfile.setImageResource(R.drawable.other)
+            else -> imageProfile.setImageResource(R.drawable.other)
         }
 
         val activityArray = resources.getStringArray(R.array.activity_array)
@@ -51,90 +59,65 @@ class HomeActivity : AppCompatActivity() {
         spinnerActivity.adapter = adapter
 
         socialButton = findViewById(R.id.socialButton)
-        socialButton.setOnClickListener{
+        socialButton.setOnClickListener {
             startActivity(Intent(this, Social::class.java))
         }
-     /*   fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        val mapView = findViewById<MapView>(R.id.map)
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync{googleMap ->
-            mMap = googleMap
-            checkLocationPermissions()
 
-        }*/
+        // Imposta la mappa
+        map = findViewById(R.id.osmmap)
+        map.setTileSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK)
+        map.setMultiTouchControls(true)
 
-    }
-/*
-    private fun checkLocationPermissions() {
-        if(ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED){
-            requestLocationPermission()
+        // Inizializza il client per ottenere la posizione
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_PERMISSION_REQUEST_CODE)
         } else {
             getLastKnownLocation()
         }
     }
 
-    private fun requestLocationPermission() {
-        if(ActivityCompat.shouldShowRequestPermissionRationale(this, ACCESS_FINE_LOCATION)){
-            ActivityCompat.requestPermissions(this, arrayOf(ACCESS_FINE_LOCATION), REQUEST_CODE_PERMISSIONS)
-        } else {
-            ActivityCompat.requestPermissions(this, arrayOf(ACCESS_FINE_LOCATION), REQUEST_CODE_PERMISSIONS)
-        }
-    }
-
-    @SuppressLint("MissingPermission")
     private fun getLastKnownLocation() {
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    val currentLatLng = LatLng(location.latitude, location.longitude)
-                    mMap.addMarker(MarkerOptions().position(currentLatLng).title("My Location"))
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+        try {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
+                        val startPoint = GeoPoint(location.latitude, location.longitude)
+                        val mapController: IMapController = map.controller
+                        mapController.setZoom(18.0)
+                        mapController.setCenter(startPoint)
+
+                        val startMarker = Marker(map)
+                        startMarker.position = startPoint
+                        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        startMarker.title = "You are here"
+                        map.overlays.add(startMarker)
+                    }
                 }
-            }
+        } catch (unlikely: SecurityException) {
+            println("Lost location permission.$unlikely")
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == REQUEST_PERMISSION_REQUEST_CODE) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 getLastKnownLocation()
-            } else {
-                // Permission denied: Show a message
-                Toast.makeText(this, "Accept permissions to view your location", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        findViewById<MapView>(R.id.map).onStart()
+    override fun onScroll(event: ScrollEvent?): Boolean {
+        // Implementa logica di scroll se necessario
+        return true
     }
 
-    override fun onResume() {
-        super.onResume()
-        findViewById<MapView>(R.id.map).onResume()
+    override fun onZoom(event: ZoomEvent?): Boolean {
+        // Implementa logica di zoom se necessario
+        return true
     }
-
-    override fun onPause() {
-        super.onPause()
-        findViewById<MapView>(R.id.map).onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        findViewById<MapView>(R.id.map).onStop()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        findViewById<MapView>(R.id.map).onLowMemory()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        findViewById<MapView>(R.id.map).onDestroy()
-    } */
-
-
-
 }

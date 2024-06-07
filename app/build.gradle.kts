@@ -101,6 +101,10 @@ dependencies {
 
     kapt ("com.google.dagger:hilt-android-compiler:2.42")
     kapt ("androidx.hilt:hilt-compiler:1.0.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.10")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("androidx.preference:preference:1.2.1")
+
 
 }
 

@@ -32,4 +32,5 @@
     <string name="still_connected">sei già accoppiato con un altro dispositivo</string>
     <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
     <string name="scan_devices">rileva dispositivi vicini a te</string>
+    <string name="mapbox_access_token" translatable="false">pk.eyJ1IjoiY2Npcm9uZSIsImEiOiJjbHgyeWllZHcwa3A0MmtzOXBlYnAyYWZxIn0.c2VV3kdOn6ebZpl_z0qOOQ</string>
 </resources>
