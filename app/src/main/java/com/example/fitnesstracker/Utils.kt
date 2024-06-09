@@ -1,3 +1,5 @@
+package com.example.fitnesstracker
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -8,14 +10,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.res.ResourcesCompat
-import com.example.fitnesstracker.R
-import com.example.fitnesstracker.RegistrationActivity
-import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException

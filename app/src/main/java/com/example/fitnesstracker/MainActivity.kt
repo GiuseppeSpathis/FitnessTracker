@@ -18,7 +18,6 @@ class MainActivity : ComponentActivity() {
 
         setContentView(R.layout.activity_main)
         startActivity(Intent(this, LoginActivity::class.java))
-        //startActivity(Intent(this, HomeActivity::class.java)) //da togliere in futuro
 
 
     }

@@ -1,34 +1,21 @@
 package com.example.fitnesstracker
 
-import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
+import android.app.ActivityOptions
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.Spinner
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.content.Intent
-import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.navigation.NavigationBarView
 
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity :  AppCompatActivity(){
    // private lateinit var mMap: GoogleMap
    // private lateinit var fusedLocationClient: FusedLocationProviderClient
    // private val REQUEST_CODE_PERMISSIONS = 101
 
-    private lateinit var socialButton: Button
+    //private lateinit var socialButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,10 +24,10 @@ class HomeActivity : AppCompatActivity() {
         val imageProfile = findViewById<ImageView>(R.id.image_profile)
         val gender = LoggedUser.gender
         println(gender)
-        when(gender){
+        when (gender) {
             "Maschio" -> imageProfile.setImageResource(R.drawable.male)
             "Femmina" -> imageProfile.setImageResource(R.drawable.female)
-             else -> imageProfile.setImageResource(R.drawable.other)
+            else -> imageProfile.setImageResource(R.drawable.other)
         }
 
         val activityArray = resources.getStringArray(R.array.activity_array)
@@ -50,10 +37,37 @@ class HomeActivity : AppCompatActivity() {
         val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
         spinnerActivity.adapter = adapter
 
+
+
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+
+        bottomNavigationView.selectedItemId = R.id.nav_home
+
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> {
+                    val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_users -> {
+                    val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                else -> false
+            }
+        }
+
+        /*
         socialButton = findViewById(R.id.socialButton)
         socialButton.setOnClickListener{
             startActivity(Intent(this, Social::class.java))
         }
+
+         */
      /*   fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         val mapView = findViewById<MapView>(R.id.map)
         mapView.onCreate(savedInstanceState)
@@ -62,6 +76,8 @@ class HomeActivity : AppCompatActivity() {
             checkLocationPermissions()
 
         }*/
+
+
 
     }
 /*

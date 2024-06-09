@@ -19,7 +19,7 @@
         <item>Guidare</item>
         <item>Stare fermo</item>
     </string-array>
-
+    <string name="nothing">niente</string>
     <string name="noPeople">nessuna persona trovata nelle vicinanze 😢😢</string>
 
     <string name="successo">successo</string>
@@ -32,4 +32,12 @@
     <string name="still_connected">sei già accoppiato con un altro dispositivo</string>
     <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
     <string name="scan_devices">rileva dispositivi vicini a te</string>
+    <string name="title_activity_stats">StatsActivity</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+
 </resources>

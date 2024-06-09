@@ -4,17 +4,18 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"/>
-    <uses-feature android:name="android.hardware.bluetooth"/>
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+
+    <uses-feature android:name="android.hardware.bluetooth" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-
-
-
 
     <application
         android:allowBackup="true"
@@ -27,10 +28,16 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
+            android:name=".StatsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_stats"
+            android:theme="@style/AppTheme" />
+        <activity
             android:name=".PersonProfile"
             android:exported="false" />
-        <activity android:name=".HomeActivity"
-            android:exported="false"/>
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
         <activity
             android:name=".RegistrationActivity"
             android:exported="false" />

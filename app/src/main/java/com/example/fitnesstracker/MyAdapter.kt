@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
-import Utils.checkGender
-import Utils.receiveMessage
-import Utils.socketError
+import com.example.fitnesstracker.Utils.checkGender
+import com.example.fitnesstracker.Utils.receiveMessage
+import com.example.fitnesstracker.Utils.socketError
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
@@ -27,15 +27,12 @@ import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.core.content.res.ResourcesCompat
-import com.example.fitnesstracker.LoggedUser
-import com.example.fitnesstracker.SocialModel
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
-import kotlin.concurrent.thread
 
 class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 

@@ -1,14 +1,7 @@
 package com.example.fitnesstracker
 
-import Utils.findUserByMacAddress
-import android.annotation.SuppressLint
+import com.example.fitnesstracker.Utils.findUserByMacAddress
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
-import androidx.core.content.res.ResourcesCompat
-import www.sanju.motiontoast.MotionToast
-import www.sanju.motiontoast.MotionToastStyle
-import java.io.IOException
-import java.util.UUID
 
 class SocialModel {
 

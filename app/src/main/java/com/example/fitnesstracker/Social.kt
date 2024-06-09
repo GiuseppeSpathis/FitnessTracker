@@ -1,26 +1,24 @@
 package com.example.fitnesstracker
 
 import MyAdapter
+import android.annotation.SuppressLint
+import android.app.ActivityOptions
+import android.content.Intent
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
-import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.animation.LinearInterpolator
-import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import okhttp3.internal.wait
 import pl.droidsonroids.gif.GifDrawable
 import pl.droidsonroids.gif.GifImageView
 import android.os.Handler
 import android.os.Looper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.navigation.NavigationBarView
 
 
 interface SocialInterface {
@@ -107,9 +105,33 @@ class Social : AppCompatActivity(), SocialInterface {
                 }
             })
 
+
+            val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+
+            bottomNavigationView.selectedItemId = R.id.nav_users
+
+            bottomNavigationView.setOnItemSelectedListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.nav_stats -> {
+                        val intent = Intent(this, StatsActivity::class.java)
+                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                        startActivity(intent, options.toBundle())
+                        true
+                    }
+                    R.id.nav_home -> {
+                        val intent = Intent(this, HomeActivity::class.java)
+                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                        startActivity(intent, options.toBundle())
+                        true
+                    }
+                    else -> false
+                }
+            }
+
         }, 1 * 8 * 1000L)  // meno di un minuto
 
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
