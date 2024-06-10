@@ -20,8 +20,9 @@
         <item>Stare fermo</item>
     </string-array>
     <string name="nothing">niente</string>
+    <string name="activity">Attività svolta</string>
+    <string name="places">Luoghi frequentati</string>
     <string name="noPeople">nessuna persona trovata nelle vicinanze 😢😢</string>
-
     <string name="successo">successo</string>
     <string name="fallimento">non avvenuto con successo</string>
     <string name="error">errore</string>
