@@ -1,6 +1,7 @@
 package com.example.fitnesstracker
 
-import com.example.fitnesstracker.Utils.checkGender
+import Utils.checkGender
+
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView

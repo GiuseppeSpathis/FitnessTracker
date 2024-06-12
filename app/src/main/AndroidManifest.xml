@@ -54,6 +54,7 @@
         <activity android:name=".RunActivity"/>
         <activity android:name=".SpeedActivity"/>
         <activity android:name=".SitActivity"/>
+        <activity android:name=".StatsActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

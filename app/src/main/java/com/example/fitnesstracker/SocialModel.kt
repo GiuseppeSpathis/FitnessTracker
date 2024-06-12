@@ -1,6 +1,6 @@
 package com.example.fitnesstracker
 
-import com.example.fitnesstracker.Utils.findUserByMacAddress
+import Utils.findUserByMacAddress
 import android.bluetooth.BluetoothDevice
 
 class SocialModel {

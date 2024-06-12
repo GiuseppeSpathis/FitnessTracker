@@ -1,3 +1,6 @@
+import Utils.checkGender
+import Utils.receiveMessage
+import Utils.socketError
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
@@ -12,9 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
-import com.example.fitnesstracker.Utils.checkGender
-import com.example.fitnesstracker.Utils.receiveMessage
-import com.example.fitnesstracker.Utils.socketError
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog

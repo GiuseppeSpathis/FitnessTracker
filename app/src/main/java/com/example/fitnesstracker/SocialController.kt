@@ -1,6 +1,6 @@
 package com.example.fitnesstracker
 
-import com.example.fitnesstracker.Utils.hasPermission
+import Utils.hasPermission
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
