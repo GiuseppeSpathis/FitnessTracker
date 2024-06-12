@@ -1,4 +1,5 @@
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,9 +15,13 @@ import com.example.fitnesstracker.HomeActivity
 import com.example.fitnesstracker.R
 import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
+import androidx.core.content.res.ResourcesCompat
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
+import java.io.IOException
 
 object Utils {
 
@@ -39,7 +44,7 @@ object Utils {
     }
 
     @SuppressLint("InflateParams")
-    fun sendMessage (context: Context, name: String, message: String, gender: String){
+    fun receiveMessage (context: Context, name: String, message: String, gender: String){
 
         val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val layout = layoutInflater.inflate(R.layout.custom_toast_layout, null, false)
@@ -64,6 +69,20 @@ object Utils {
         toast.view = layout
         toast.show()
 
+    }
+    fun socketError(e: IOException, activity: Activity){
+        activity.runOnUiThread {
+            e.message?.let {
+                MotionToast.createColorToast(
+                    activity,
+                    activity.resources.getString(R.string.error),
+                    it,
+                    MotionToastStyle.ERROR,
+                    MotionToast.GRAVITY_BOTTOM,
+                    MotionToast.LONG_DURATION,
+                    ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
+            }
+        }
     }
 
     fun hasPermission(permission: String, context: Context) : Boolean {

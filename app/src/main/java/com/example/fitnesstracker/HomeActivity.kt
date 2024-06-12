@@ -68,6 +68,31 @@ class HomeActivity : AppCompatActivity(), MapListener {
         val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
         spinnerActivity.adapter = adapter
 
+
+
+
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+
+        bottomNavigationView.selectedItemId = R.id.nav_home
+
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> {
+                    val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_users -> {
+                    val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                else -> false
+            }
+        }
+
         /*
         socialButton = findViewById(R.id.socialButton)
         socialButton.setOnClickListener {

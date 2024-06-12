@@ -1,14 +1,7 @@
 package com.example.fitnesstracker
 
-import Utils.findUserByMacAddress
-import android.annotation.SuppressLint
+import com.example.fitnesstracker.Utils.findUserByMacAddress
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
-import androidx.core.content.res.ResourcesCompat
-import www.sanju.motiontoast.MotionToast
-import www.sanju.motiontoast.MotionToastStyle
-import java.io.IOException
-import java.util.UUID
 
 class SocialModel {
 
@@ -26,7 +19,7 @@ class SocialModel {
     }
 
     suspend fun updateList(device: BluetoothDevice?): Boolean{ //da chiamare dal broadcast receiver
-/*
+
         val user = device?.address?.let { findUserByMacAddress(it) }
         if (user != null) {
             if(user.username != null && user.gender != null && user.macAddress !=null) {
@@ -35,9 +28,9 @@ class SocialModel {
             }
         }
         return false
-        */
-        personList.add(Person("pippo", "Maschio", device))
-        return true
+
+        //personList.add(Person("pippo", "Maschio", device))
+        //return true
     }
 
     fun filterList(filter: String):  List<Person>{
