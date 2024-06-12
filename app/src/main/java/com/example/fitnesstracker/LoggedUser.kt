@@ -5,4 +5,5 @@ object  LoggedUser {
     var gender : String = ""
     var email : String = ""
     var macAddress : String = ""
+    var id : String = ""
 }

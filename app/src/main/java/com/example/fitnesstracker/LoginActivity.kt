@@ -72,6 +72,7 @@ class LoginActivity : AppCompatActivity() {
                 LoggedUser.gender = userData.gender ?: ""
                 LoggedUser.email = userData.email ?: ""
                 LoggedUser.macAddress = userData.macAddress ?: ""
+                LoggedUser.id = uid
             } else {
                 Log.e("LoginActivity", "Error while saving user data")
             }

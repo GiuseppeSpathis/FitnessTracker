@@ -13,9 +13,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="true"/>
+    <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="true"/>
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.BODY_SENSORS"/>
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
 
-
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -41,6 +47,13 @@
         <activity
             android:name=".Social"
             android:exported="false" />
+        <activity android:name=".WalkActivity">
+
+        </activity>
+
+        <activity android:name=".RunActivity"/>
+        <activity android:name=".SpeedActivity"/>
+        <activity android:name=".SitActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

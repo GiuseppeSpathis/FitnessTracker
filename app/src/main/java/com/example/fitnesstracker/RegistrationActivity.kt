@@ -34,6 +34,7 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import android.Manifest.permission.ACCESS_WIFI_STATE
 import androidx.core.content.ContextCompat
+import java.util.UUID
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -43,7 +44,7 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var password: EditText
     private lateinit var genderSpinner: AppCompatSpinner
     private lateinit var registerButton: Button
-    private lateinit var goBack : Button
+    private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +54,7 @@ class RegistrationActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         email = findViewById(R.id.email)
         username = findViewById(R.id.username)
-        password= findViewById(R.id.password)
+        password = findViewById(R.id.password)
         genderSpinner = findViewById(R.id.gender_spinner)
         registerButton = findViewById(R.id.register)
         goBack = findViewById(R.id.go_back)
@@ -68,7 +69,7 @@ class RegistrationActivity : AppCompatActivity() {
             SafetyNetAppCheckProviderFactory.getInstance()
         )
 
-        registerButton.setOnClickListener{
+        registerButton.setOnClickListener {
             val email = email.text.toString()
             val username = username.text.toString()
             val password = password.text.toString()
@@ -85,13 +86,13 @@ class RegistrationActivity : AppCompatActivity() {
             }
 
         }
-        goBack.setOnClickListener{
+        goBack.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
 
     }
 
-    private suspend fun registerUser(email: String, username: String, password: String, gender: String){
+    private suspend fun registerUser(email: String, username: String, password: String, gender: String) {
         try {
             withContext(Dispatchers.IO) {
                 auth.createUserWithEmailAndPassword(email, password).await()
@@ -127,15 +128,17 @@ class RegistrationActivity : AppCompatActivity() {
         try {
             withContext(Dispatchers.IO) {
                 val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-                val user = User(email, username, gender, mac)
+                val uniqueId = UUID.randomUUID().toString()
+                val user = User(uniqueId, email, username, gender, mac)
 
                 database.child("users").child(uid).setValue(user).await()
             }
             return true
         } catch (e: Exception) {
             Log.e("RegistrationActivity", "Error saving user data", e)
-            Toast.makeText(this@RegistrationActivity, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT)
-                .show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
+            }
             return false
         }
     }
@@ -179,9 +182,6 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-
-
-
     private fun requestWifiPermission() {
         // Implement logic to request permission from the user
         println("ciaoooo")
@@ -193,18 +193,15 @@ class RegistrationActivity : AppCompatActivity() {
         if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             getMacAddress(this)
         } else {
-           println("No access")
+            println("No access")
         }
     }
 
     private fun getMacAddress(context: Context): String {
-       val wifiManager = context.getSystemService(WIFI_SERVICE) as WifiManager
+        val wifiManager = context.getSystemService(WIFI_SERVICE) as WifiManager
         val mac = wifiManager.connectionInfo.macAddress
         return mac
     }
 
-
-
-    data class User(val email: String?, val username: String?,val gender: String?, val macAddress: String?)
-
+    data class User(val id: String, val email: String?, val username: String?, val gender: String?, val macAddress: String?)
 }

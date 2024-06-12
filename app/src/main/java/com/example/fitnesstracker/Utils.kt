@@ -1,13 +1,16 @@
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
+import com.example.fitnesstracker.HomeActivity
 import com.example.fitnesstracker.R
 import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
@@ -79,9 +82,10 @@ object Utils {
             val userEmail = user?.get("email") as? String
             val userMac = user?.get("macAddress") as? String
             val userGender = user?.get("gender") as? String
-
+            val userId = user?.get("id") as String
 
             RegistrationActivity.User(
+                userId,
                 userEmail,
                 userUsername,
                 userGender,
@@ -92,6 +96,7 @@ object Utils {
             null
         }
     }
+
 
 
 
