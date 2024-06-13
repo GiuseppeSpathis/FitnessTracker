@@ -27,6 +27,7 @@ import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.core.content.res.ResourcesCompat
+import com.example.fitnesstracker.SocialController
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException
@@ -34,13 +35,14 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 
-class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
-    private var you_are_connected = false
-    private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    private lateinit var socket: BluetoothSocket
-    private lateinit var outputStream: OutputStream
-    private lateinit var inputStream: InputStream
+
+
+class MyAdapter(private var personList: List<Person>, private var socialController: SocialController) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+    class Ref<T>(var value: T)
+
+    private var you_are_connected = Ref(false)
+
 
     inner class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var iconPerson: ImageView = view.findViewById(R.id.iconPerson)
@@ -59,6 +61,15 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        if(socialController.alreadyConnected(personList[position].device)){
+            holder.connect.visibility = View.GONE
+            holder.message.visibility = View.VISIBLE
+            holder.share.visibility = View.VISIBLE
+            holder.disconnect.visibility = View.VISIBLE
+            you_are_connected.value = true
+
+        }
+
         val person = personList[position]
         holder.name.text = person.name
         checkGender(person.gender, holder.iconPerson, holder.itemView.context)
@@ -75,7 +86,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
             Toast.makeText(it.context, "vuoi condividere", Toast.LENGTH_SHORT).show() //da modificare in futuro
         }
         holder.connect.setOnClickListener{
-            if(you_are_connected){
+            if(you_are_connected.value){
                 MotionToast.createColorToast(
                     it.context as Activity,
                     it.context.resources.getString(R.string.connect_failed),
@@ -88,11 +99,11 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
 
             }
             else {
-                connect2device(person.device, it.context as Activity, holder, person)
+                socialController.connect2device(person.device, it.context as Activity, holder, person, you_are_connected)
             }
         }
         holder.disconnect.setOnClickListener {
-            disconnectDevice(it.context as Activity, holder)
+            socialController.disconnectDevice(it.context as Activity, holder, you_are_connected, personList[position].device)
         }
     }
 
@@ -139,7 +150,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString() //in futuro questo toastMessage devi inviare un toast a quell'utente
-                sendMessage(toastMessage, context as Activity)
+                socialController.sendMessage(toastMessage, context as Activity)
 
 
                 dialog.dismiss()
@@ -167,125 +178,7 @@ class MyAdapter(private var personList: List<Person>) : RecyclerView.Adapter<MyA
     }
 
 
-    private fun disconnectDevice(activity: Activity, holder: MyViewHolder){
-        Thread {
-            try {
-                socket.close()
-                outputStream.close()
-                inputStream.close()
 
-                activity.runOnUiThread {
-
-                    MotionToast.createColorToast(
-                        activity,
-                        activity.resources.getString(R.string.successo),
-                        activity.resources.getString(R.string.disconnected),
-                        MotionToastStyle.SUCCESS,
-                        MotionToast.GRAVITY_BOTTOM,
-                        MotionToast.LONG_DURATION,
-                        ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
-
-                    holder.connect.visibility = View.VISIBLE
-                    holder.message.visibility = View.GONE
-                    holder.share.visibility = View.GONE
-                    holder.disconnect.visibility = View.GONE
-
-                    you_are_connected = false
-
-                }
-            }
-            catch (e: IOException) {
-
-                activity.runOnUiThread {
-                    socketError(e, activity)
-                }
-
-            }
-        }.start()
-    }
-
-    @SuppressLint("MissingPermission")
-    fun connect2device(device: BluetoothDevice?, activity: Activity, holder: MyViewHolder, person: Person){
-        Thread {
-            try {
-                if (device != null) {
-                    socket = device.createRfcommSocketToServiceRecord(uuid)
-
-                    socket.connect()
-
-                    activity.runOnUiThread {
-
-                        MotionToast.createColorToast(
-                            activity,
-                            activity.resources.getString(R.string.successo),
-                            activity.resources.getString(R.string.connected),
-                            MotionToastStyle.SUCCESS,
-                            MotionToast.GRAVITY_BOTTOM,
-                            MotionToast.LONG_DURATION,
-                            ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
-
-                        holder.connect.visibility = View.GONE
-                        holder.message.visibility = View.VISIBLE
-                        holder.share.visibility = View.VISIBLE
-                        holder.disconnect.visibility = View.VISIBLE
-
-                        you_are_connected = true
-
-                        outputStream = socket.outputStream
-
-                        receiveFromSocket(activity, person.name, person.gender)
-
-                    }
-                }
-
-            }
-            catch (e: IOException){
-                activity.runOnUiThread {
-                    socketError(e, activity)
-                }
-
-
-            }
-
-        }.start()
-
-    }
-
-    private fun sendMessage(message: String, activity: Activity) {
-        Thread {
-            try {
-                outputStream.write(message.toByteArray())
-            } catch (e: IOException) {
-                socketError(e, activity)
-            }
-        }.start()
-
-    }
-
-    private fun receiveFromSocket(activity: Activity, username: String, gender: String) {
-        Thread {
-            try {
-                inputStream = socket.inputStream
-                val buffer = ByteArray(1024)  // buffer store for the stream
-                var bytes: Int // bytes returned from read()
-
-                // Keep listening to the InputStream until an exception occurs
-                while (true) {
-                    // Read from the InputStream
-                    bytes = inputStream.read(buffer)
-                    val incomingMessage = String(buffer, 0, bytes)
-                    receiveMessage(activity, username, incomingMessage, gender)
-                }
-            } catch (e: IOException) {
-                println(e.message)
-                if(e.message != "bt socket closed, read return: -1")
-                    socketError(e, activity)
-            }
-
-
-        }.start()
-
-    }
 
 
 
