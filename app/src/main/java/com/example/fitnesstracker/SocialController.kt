@@ -55,18 +55,16 @@ class SocialController (private val SocialInterface: SocialInterface) {
     }
 
 
-    private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    private val uuid =  UUID.fromString("79c16f25-a50b-450e-9d10-fc267964b3aa")//UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private lateinit var socket: BluetoothSocket
     private lateinit var outputStream: OutputStream
     private lateinit var inputStream: InputStream
-    private var serverSocket: BluetoothServerSocket? = null
+    private lateinit var serverSocket: BluetoothServerSocket
 
 
     @SuppressLint("MissingPermission")
     private fun startDiscovery(){
-        println("incomincio la discovery")
         SocialInterface.startAnimation()
-        println("durante l'animazione")
         bluetoothAdapter?.startDiscovery()
     }
 
@@ -84,6 +82,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
                     else {
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                     }
+
                     if(device?.name != null){
                         CoroutineScope(Dispatchers.IO).launch {
                             val found = socialModel.updateList(device)
@@ -193,8 +192,14 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
     @SuppressLint("MissingPermission")
     fun beDiscoverable(){
+        if (bluetoothAdapter?.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 800)
+            SocialInterface.getActivity().startActivity(discoverableIntent)
+        }
         bluetoothAdapter?.setName("pippo");
         startServer()
+        //receiveFromSocket(SocialInterface.getActivity())
     }
 
     fun startBluetooth (){
@@ -226,8 +231,8 @@ class SocialController (private val SocialInterface: SocialInterface) {
     fun startServer() {
         val thread = Thread {
             try {
-                serverSocket = bluetoothAdapter?.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
-                val tmpSocket = serverSocket?.accept()
+                serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
+                val tmpSocket = serverSocket.accept()
                 if(tmpSocket!= null){
                     socket = tmpSocket
                     receiveFromSocket(SocialInterface.getActivity())
@@ -349,7 +354,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
                     outputStream = socket.outputStream
                     inputStream = socket.inputStream
-                    receiveFromSocket(activity) //questo in realta' si puo' togliere tanto l'altra persona non ti puo' inviare messaggi
+                    //receiveFromSocket(activity) //questo in realta' si puo' togliere tanto l'altra persona non ti puo' inviare messaggi
                 }
             } catch (e: IOException) {
                 activity.runOnUiThread {
@@ -363,14 +368,16 @@ class SocialController (private val SocialInterface: SocialInterface) {
         Thread {
             try {
                 outputStream.write(message.toByteArray())
+                outputStream.flush()
             } catch (e: IOException) {
-                socketError(e, activity)
+                e.printStackTrace()
+
             }
         }.start()
 
     }
 
-     private fun receiveFromSocket(activity: Activity) {
+    private fun receiveFromSocket(activity: Activity) {
         Thread {
             try {
                 inputStream = socket.inputStream
@@ -382,17 +389,18 @@ class SocialController (private val SocialInterface: SocialInterface) {
                     // Read from the InputStream
                     bytes = inputStream.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
-                    receiveMessage(activity, "pippo", incomingMessage, "Maschio") //da modificare username e gender
+
+                    activity.runOnUiThread {
+                        receiveMessage(activity, "pippo", incomingMessage, "Maschio") //da modificare username e gender
+                    }
                 }
             } catch (e: IOException) {
-                if(e.message != "bt socket closed, read return: -1")
+                if (e.message != "bt socket closed, read return: -1")
                     socketError(e, activity)
             }
-
-
         }.start()
-
     }
+
 
     @SuppressLint("MissingPermission")
     fun alreadyConnected(device: BluetoothDevice?): Boolean {
@@ -407,9 +415,8 @@ class SocialController (private val SocialInterface: SocialInterface) {
     }
 
     fun closeConnections() {
-        println("chiudo la connessione")
         try {
-            serverSocket?.close()
+            serverSocket.close()
             socket.close()
             inputStream.close()
             outputStream.close()

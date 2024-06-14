@@ -63,7 +63,6 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
     override fun listUpdated(personList: List<Person>) {
-        println("sono in list update")
         nDevices.text = socialController.getfoundDevices(personList)
         myAdapter.updateList(personList)
 
@@ -210,10 +209,7 @@ class Social : AppCompatActivity(), SocialInterface {
         socialController.closeConnections()
     }
 
-    override fun onPause() {
-        super.onPause()
-        socialController.closeConnections()
-    }
+
 
 
 }
