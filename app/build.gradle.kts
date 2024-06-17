@@ -106,6 +106,7 @@ dependencies {
     implementation("org.osmdroid:osmdroid-android:6.1.10")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("androidx.preference:preference:1.2.1")
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 
 }

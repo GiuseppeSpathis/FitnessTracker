@@ -6,4 +6,10 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
     </style>
+
+    <style name="WhiteButton" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">@color/white</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
 </resources>

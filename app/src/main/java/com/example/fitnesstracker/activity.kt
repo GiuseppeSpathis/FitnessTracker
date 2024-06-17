@@ -1,13 +1,14 @@
 package com.example.fitnesstracker
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDateTime
 
 @Entity(tableName = "attività")
 data class Attività(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: String,
-    val startTime: Long,
-    val endTime: Long,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime,
     val date: String,
     val activityType: String,
     val stepCount: Int?,

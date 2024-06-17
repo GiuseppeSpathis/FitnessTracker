@@ -33,8 +33,10 @@ import kotlinx.coroutines.withContext
 import java.net.InetAddress
 import java.net.NetworkInterface
 import android.Manifest.permission.ACCESS_WIFI_STATE
+import android.widget.Spinner
 import androidx.core.content.ContextCompat
 import java.util.UUID
+
 
 class RegistrationActivity : AppCompatActivity() {
 
@@ -42,7 +44,7 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var email: EditText
     private lateinit var username: EditText
     private lateinit var password: EditText
-    private lateinit var genderSpinner: AppCompatSpinner
+    private lateinit var genderSpinner: Spinner
     private lateinit var registerButton: Button
     private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
@@ -58,6 +60,7 @@ class RegistrationActivity : AppCompatActivity() {
         genderSpinner = findViewById(R.id.gender_spinner)
         registerButton = findViewById(R.id.register)
         goBack = findViewById(R.id.go_back)
+
         // Set up gender spinner
         val genderArray = resources.getStringArray(R.array.gender_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderArray)
@@ -84,12 +87,11 @@ class RegistrationActivity : AppCompatActivity() {
                     }
                 }
             }
-
         }
+
         goBack.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
-
     }
 
     private suspend fun registerUser(email: String, username: String, password: String, gender: String) {
@@ -97,11 +99,12 @@ class RegistrationActivity : AppCompatActivity() {
             withContext(Dispatchers.IO) {
                 auth.createUserWithEmailAndPassword(email, password).await()
                 val uid = auth.currentUser!!.uid
-                if (ContextCompat.checkSelfPermission(this@RegistrationActivity, ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(this@RegistrationActivity, android.Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this@RegistrationActivity, android.Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
                     requestWifiPermission()
                     return@withContext
                 }
-                val mac = getMacAddress(this@RegistrationActivity)
+                val mac = getMacAddress()
                 Log.d("RegistrationActivity", "Retrieved macAddress: $mac") // Print macAddress for debugging
                 saveUserData(uid, email, username, gender, mac)
 
@@ -144,7 +147,7 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private suspend fun validateInput(email: String, username: String, password: String): Boolean {
-        val emailPattern = Patterns.EMAIL_ADDRESS
+        val emailPattern = android.util.Patterns.EMAIL_ADDRESS
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
 
         if (!emailPattern.matcher(email).matches()) {
@@ -183,25 +186,23 @@ class RegistrationActivity : AppCompatActivity() {
     }
 
     private fun requestWifiPermission() {
-        // Implement logic to request permission from the user
-        println("ciaoooo")
-        ActivityCompat.requestPermissions(this, arrayOf(ACCESS_WIFI_STATE), REQUEST_WIFI_PERMISSION_CODE)
+        ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.ACCESS_NETWORK_STATE), REQUEST_WIFI_PERMISSION_CODE)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getMacAddress(this)
+            getMacAddress()
         } else {
             println("No access")
         }
     }
 
-    private fun getMacAddress(context: Context): String {
-        val wifiManager = context.getSystemService(WIFI_SERVICE) as WifiManager
-        val mac = wifiManager.connectionInfo.macAddress
-        return mac
+    private fun getMacAddress(): String {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        return wifiManager.connectionInfo.macAddress ?: "02:00:00:00:00:00"
     }
 
     data class User(val id: String, val email: String?, val username: String?, val gender: String?, val macAddress: String?)
 }
+

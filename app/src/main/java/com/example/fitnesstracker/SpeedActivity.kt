@@ -17,6 +17,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -28,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.*
 
 class SpeedActivity : AppCompatActivity(), SensorEventListener {
@@ -165,15 +168,19 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // Handle accuracy changes if needed
     }
+    @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
-        val endTime = System.currentTimeMillis()
+        val endTimeMillis = System.currentTimeMillis()
+        val endTime = Instant.ofEpochMilli(endTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        val startTime = Instant.ofEpochMilli(this.startTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
+
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val date = dateFormat.format(Date(endTime))
+        val date = dateFormat.format(Date(endTimeMillis))
         val userId = LoggedUser.id
 
         val attività = Attività(
             userId = userId,
-            startTime = startTime,
+            startTime = startTime,  // Assicurati che startTime sia già stato inizializzato in precedenza
             endTime = endTime,
             stepCount = null,
             distance = null,
@@ -194,6 +201,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
             .setTitle("Successo")

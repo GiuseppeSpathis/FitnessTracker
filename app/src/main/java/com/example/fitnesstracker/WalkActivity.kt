@@ -17,7 +17,9 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Date
 
 
@@ -156,10 +160,14 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             .show()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
-        val endTime = System.currentTimeMillis()
+        val endTimeMillis = System.currentTimeMillis()
+        val endTime = Instant.ofEpochMilli(endTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        val startTime = Instant.ofEpochMilli(this.startTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
+
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val date = dateFormat.format(Date(endTime))
+        val date = dateFormat.format(Date(endTimeMillis))
         val userId = LoggedUser.id
 
         val distanceInKm = stepCount * stepLenghtInMeters / 1000
@@ -187,6 +195,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
