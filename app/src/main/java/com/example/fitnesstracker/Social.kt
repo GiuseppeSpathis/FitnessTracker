@@ -17,8 +17,12 @@ import pl.droidsonroids.gif.GifDrawable
 import pl.droidsonroids.gif.GifImageView
 import android.os.Handler
 import android.os.Looper
+import android.widget.Button
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationBarView
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
 
 
 interface SocialInterface {
@@ -61,6 +65,7 @@ class Social : AppCompatActivity(), SocialInterface {
     override fun listUpdated(personList: List<Person>) {
         nDevices.text = socialController.getfoundDevices(personList)
         myAdapter.updateList(personList)
+
 
         if(this::noPeople.isInitialized && search.visibility != View.VISIBLE && socialController.getPersonlist().isNotEmpty()) {
             noPeople.visibility = View.GONE
@@ -133,11 +138,52 @@ class Social : AppCompatActivity(), SocialInterface {
     }
 
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.bluetooth)
 
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+
+        bottomNavigationView.selectedItemId = R.id.nav_users
+
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> {
+                    val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_home -> {
+                    val intent = Intent(this, HomeActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                else -> false
+            }
+        }
+
+
+        socialController = SocialController(this)
+        socialController.setupBluetooth()
+
+        val buttonDiscoverable: Button = findViewById(R.id.discover)
+        buttonDiscoverable.setOnClickListener{
+            MotionToast.createColorToast(
+                this,
+                this.resources.getString(R.string.successo),
+                "sei discoverabile da altri dispositivi",
+                MotionToastStyle.SUCCESS,
+                MotionToast.GRAVITY_BOTTOM,
+                MotionToast.LONG_DURATION,
+                ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular))
+
+            socialController.beDiscoverable()
+        }
 
         val gifImageView: GifImageView = findViewById(R.id.bluetoothGif)
         gifDrawable = gifImageView.drawable as GifDrawable
@@ -151,18 +197,18 @@ class Social : AppCompatActivity(), SocialInterface {
         }
 
 
-        socialController = SocialController(this)
-
-
-        myAdapter = MyAdapter(socialController.getPersonlist())
-
-
-
-
-
+        myAdapter = MyAdapter(socialController.getPersonlist(), socialController )
 
 
     }
+
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socialController.closeConnections()
+    }
+
 
 
 
