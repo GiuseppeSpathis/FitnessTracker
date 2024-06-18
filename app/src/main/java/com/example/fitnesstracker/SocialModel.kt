@@ -1,14 +1,11 @@
 package com.example.fitnesstracker
 
-import Utils.findUserByMacAddress
+
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import android.content.Context
 
 class SocialModel {
-
-
-
-
-
 
     private var personList: MutableList<Person> = mutableListOf(
 
@@ -18,20 +15,17 @@ class SocialModel {
         return personList.toList()
     }
 
-    suspend fun updateList(device: BluetoothDevice): Boolean{ //da chiamare dal broadcast receiver
-        /*
-        val user = device?.address?.let { findUserByMacAddress(it) }
+    @SuppressLint("MissingPermission")
+    suspend fun updateList(device: BluetoothDevice, context: Context): Boolean{ //da chiamare dal broadcast receiver
+        val deviceName = device!!.name
+        println("device name: $deviceName")
+        val user = Utils.getUser(device!!.name, context)
+        println("user retrivied: $user")
         if (user != null) {
-            if(user.username != null && user.gender != null && user.macAddress !=null) {
-                personList.add(Person(user.username, user.gender, device))
-                return true
-            }
+            personList.add(Person(user.name, user.gender, device))
+            return true
         }
         return false
-        */
-        personList.add(Person(device.name, "Maschio", device))
-        return true
-
     }
 
     fun filterList(filter: String):  List<Person>{

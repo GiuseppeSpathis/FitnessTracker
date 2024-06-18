@@ -1,5 +1,6 @@
 package com.example.fitnesstracker
 
+import Utils
 import Utils.hasPermission
 import Utils.receiveMessage
 import Utils.socketError
@@ -42,6 +43,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
     companion object {
         private const val REQUEST_BLUETOOTH_CONNECT  = 1
         private const val REQUEST_BLUETOOTH_SCAN  = 2
+        private const val REQUEST_BLUETOOTH_ADMIN = 3
 
     }
 
@@ -56,10 +58,11 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
 
     private val uuid =  UUID.fromString("79c16f25-a50b-450e-9d10-fc267964b3aa")//UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    private lateinit var socket: BluetoothSocket
-    private lateinit var outputStream: OutputStream
-    private lateinit var inputStream: InputStream
-    private lateinit var serverSocket: BluetoothServerSocket
+    private var socket: BluetoothSocket? = null
+    private var outputStream: OutputStream? = null
+    private var inputStream: InputStream? = null
+    private var serverSocket: BluetoothServerSocket? = null
+
 
 
     @SuppressLint("MissingPermission")
@@ -85,7 +88,8 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
                     if(device?.name != null){
                         CoroutineScope(Dispatchers.IO).launch {
-                            val found = socialModel.updateList(device)
+                            val found = socialModel.updateList(device, SocialInterface.getActivity())
+                            println(found)
                             if(found){
                                 withContext(Dispatchers.Main) {
                                     SocialInterface.listUpdated(getPersonlist())
@@ -149,7 +153,10 @@ class SocialController (private val SocialInterface: SocialInterface) {
                 if (grantResults.isNotEmpty()) { // Check if there are any results at all
                     val permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
                     if (permissionGranted) {
-                        // Permission is granted, proceed with enabling Bluetooth
+                        if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity()))
+                        {
+                            ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+                        }
                         enableBluetooth()
                     } else {
                         // Permission denied, handle the case where the user denies permission
@@ -158,19 +165,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
                 }
                 return
             }
-            REQUEST_BLUETOOTH_SCAN -> {
-                if (grantResults.isNotEmpty()) { // Check if there are any results at all
-                    val permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
-                    if (permissionGranted) {
-                        // Permission is granted, start Bluetooth discovery
-                        startDiscovery()
-                    } else {
-                        // Permission denied, handle the case where the user denies permission
-                        Toast.makeText(SocialInterface.getActivity(), "Permesso BLUETOOTH_SCAN negato", Toast.LENGTH_LONG).show()
-                    }
-                }
-                return
-            }
+
         }
     }
 
@@ -181,8 +176,17 @@ class SocialController (private val SocialInterface: SocialInterface) {
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
+
             }
+
         }
+        if(!hasPermission(Manifest.permission.BLUETOOTH_ADMIN, SocialInterface.getActivity()))
+        {
+                ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_ADMIN), REQUEST_BLUETOOTH_ADMIN)
+
+        }
+        /**/
+
 
         if (bluetoothAdapter?.isEnabled == false && hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity())) {
             enableBluetooth()
@@ -192,12 +196,12 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
     @SuppressLint("MissingPermission")
     fun beDiscoverable(){
-        if (bluetoothAdapter?.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+       if (bluetoothAdapter?.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
             val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
-            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 800)
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 1000000)
             SocialInterface.getActivity().startActivity(discoverableIntent)
         }
-        bluetoothAdapter?.setName("pippo");
+        bluetoothAdapter?.setName(LoggedUser.username);
         startServer()
         //receiveFromSocket(SocialInterface.getActivity())
     }
@@ -206,23 +210,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
         // Registra il BroadcastReceiver per ricevere i dispositivi trovati
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         SocialInterface.getActivity().registerReceiver(receiver, filter)
-        // Controlla se il Bluetooth è abilitato, altrimenti richiedi all'utente di abilitarlo
-        if (bluetoothAdapter?.isEnabled == false) {
-            requestBluetoothConnectAndScanPermission()
-        } else {
-
-            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity())){
-                startDiscovery()
-            }
-            else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
-                }
-                else {
-                    startDiscovery()
-                }
-            }
-        }
+        startDiscovery()
     }
 
 
@@ -232,13 +220,21 @@ class SocialController (private val SocialInterface: SocialInterface) {
         val thread = Thread {
             try {
                 serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
-                val tmpSocket = serverSocket.accept()
+                println("creato server socket, in attesa")
+                val tmpSocket = serverSocket?.accept()
+                println("connessione trovata")
                 if(tmpSocket!= null){
                     socket = tmpSocket
-                    receiveFromSocket(SocialInterface.getActivity())
+                    val remoteDeviceName = socket?.remoteDevice!!.name
+
+                    receiveFromSocket(SocialInterface.getActivity(), remoteDeviceName)
+                } else {
+                    println("tmpsocket è null")
                 }
+
             } catch (e: IOException) {
                 e.printStackTrace()
+
             }
         }
         thread.start()
@@ -249,9 +245,9 @@ class SocialController (private val SocialInterface: SocialInterface) {
             try {
 
                 try {
-                    socket.close()
-                    outputStream.close()
-                    inputStream.close()
+                    closeConnections()
+                    println("connessione persa disconnect")
+
                 } catch (e: UninitializedPropertyAccessException) {
                     //non fare niente se le variaibli non sono state inizializzate
                 }
@@ -333,7 +329,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
         Thread {
             try {
                 socket = device.createRfcommSocketToServiceRecord(uuid)
-                socket.connect()
+                socket?.connect()
 
                 activity.runOnUiThread {
                     MotionToast.createColorToast(
@@ -352,8 +348,8 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
                     you_are_connected.value = true
 
-                    outputStream = socket.outputStream
-                    inputStream = socket.inputStream
+                    outputStream = socket?.outputStream
+                    inputStream = socket?.inputStream
                     //receiveFromSocket(activity) //questo in realta' si puo' togliere tanto l'altra persona non ti puo' inviare messaggi
                 }
             } catch (e: IOException) {
@@ -367,8 +363,8 @@ class SocialController (private val SocialInterface: SocialInterface) {
     fun sendMessage(message: String, activity: Activity) {
         Thread {
             try {
-                outputStream.write(message.toByteArray())
-                outputStream.flush()
+                outputStream?.write(message.toByteArray())
+                outputStream?.flush()
             } catch (e: IOException) {
                 e.printStackTrace()
 
@@ -377,29 +373,36 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
     }
 
-    private fun receiveFromSocket(activity: Activity) {
+    private fun receiveFromSocket(activity: Activity, username: String) {
         Thread {
             try {
-                inputStream = socket.inputStream
+                inputStream = socket?.inputStream
                 val buffer = ByteArray(1024)  // buffer store for the stream
                 var bytes: Int // bytes returned from read()
-
+                println("provando a ricevere")
                 // Keep listening to the InputStream until an exception occurs
                 while (true) {
                     // Read from the InputStream
-                    bytes = inputStream.read(buffer)
+                    bytes = inputStream!!.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
+                    Log.d("mESSAGESdEBUG", "Message: $incomingMessage")
 
-                    activity.runOnUiThread {
-                        receiveMessage(activity, "pippo", incomingMessage, "Maschio") //da modificare username e gender
+                    // Use coroutine scope to call suspend function
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val user = Utils.getUser(username, SocialInterface.getActivity())
+                        withContext(Dispatchers.Main) {
+                            receiveMessage(activity, user?.name ?: " ", incomingMessage, user?.gender ?: "Maschio")
+                        }
                     }
                 }
             } catch (e: IOException) {
                 if (e.message != "bt socket closed, read return: -1")
                     socketError(e, activity)
+                println("connessione chiusa per eccezione")
             }
         }.start()
     }
+
 
 
     @SuppressLint("MissingPermission")
@@ -416,14 +419,17 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
     fun closeConnections() {
         try {
-            serverSocket.close()
-            socket.close()
-            inputStream.close()
-            outputStream.close()
-        } catch (e: UninitializedPropertyAccessException) {
-           //non fare niente se le variaibli non sono state inizializzate
+            serverSocket?.close()
+            socket?.close()
+            inputStream?.close()
+            outputStream?.close()
+            println("connessione chiusa")
+        } catch (e: IOException) {
+            println("Errore durante la chiusura delle connessioni: ${e.message}")
         }
     }
+
+
 
     fun getPersonlist(): List<Person>{
         return socialModel.getPersonsList()

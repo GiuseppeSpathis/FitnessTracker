@@ -47,7 +47,6 @@ class HomeActivity : AppCompatActivity(), MapListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // Carica le configurazioni di OSMDroid
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
 
         val imageProfile = findViewById<ImageView>(R.id.image_profile)

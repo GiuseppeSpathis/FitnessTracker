@@ -17,3 +17,19 @@ data class Attività(
     val avgSpeed: Double?,
     val maxSpeed: Double?,
 )
+
+@Entity(tableName = "othersActivity")
+data class OthersActivity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val userId: String,
+    val username: String,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime,
+    val date: String,
+    val activityType: String,
+    val stepCount: Int?,
+    val distance: Float?,
+    val pace: Float?,
+    val avgSpeed: Double?,
+    val maxSpeed: Double?,
+)

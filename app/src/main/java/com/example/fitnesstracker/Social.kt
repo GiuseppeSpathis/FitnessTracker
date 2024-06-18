@@ -118,12 +118,14 @@ class Social : AppCompatActivity(), SocialInterface {
             bottomNavigationView.setOnItemSelectedListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.nav_stats -> {
+                        socialController.closeConnections()
                         val intent = Intent(this, StatsActivity::class.java)
                         val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                         startActivity(intent, options.toBundle())
                         true
                     }
                     R.id.nav_home -> {
+                        socialController.closeConnections()
                         val intent = Intent(this, HomeActivity::class.java)
                         val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                         startActivity(intent, options.toBundle())
@@ -152,12 +154,14 @@ class Social : AppCompatActivity(), SocialInterface {
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_stats -> {
+                    socialController.closeConnections()
                     val intent = Intent(this, StatsActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                     startActivity(intent, options.toBundle())
                     true
                 }
                 R.id.nav_home -> {
+                    socialController.closeConnections()
                     val intent = Intent(this, HomeActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                     startActivity(intent, options.toBundle())

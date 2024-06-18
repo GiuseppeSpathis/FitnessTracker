@@ -22,6 +22,11 @@ interface ActivityDao {
     @Query("SELECT * FROM Attività WHERE date BETWEEN :startDate AND :endDate")
     fun getAttivitàByDateRange(startDate: String, endDate: String): List<Attività>
 
+    @Query("SELECT * FROM Attività")
+    fun getAllActivitites()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOthersActivity(attività: OthersActivity)
 }
 
 

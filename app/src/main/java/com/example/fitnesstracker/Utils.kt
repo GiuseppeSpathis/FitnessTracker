@@ -1,3 +1,4 @@
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -16,7 +17,11 @@ import com.example.fitnesstracker.R
 import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
+import com.example.fitnesstracker.LoggedUser
+import com.example.fitnesstracker.Person
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.getValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import www.sanju.motiontoast.MotionToast
@@ -72,6 +77,7 @@ object Utils {
     }
     fun socketError(e: IOException, activity: Activity){
         activity.runOnUiThread {
+            println("sono in socket error")
             e.message?.let {
                 MotionToast.createColorToast(
                     activity,
@@ -90,31 +96,42 @@ object Utils {
     }
 
 
-     suspend fun findUserByMacAddress(macAddress: String): RegistrationActivity.User? {
+    suspend fun getUser(username: String, context: Context): Person? {
         val database = FirebaseDatabase.getInstance("https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app").reference
-        return try {
-            val query = database.child("users").orderByChild("macAddress").equalTo(macAddress).get().await()
-            val userMap = query.value as? Map<String, Any>
-            val user = userMap?.values?.firstOrNull() as? Map<String, Any>
-            // Assuming your User class has appropriate properties (e.g., id, name, email)
-            val userUsername = user?.get("username") as? String
-            val userEmail = user?.get("email") as? String
-            val userMac = user?.get("macAddress") as? String
-            val userGender = user?.get("gender") as? String
-            val userId = user?.get("id") as String
+        return withContext(Dispatchers.IO) {
+            try {
+                val snapshot = database.child("users").orderByChild("username").equalTo(username).get().await()
+                println("Snapshot: ${snapshot.value}")
 
-            RegistrationActivity.User(
-                userId,
-                userEmail,
-                userUsername,
-                userGender,
-                userMac
-            )
-        } catch (e: Exception) {
-            Log.e("RegistrationActivity", "Errore durante la ricerca dell'utente tramite macAddress", e)
-            null
+                if (snapshot.exists()) {
+                    val userSnapshot = snapshot.children.firstOrNull()
+                    if (userSnapshot != null) {
+                        val email = userSnapshot.child("email").getValue<String>()
+                        val gender = userSnapshot.child("gender").getValue<String>()
+                        val id = userSnapshot.child("id").getValue<String>()
+                        val macAddress = userSnapshot.child("macAddress").getValue<String>()
+                        val name = userSnapshot.child("username").getValue<String>()  // Qui mappiamo username a name
+
+                        if (name != null && gender != null) {
+                            return@withContext Person(name, gender, null)
+                        }
+                    }
+                    null
+                } else {
+                    println("User not found")
+                    null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Error fetching user: ${e.message}")
+                null
+            }
         }
     }
+
+
+
+
 
 
 

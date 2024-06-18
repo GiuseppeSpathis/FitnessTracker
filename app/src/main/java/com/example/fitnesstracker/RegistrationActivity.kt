@@ -166,7 +166,12 @@ class RegistrationActivity : AppCompatActivity() {
             return false
         }
 
-        return true // Validation successful
+        if(usernameExists(username)){
+            Toast.makeText(this, "Username già utilizzato", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true
     }
 
     // Helper function to check email existence (suspending)
@@ -180,6 +185,21 @@ class RegistrationActivity : AppCompatActivity() {
                 result.exists()
             } catch (e: Exception) {
                 Log.e("RegistrationActivity", "Error checking email existence", e)
+                false // Handle error appropriately
+            }
+        }
+    }
+
+    private suspend fun usernameExists(username: String): Boolean {
+        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
+
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val result = database.child("users").orderByChild("username").equalTo(username).get().await()
+                result.exists()
+            } catch (e: Exception) {
+                Log.e("RegistrationActivity", "Error checking username existence", e)
                 false // Handle error appropriately
             }
         }
