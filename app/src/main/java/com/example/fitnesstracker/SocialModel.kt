@@ -12,14 +12,14 @@ class SocialModel {
     )
 
     fun getPersonsList(): List<Person>{
-        return personList.toList()
+        return personList.distinctBy { it.name }
     }
 
     @SuppressLint("MissingPermission")
     suspend fun updateList(device: BluetoothDevice, context: Context): Boolean{ //da chiamare dal broadcast receiver
-        val deviceName = device!!.name
+        val deviceName = device.name
         println("device name: $deviceName")
-        val user = Utils.getUser(device!!.name, context)
+        val user = Utils.getUser(device.name, context)
         println("user retrivied: $user")
         if (user != null) {
             personList.add(Person(user.name, user.gender, device))

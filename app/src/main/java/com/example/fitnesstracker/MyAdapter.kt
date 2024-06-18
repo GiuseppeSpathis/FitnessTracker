@@ -26,6 +26,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.SocialController
 import www.sanju.motiontoast.MotionToast
@@ -138,18 +139,20 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
 
         builder.setPositiveButton("Invia", dummyListener)
 
-        builder.setNegativeButton("Annulla") { dialog, _ ->
-            dialog.cancel()
-        }
+
 
         val dialog = builder.create()
         dialog.setOnShowListener {
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+
+            positiveButton.setTextColor(ContextCompat.getColor(context, R.color.gray))
+
             positiveButton.isEnabled = false // all'inizio il pulsante e' disabilitato
 
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
-                val toastMessage = input.text.toString() //in futuro questo toastMessage devi inviare un toast a quell'utente
+                val toastMessage = input.text.toString()
                 socialController.sendMessage(toastMessage, context as Activity)
 
 
@@ -165,7 +168,14 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
 
             input.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
-                    positiveButton.isEnabled = s.isNotEmpty() // il pulsante diventa abilitato se il testo non e' vuoto
+                    if(s.isNotEmpty()){
+                        positiveButton.isEnabled = true
+                        positiveButton.setTextColor(ContextCompat.getColor(context, R.color.black))
+                    }
+                    else {
+                        positiveButton.isEnabled = false
+                        positiveButton.setTextColor(ContextCompat.getColor(context, R.color.gray))
+                    }
                 }
 
                 override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}

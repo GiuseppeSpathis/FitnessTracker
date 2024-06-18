@@ -62,6 +62,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
     private var outputStream: OutputStream? = null
     private var inputStream: InputStream? = null
     private var serverSocket: BluetoothServerSocket? = null
+    private var pairedDevice: BluetoothDevice? = null
 
 
 
@@ -220,16 +221,14 @@ class SocialController (private val SocialInterface: SocialInterface) {
         val thread = Thread {
             try {
                 serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
-                println("creato server socket, in attesa")
                 val tmpSocket = serverSocket?.accept()
-                println("connessione trovata")
+
                 if(tmpSocket!= null){
+
                     socket = tmpSocket
                     val remoteDeviceName = socket?.remoteDevice!!.name
 
                     receiveFromSocket(SocialInterface.getActivity(), remoteDeviceName)
-                } else {
-                    println("tmpsocket è null")
                 }
 
             } catch (e: IOException) {
@@ -291,7 +290,7 @@ class SocialController (private val SocialInterface: SocialInterface) {
         if (device.bondState != BluetoothDevice.BOND_BONDED) {
             // Se non è accoppiato, inizia il processo di accoppiamento
             device.createBond()
-
+            pairedDevice = device
             // Registra un BroadcastReceiver per gestire l'evento di accoppiamento
             val bondReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -410,15 +409,25 @@ class SocialController (private val SocialInterface: SocialInterface) {
         return device?.bondState == BluetoothDevice.BOND_BONDED
     }
 
-    fun unBondBluetoothDevice(device: BluetoothDevice?) {
+    private fun unBondBluetoothDevice(device: BluetoothDevice?) {
         val pair = device?.javaClass?.getMethod("removeBond")
         if (pair != null) {
             pair.invoke(device)
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun closeConnections() {
         try {
+            if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity())
+            ) {
+                if(pairedDevice!= null) {
+                    if (pairedDevice!!.bondState == BluetoothDevice.BOND_BONDED) {
+                        unBondBluetoothDevice(pairedDevice)
+                        pairedDevice = null
+                    }
+                }
+            }
             serverSocket?.close()
             socket?.close()
             inputStream?.close()

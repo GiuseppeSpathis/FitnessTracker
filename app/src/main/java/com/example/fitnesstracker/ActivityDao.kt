@@ -23,10 +23,10 @@ interface ActivityDao {
     fun getAttivitàByDateRange(startDate: String, endDate: String): List<Attività>
 
     @Query("SELECT * FROM Attività")
-    fun getAllActivitites()
+    fun getAllActivitites() : List<Attività>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOthersActivity(attività: OthersActivity)
+    suspend fun insertOthersActivity(attivita: OthersActivity)
 }
 
 

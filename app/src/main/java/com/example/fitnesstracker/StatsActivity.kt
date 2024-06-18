@@ -89,6 +89,12 @@ class StatsActivity : AppCompatActivity() {
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.nav_stats -> {
+                    val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
                 R.id.nav_home -> {
                     val intent = Intent(this, HomeActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)

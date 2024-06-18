@@ -33,6 +33,7 @@
     <string name="still_connected">sei già accoppiato con un altro dispositivo</string>
     <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
     <string name="scan_devices">rileva dispositivi vicini a te</string>
+    <string name="beDiscoverable">diventa visibile agli altri</string>
     <string name="title_activity_stats">StatsActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

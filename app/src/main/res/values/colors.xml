@@ -9,6 +9,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="mainColor">#004aad</color>
     <color name="blue">#0000FF</color>
+    <color name="gray">#808080</color>
     <color name="red">#FF0000</color>
     <color name="passeggiata">#1EE3CF</color>
     <color name="corsa">#F66942</color>

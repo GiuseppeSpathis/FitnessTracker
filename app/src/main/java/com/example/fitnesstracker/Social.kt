@@ -4,6 +4,8 @@ import MyAdapter
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.content.Intent
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 
 import android.os.Bundle
 import android.text.Editable
@@ -131,6 +133,13 @@ class Social : AppCompatActivity(), SocialInterface {
                         startActivity(intent, options.toBundle())
                         true
                     }
+                    R.id.nav_users -> {
+                        socialController.closeConnections()
+                        val intent = Intent(this, Social::class.java)
+                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                        startActivity(intent, options.toBundle())
+                        true
+                    }
                     else -> false
                 }
             }
@@ -167,6 +176,13 @@ class Social : AppCompatActivity(), SocialInterface {
                     startActivity(intent, options.toBundle())
                     true
                 }
+                R.id.nav_users -> {
+                    socialController.closeConnections()
+                    val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
                 else -> false
             }
         }
@@ -174,6 +190,19 @@ class Social : AppCompatActivity(), SocialInterface {
 
         socialController = SocialController(this)
         socialController.setupBluetooth()
+
+
+        val gifImageView: GifImageView = findViewById(R.id.bluetoothGif)
+        gifDrawable = gifImageView.drawable as GifDrawable
+
+        nDevices = findViewById(R.id.n_devices)
+
+        gifDrawable.stop()
+
+        gifImageView.setOnClickListener {
+            socialController.startBluetooth()
+        }
+
 
         val buttonDiscoverable: Button = findViewById(R.id.discover)
         buttonDiscoverable.setOnClickListener{
@@ -186,19 +215,24 @@ class Social : AppCompatActivity(), SocialInterface {
                 MotionToast.LONG_DURATION,
                 ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular))
 
+
             socialController.beDiscoverable()
+            gifImageView.isEnabled = false
+
+            // Cambia il colore della GifImageView a grigio
+            val matrix = ColorMatrix()
+            matrix.setSaturation(0f)  // 0 significa che è completamente desaturato
+            val filter = ColorMatrixColorFilter(matrix)
+            gifImageView.colorFilter = filter
+
+            // Crea un Handler e un Runnable per riabilitare il bottone dopo 1 minuto
+            val handler = Handler(Looper.getMainLooper())
+            handler.postDelayed({
+                gifImageView.isEnabled = true
+                gifImageView.clearColorFilter()
+            }, 60000 )  // 60000  millisecondi = 1 minuto
         }
 
-        val gifImageView: GifImageView = findViewById(R.id.bluetoothGif)
-        gifDrawable = gifImageView.drawable as GifDrawable
-
-        nDevices = findViewById(R.id.n_devices)
-
-        gifDrawable.stop()
-
-        gifImageView.setOnClickListener {
-            socialController.startBluetooth()
-        }
 
 
         myAdapter = MyAdapter(socialController.getPersonlist(), socialController )

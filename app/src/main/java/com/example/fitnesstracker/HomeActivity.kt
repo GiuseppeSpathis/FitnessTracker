@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
@@ -80,6 +81,12 @@ class HomeActivity : AppCompatActivity(), MapListener {
             when (menuItem.itemId) {
                 R.id.nav_stats -> {
                     val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_home -> {
+                    val intent = Intent(this, HomeActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                     startActivity(intent, options.toBundle())
                     true
