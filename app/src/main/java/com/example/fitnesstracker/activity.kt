@@ -21,7 +21,6 @@ data class Attività(
 @Entity(tableName = "othersActivity")
 data class OthersActivity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val userId: String,
     val username: String,
     val startTime: LocalDateTime,
     val endTime: LocalDateTime,
@@ -32,4 +31,17 @@ data class OthersActivity(
     val pace: Float?,
     val avgSpeed: Double?,
     val maxSpeed: Double?,
-)
+) {
+    constructor(username: String, attività: Attività) : this(
+        username = username,
+        startTime = attività.startTime,
+        endTime = attività.endTime,
+        date = attività.date,
+        activityType = attività.activityType,
+        stepCount = attività.stepCount,
+        distance = attività.distance,
+        pace = attività.pace,
+        avgSpeed = attività.avgSpeed,
+        maxSpeed = attività.maxSpeed
+    )
+}

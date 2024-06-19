@@ -1,11 +1,14 @@
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -49,14 +52,12 @@ object Utils {
     }
 
     @SuppressLint("InflateParams")
-    fun receiveMessage (context: Context, name: String, message: String, gender: String){
-
+    fun receiveMessage(context: Context, name: String, message: String, gender: String, fileShared: Boolean = false) {
         val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val layout = layoutInflater.inflate(R.layout.custom_toast_layout, null, false)
 
 
         val image = layout.findViewById<ImageView>(R.id.toastImage)
-
         checkGender(gender, image, context)
 
         val title = layout.findViewById<TextView>(R.id.toastTitle)
@@ -65,16 +66,35 @@ object Utils {
         val text = layout.findViewById<TextView>(R.id.toastText)
         text.text = message
 
+        val okButton = layout.findViewById<Button>(R.id.okButton)
 
-        layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
+        if (fileShared) {
+            // Show the OK button and create a Dialog
+            val dialog = Dialog(context)
+            okButton.visibility = View.VISIBLE
 
+            okButton.setOnClickListener {
+                dialog.dismiss()
+            }
 
-        val toast = Toast(context)
-        toast.duration = Toast.LENGTH_LONG
-        toast.view = layout
-        toast.show()
+            // Imposta il layout personalizzato nel dialogo
+            dialog.setContentView(layout)
 
+            // Mostra il dialogo
+            dialog.show()
+        } else {
+            // Hide the OK button and show a Toast
+            okButton.visibility = View.GONE
+            layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
+            val toast = Toast(context)
+            toast.duration = Toast.LENGTH_LONG
+            toast.view = layout
+            toast.show()
+        }
     }
+
+
+
     fun socketError(e: IOException, activity: Activity){
         activity.runOnUiThread {
             println("sono in socket error")
@@ -94,6 +114,13 @@ object Utils {
     fun hasPermission(permission: String, context: Context) : Boolean {
         return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
+
+    fun isJSONComplete(jsonString: String): Boolean {
+        // Implementa la logica per verificare se hai ricevuto l'intero JSON
+        // Ad esempio, potresti verificare se il JSON inizia con "{" e termina con "}"
+        return jsonString.startsWith("{") && jsonString.endsWith("}")
+    }
+
 
 
     suspend fun getUser(username: String, context: Context): Person? {

@@ -34,11 +34,14 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.google.gson.reflect.TypeToken
 
 //import pl.droidsonroids.gif.GifDrawable
 
 
-class SocialController (private val SocialInterface: SocialInterface) {
+class SocialController (private val SocialInterface: SocialInterface,  private val database: AppDatabase) {
 
     companion object {
         private const val REQUEST_BLUETOOTH_CONNECT  = 1
@@ -204,7 +207,6 @@ class SocialController (private val SocialInterface: SocialInterface) {
         }
         bluetoothAdapter?.setName(LoggedUser.username);
         startServer()
-        //receiveFromSocket(SocialInterface.getActivity())
     }
 
     fun startBluetooth (){
@@ -274,9 +276,9 @@ class SocialController (private val SocialInterface: SocialInterface) {
             }
             catch (e: IOException) {
 
-                activity.runOnUiThread {
+
                     socketError(e, activity)
-                }
+
 
             }
         }.start()
@@ -349,12 +351,11 @@ class SocialController (private val SocialInterface: SocialInterface) {
 
                     outputStream = socket?.outputStream
                     inputStream = socket?.inputStream
-                    //receiveFromSocket(activity) //questo in realta' si puo' togliere tanto l'altra persona non ti puo' inviare messaggi
                 }
             } catch (e: IOException) {
-                activity.runOnUiThread {
+
                     socketError(e, activity)
-                }
+
             }
         }.start()
     }
@@ -378,28 +379,64 @@ class SocialController (private val SocialInterface: SocialInterface) {
                 inputStream = socket?.inputStream
                 val buffer = ByteArray(1024)  // buffer store for the stream
                 var bytes: Int // bytes returned from read()
-                println("provando a ricevere")
+                var jsonString = ""
+
                 // Keep listening to the InputStream until an exception occurs
                 while (true) {
                     // Read from the InputStream
                     bytes = inputStream!!.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
-                    Log.d("mESSAGESdEBUG", "Message: $incomingMessage")
 
-                    // Use coroutine scope to call suspend function
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val user = Utils.getUser(username, SocialInterface.getActivity())
-                        withContext(Dispatchers.Main) {
-                            receiveMessage(activity, user?.name ?: " ", incomingMessage, user?.gender ?: "Maschio")
+                    // Concatena i dati ricevuti per formare il JSON completo
+                    jsonString += incomingMessage
+
+
+                    // Verifica se hai ricevuto l'intero JSON
+                    if (jsonString.startsWith("#[{\"activityType\"")) {
+                        if(jsonString.endsWith(("}]"))){
+                            handleReceivedJSON(jsonString.removePrefix("#"))
+                            jsonString = ""
+                        }
+                    }
+                    else { //mi sta inviando una semplice stringa
+                        val message = jsonString
+                        jsonString= ""
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val user = Utils.getUser(username, SocialInterface.getActivity())
+                            withContext(Dispatchers.Main) {
+                                receiveMessage(activity, user?.name ?: " ", message, user?.gender ?: "Maschio")
+                            }
                         }
                     }
                 }
             } catch (e: IOException) {
                 if (e.message != "bt socket closed, read return: -1")
                     socketError(e, activity)
-                println("connessione chiusa per eccezione")
+                println("Connessione chiusa per eccezione")
             }
         }.start()
+    }
+
+    private fun handleReceivedJSON(jsonString: String) {
+        try {
+            // Esegui il parsing del JSON
+            val gson = Gson()
+            val activities: List<OthersActivity> = gson.fromJson(jsonString, object : TypeToken<List<OthersActivity>>() {}.type)
+            CoroutineScope(Dispatchers.Main).launch {
+                val user = Utils.getUser(activities[0].username, SocialInterface.getActivity())
+                SocialInterface.getActivity().runOnUiThread {
+                    receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true )
+                }
+                // Ora puoi fare qualcosa con le attività ricevute
+                // Esempio: stampa le attività ricevute
+                activities.forEach { attivita ->
+                    println("Attività ricevuta - ID: ${attivita.username}, Data: ${attivita.date}, Tipo: ${attivita.activityType}")
+                }
+            }
+
+        } catch (e: JsonSyntaxException) {
+            println("Errore durante il parsing del JSON: ${e.message}")
+        }
     }
 
 
@@ -437,6 +474,49 @@ class SocialController (private val SocialInterface: SocialInterface) {
             println("Errore durante la chiusura delle connessioni: ${e.message}")
         }
     }
+
+    fun shareData() {
+        Thread {
+            val attivitaDao = database.attivitàDao()
+            val activities = attivitaDao.getAllActivitites()
+
+            // Converti le Attività in OthersActivity con username di LoggedUser
+            val username = LoggedUser.username
+            val otherActivities = activities.map { attività ->
+                OthersActivity(username, attività)
+            }
+
+            // Converti la lista di attività in JSON usando Gson
+            val gson = Gson()
+            val activitiesJson = gson.toJson(otherActivities)
+
+            // Passa all'UI thread per mostrare il toast se non ci sono attività
+            if (activitiesJson == "[]") {
+                SocialInterface.getActivity().runOnUiThread {
+                    MotionToast.createColorToast(
+                        SocialInterface.getActivity(),
+                        SocialInterface.getActivity().resources.getString(R.string.error),
+                        SocialInterface.getActivity().resources.getString(R.string.noActivities),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(
+                            SocialInterface.getActivity(),
+                            www.sanju.motiontoast.R.font.helvetica_regular
+                        )
+                    )
+                }
+            } else {
+                // Invia il JSON delle attività tramite Bluetooth
+                SocialInterface.getActivity().runOnUiThread {
+                    sendMessage("#$activitiesJson", SocialInterface.getActivity())
+                }
+            }
+        }.start()
+    }
+
+
+
 
 
 

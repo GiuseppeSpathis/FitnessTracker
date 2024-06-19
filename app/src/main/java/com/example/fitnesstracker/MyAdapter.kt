@@ -84,7 +84,23 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
             showDialog(it.context, holder.name.text.toString())
         }
         holder.share.setOnClickListener{
-            Toast.makeText(it.context, "vuoi condividere", Toast.LENGTH_SHORT).show() //da modificare in futuro
+            val builder = AlertDialog.Builder(it.context)
+            builder.setTitle("Condividi attività")
+            builder.setMessage("Vuoi condividere le tue attività con ${person.name}?")
+
+            // Aggiungi pulsanti al dialog
+            builder.setPositiveButton("Ok") { dialog, _ ->
+                dialog.dismiss()  // Chiudi il dialog prima di chiamare shareData
+                socialController.shareData()
+            }
+
+            builder.setNegativeButton("Annulla") { dialog, _ ->
+                dialog.dismiss()  // Chiudi il dialog senza fare nulla
+            }
+
+            // Mostra il dialog
+            builder.create().show()
+
         }
         holder.connect.setOnClickListener{
             if(you_are_connected.value){
@@ -100,6 +116,14 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
 
             }
             else {
+                MotionToast.createColorToast(
+                    it.context as Activity,
+                    it.context.resources.getString(R.string.request_sent),
+                    it.context.resources.getString(R.string.pairing_request),
+                    MotionToastStyle.INFO,
+                    MotionToast.GRAVITY_BOTTOM,
+                    MotionToast.LONG_DURATION,
+                    ResourcesCompat.getFont(it.context, www.sanju.motiontoast.R.font.helvetica_regular))
                 socialController.connect2device(person.device, it.context as Activity, holder, person, you_are_connected)
             }
         }

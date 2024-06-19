@@ -19,21 +19,34 @@
         <item>Guidare</item>
         <item>Stare fermo</item>
     </string-array>
+
+    <string name="messageShared">ha condiviso con te \n lo storico delle sue attività,\n vuoi vederlo?</string>
     <string name="nothing">niente</string>
+    <string name="ok">OK</string>
     <string name="activity">Attività svolta</string>
     <string name="places">Luoghi frequentati</string>
     <string name="noPeople">nessuna persona trovata nelle vicinanze 😢😢</string>
     <string name="successo">successo</string>
     <string name="fallimento">non avvenuto con successo</string>
     <string name="error">errore</string>
+    <string name="noActivities">non hai attività da condividere</string>
     <string name="connect_failed">accoppiamento col dispositivo non avvenuta con successo</string>
     <string name="connected">accoppiamento col dispositivo avvenuta con successo</string>
+    <string name="request_sent">inviata richiesta</string>
+    <string name="pairing_request">la richiesta di accoppiamento é stata inviata con successo</string>
     <string name="disconnected">disconnessione col dispositivo avvenuta con successo</string>
     <string name="info">info</string>
     <string name="still_connected">sei già accoppiato con un altro dispositivo</string>
     <string name="messaggio_inviato">il messaggio é stato inviato con successo</string>
     <string name="scan_devices">rileva dispositivi vicini a te</string>
-    <string name="beDiscoverable">diventa visibile agli altri</string>
+    <string name="beDiscoverable">Diventa visibile agli altri</string>
+    <string-array name="info_message_parts">
+        <item><![CDATA[<br><br>]]></item>
+        <item><![CDATA[<b>Bottone "%1$s"</b>]]></item>
+        <item><![CDATA[<p>Questo bottone permette al tuo dispositivo di diventare visibile agli altri dispositivi nelle vicinanze che stanno cercando dispositivi Bluetooth. Quando premi questo bottone, il tuo dispositivo entra in modalità visibile, consentendo agli altri utenti di trovarti e connettersi con te.</p>]]></item>
+        <item><![CDATA[<b>Bottone Ricerca Dispositivi</b>]]></item>
+        <item><![CDATA[<p>Il bottone centrale, rappresentato dall\'icona del Bluetooth, avvia la ricerca di dispositivi Bluetooth nelle vicinanze. Quando premi questo bottone, il tuo dispositivo inizia a scansionare l\'area circostante alla ricerca di altri dispositivi Bluetooth visibili.</p>]]></item>
+    </string-array>
     <string name="title_activity_stats">StatsActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

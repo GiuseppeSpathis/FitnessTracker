@@ -3,6 +3,7 @@ package com.example.fitnesstracker
 import MyAdapter
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
@@ -19,7 +20,9 @@ import pl.droidsonroids.gif.GifDrawable
 import pl.droidsonroids.gif.GifImageView
 import android.os.Handler
 import android.os.Looper
+import android.text.Html
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationBarView
@@ -187,10 +190,37 @@ class Social : AppCompatActivity(), SocialInterface {
             }
         }
 
+        val db = AppDatabase.getDatabase(this)
 
-        socialController = SocialController(this)
+        socialController = SocialController(this, db)
         socialController.setupBluetooth()
 
+
+
+        val infoButton: ImageButton = findViewById(R.id.infoButton)
+        infoButton.setOnClickListener {
+            val beDiscoverable = getString(R.string.beDiscoverable)
+            val infoMessageParts = resources.getStringArray(R.array.info_message_parts)
+
+            // Combina tutte le parti del messaggio HTML
+            val builder = StringBuilder()
+            for (part in infoMessageParts) {
+                // Interpola la stringa beDiscoverable nella prima parte
+                if (part.contains("%1\$s")) {
+                    builder.append(String.format(part, beDiscoverable))
+                } else {
+                    builder.append(part)
+                }
+            }
+            val infoMessage = builder.toString()
+
+            // Mostra il dialogo con il messaggio HTML
+            AlertDialog.Builder(this)
+                .setTitle("Info")
+                .setMessage(Html.fromHtml(infoMessage, Html.FROM_HTML_MODE_LEGACY))
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
 
         val gifImageView: GifImageView = findViewById(R.id.bluetoothGif)
         gifDrawable = gifImageView.drawable as GifDrawable
