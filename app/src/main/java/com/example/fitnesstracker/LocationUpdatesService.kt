@@ -25,6 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,6 +37,7 @@ class LocationUpdatesService : JobIntentService() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var db: AppDatabase
+    private var isInsideGeofence = false
 
     override fun onCreate() {
         super.onCreate()
@@ -78,7 +80,7 @@ class LocationUpdatesService : JobIntentService() {
         }.build()
 
         startForeground(1, notification)
-        //simulateGeofenceTransitions()
+        simulateGeofenceTransitions()
     }
 
     override fun onHandleWork(intent: Intent) {
@@ -101,9 +103,11 @@ class LocationUpdatesService : JobIntentService() {
         }
     }
 
+
     private fun handleLocationUpdate(location: Location) {
         CoroutineScope(Dispatchers.IO).launch {
             val geofences = db.attivitàDao().getAllGeofences()
+            var foundGeofence = false
 
             for (geofence in geofences) {
                 val distance = FloatArray(2)
@@ -113,40 +117,51 @@ class LocationUpdatesService : JobIntentService() {
                     distance
                 )
                 if (distance[0] < geofence.radius) {
-                    val enterTime = System.currentTimeMillis()
-                    withContext(Dispatchers.Main) {
-                        sendNotification("Entered Geofence", "You have entered a geofence.")
+                    foundGeofence = true
+                    if (!isInsideGeofence) {
+                        println("Entered a geofence")
+                        isInsideGeofence = true
+                        val enterTime = System.currentTimeMillis()
+                        withContext(Dispatchers.Main) {
+                            sendNotification("Entered Geofence", "You have entered a geofence.")
+                        }
+
+                        // Create and save a new instance of timeGeofence for the entry
+                        val timeGeofence = timeGeofence(
+                            latitude = geofence.latitude,
+                            longitude = geofence.longitude,
+                            radius = geofence.radius,
+                            enterTime = enterTime,
+                            exitTime = 0L, // Placeholder, will be updated on exit
+                            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        )
+                        db.attivitàDao().insertTimeGeofence(timeGeofence)
                     }
+                    break
+                }
+            }
 
-                    // Create and save a new instance of timeGeofence for the entry
-                    val timeGeofence = timeGeofence(
-                        latitude = geofence.latitude,
-                        longitude = geofence.longitude,
-                        radius = geofence.radius,
-                        enterTime = enterTime,
-                        exitTime = 0L, // Placeholder, will be updated on exit
-                        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                    )
-                    db.attivitàDao().insertTimeGeofence(timeGeofence)
+            if (!foundGeofence && isInsideGeofence) {
+                println("Exited from a geofence")
+                isInsideGeofence = false
+                val exitTime = System.currentTimeMillis()
+                withContext(Dispatchers.Main) {
+                    sendNotification("Exited Geofence", "You have exited a geofence.")
+                }
 
-                } else {
-                    val exitTime = System.currentTimeMillis()
-                    withContext(Dispatchers.Main) {
-                        sendNotification("Exited Geofence", "You have exited a geofence.")
-                    }
-
-                    // Update the timeGeofence instance with the exit time
+                // Update the timeGeofence instance with the exit time
+                for (geofence in geofences) {
                     val timeGeofence = db.attivitàDao().getLastTimeGeofenceByCoordinates(
                         geofence.latitude, geofence.longitude, geofence.radius
                     )
-                    timeGeofence.exitTime = exitTime
-                    db.attivitàDao().updateTimeGeofence(timeGeofence)
+                    timeGeofence?.let {
+                        it.exitTime = exitTime
+                        db.attivitàDao().updateTimeGeofence(it)
+                    }
                 }
-
             }
         }
     }
-
     private fun sendNotification(title: String, message: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notification = NotificationCompat.Builder(this, "location_service_channel")
@@ -173,9 +188,11 @@ class LocationUpdatesService : JobIntentService() {
             time = System.currentTimeMillis()
         }
 
-        handleLocationUpdate(insideLocation) // Simulate entering geofence
-        handleLocationUpdate(outsideLocation) // Simulate exiting geofence
-
+        CoroutineScope(Dispatchers.IO).launch {
+            handleLocationUpdate(insideLocation) // Simulate entering geofence
+            delay(5 * 60 * 1000)
+            handleLocationUpdate(outsideLocation) // Simulate exiting geofence
+        }
     }
 
     companion object {
