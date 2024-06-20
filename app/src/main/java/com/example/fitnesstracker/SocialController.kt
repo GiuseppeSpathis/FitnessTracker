@@ -22,6 +22,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import kotlinx.coroutines.CoroutineScope
@@ -35,8 +36,10 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
+import java.time.LocalDateTime
 
 //import pl.droidsonroids.gif.GifDrawable
 
@@ -417,27 +420,36 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
         }.start()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleReceivedJSON(jsonString: String) {
         try {
             // Esegui il parsing del JSON
-            val gson = Gson()
+            val gson = GsonBuilder()
+                .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
+                .create()
+
             val activities: List<OthersActivity> = gson.fromJson(jsonString, object : TypeToken<List<OthersActivity>>() {}.type)
             CoroutineScope(Dispatchers.Main).launch {
+                // Inserisci prima tutte le attività nel database
+
+                activities.forEach { attivita ->
+                    withContext(Dispatchers.IO) {
+                        database.attivitàDao().insertOthersActivity(attivita)
+
+
+                    }
+                }
+                // Poi ottieni l'utente e chiama receiveMessage
                 val user = Utils.getUser(activities[0].username, SocialInterface.getActivity())
                 SocialInterface.getActivity().runOnUiThread {
-                    receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true )
-                }
-                // Ora puoi fare qualcosa con le attività ricevute
-                // Esempio: stampa le attività ricevute
-                activities.forEach { attivita ->
-                    println("Attività ricevuta - ID: ${attivita.username}, Data: ${attivita.date}, Tipo: ${attivita.activityType}")
+                    receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true)
                 }
             }
-
-        } catch (e: JsonSyntaxException) {
-            println("Errore durante il parsing del JSON: ${e.message}")
+        } catch (e: Exception) {
+            // Gestisci l'eccezione
         }
     }
+
 
 
 
@@ -475,11 +487,12 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun shareData() {
         Thread {
             val attivitaDao = database.attivitàDao()
             val activities = attivitaDao.getAllActivitites()
-
+            println("stampo activities ${activities}")
             // Converti le Attività in OthersActivity con username di LoggedUser
             val username = LoggedUser.username
             val otherActivities = activities.map { attività ->
@@ -487,9 +500,12 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
             }
 
             // Converti la lista di attività in JSON usando Gson
-            val gson = Gson()
+            val gson = GsonBuilder()
+                .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
+                .create()
+            println("stampo otherActivities: ${otherActivities}")
             val activitiesJson = gson.toJson(otherActivities)
-
+            println("stampo activityJson di otherActivities: ${activitiesJson}")
             // Passa all'UI thread per mostrare il toast se non ci sono attività
             if (activitiesJson == "[]") {
                 SocialInterface.getActivity().runOnUiThread {

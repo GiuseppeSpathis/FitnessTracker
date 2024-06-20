@@ -77,6 +77,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
         bottomNavigationView.selectedItemId = R.id.nav_home
 
+
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_stats -> {
@@ -93,6 +94,12 @@ class HomeActivity : AppCompatActivity(), MapListener {
                 }
                 R.id.nav_users -> {
                     val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.geofence -> {
+                    val intent = Intent(this, GeoFenceActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                     startActivity(intent, options.toBundle())
                     true

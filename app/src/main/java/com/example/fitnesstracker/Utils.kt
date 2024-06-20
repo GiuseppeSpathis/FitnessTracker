@@ -22,6 +22,7 @@ import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.LoggedUser
 import com.example.fitnesstracker.Person
+import com.example.fitnesstracker.StatsActivity
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.getValue
 import kotlinx.coroutines.Dispatchers
@@ -67,19 +68,17 @@ object Utils {
         text.text = message
 
         val okButton = layout.findViewById<Button>(R.id.okButton)
-
         if (fileShared) {
             // Show the OK button and create a Dialog
             val dialog = Dialog(context)
             okButton.visibility = View.VISIBLE
-
             okButton.setOnClickListener {
-                dialog.dismiss()
+
+                //dialog.dismiss()
             }
 
             // Imposta il layout personalizzato nel dialogo
             dialog.setContentView(layout)
-
             // Mostra il dialogo
             dialog.show()
         } else {

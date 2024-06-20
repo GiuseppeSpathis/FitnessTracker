@@ -74,7 +74,6 @@ class StatsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         db = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java, "app_database"
@@ -82,11 +81,9 @@ class StatsActivity : AppCompatActivity() {
 
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
-
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             showDateDialog(year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
         }
-
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_stats -> {
@@ -107,19 +104,22 @@ class StatsActivity : AppCompatActivity() {
                     startActivity(intent, options.toBundle())
                     true
                 }
+                R.id.geofence -> {
+                    val intent = Intent(this, GeoFenceActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
                 else -> false
             }
         }
-
         val activityArray = arrayOf(getString(R.string.nothing)) + resources.getStringArray(R.array.activity_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
         //resetDatabase()
         //insertFakeData()
-
         pieChart = binding.pieChart
         val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear)
         val listener = View.OnClickListener { view ->
@@ -181,107 +181,7 @@ class StatsActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun insertFakeData() {
-         val activities = listOf(
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 9, 0),
-                endTime = LocalDateTime.of(2024, 6, 16, 9, 30),
-                stepCount = 1000,
-                distance = 10.0f,
-                date = "16/06/2024",
-                pace = null,
-                activityType = "Passeggiata",
-                avgSpeed = null,
-                maxSpeed = null
-            ),
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 9, 35),
-                endTime = LocalDateTime.of(2024, 6, 16, 10, 0),
-                stepCount = 1000,
-                distance = 10.0f,
-                date = "16/06/2024",
-                pace = null,
-                activityType = "Passeggiata",
-                avgSpeed = null,
-                maxSpeed = null
-            ),
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 10, 0),
-                endTime = LocalDateTime.of(2024, 6, 16, 10, 30),
-                stepCount = 1200,
-                distance = 1.0f,
-                date = "16/06/2024",
-                pace = 5.0f,
-                activityType = "Corsa",
-                avgSpeed = null,
-                maxSpeed = null
-            ),
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 10, 31),
-                endTime = LocalDateTime.of(2024, 6, 16, 11, 0),
-                stepCount = null,
-                distance = null,
-                date = "16/06/2024",
-                pace = null,
-                activityType = "Guidare",
-                avgSpeed = 20.0,
-                maxSpeed = 50.0
-            ),
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 12, 0),
-                endTime = LocalDateTime.of(2024, 6, 16, 12, 45),
-                stepCount = null,
-                distance = null,
-                date = "16/06/2024",
-                pace = null,
-                activityType = "Stare fermo",
-                avgSpeed = null,
-                maxSpeed = null
-            ),
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 16, 15, 0),
-                endTime = LocalDateTime.of(2024, 6, 16, 15, 30),
-                stepCount = null,
-                distance = null,
-                date = "16/06/2024",
-                pace = null,
-                activityType = "Guidare",
-                avgSpeed = 20.0,
-                maxSpeed = 50.0
-            )
-        )
 
-        /*val activities = listOf(
-            Attività(
-                userId = LoggedUser.id,
-                startTime = LocalDateTime.of(2024, 6, 15, 9, 0),
-                endTime = LocalDateTime.of(2024, 6, 15, 9, 30),
-                stepCount = 1000,
-                distance = 10.0f,
-                date = "15/06/2024",
-                pace = null,
-                activityType = "Passeggiata",
-                avgSpeed = null,
-                maxSpeed = null
-            )
-        )*/
-
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                for (activity in activities) {
-                    db.attivitàDao().insertActivity(activity)
-                    Log.d("StatsActivity", "Fake attività inserita: $activity")
-                }
-            }
-        }
-    }
 
 
 
@@ -558,8 +458,10 @@ class StatsActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updatePieChartForPeriod(period: String) {
+        println("sono nella statsActivity9")
         lifecycleScope.launch {
             val activities = getActivitiesForPeriod(period)
+            println("sono nella statsActivity10")
             displayPieChart(activities)
         }
     }

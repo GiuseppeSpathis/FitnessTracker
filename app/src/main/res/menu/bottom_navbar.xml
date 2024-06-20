@@ -12,4 +12,9 @@
         android:id="@+id/nav_users"
         android:icon="@drawable/navbar_people"
         android:title="Users" />
+    <item
+        android:id="@+id/geofence"
+        android:icon="@drawable/geofancing_icon"
+        android:title="geoFence" />
+
 </menu>

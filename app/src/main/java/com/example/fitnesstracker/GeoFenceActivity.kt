@@ -1,6 +1,7 @@
 package com.example.fitnesstracker
 
 import android.Manifest
+import android.app.ActivityOptions
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -21,6 +22,7 @@ import androidx.room.Room
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.LocationServices
+import com.google.android.material.navigation.NavigationBarView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,6 +63,44 @@ class GeoFenceActivity : AppCompatActivity() {
         searchButton = findViewById(R.id.btnSearch)
         addGeofenceButton = findViewById(R.id.btnAddGeofence)
         addGeofenceButton.isEnabled = false
+
+
+
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+
+        bottomNavigationView.selectedItemId = R.id.geofence
+
+
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> {
+                    val intent = Intent(this, StatsActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_home -> {
+                    val intent = Intent(this, HomeActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.nav_users -> {
+                    val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.geofence -> {
+                    val intent = Intent(this, GeoFenceActivity::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                else -> false
+            }
+        }
+
 
         findViewById<Button>(R.id.btnViewGeofences).setOnClickListener {
             viewGeofences()

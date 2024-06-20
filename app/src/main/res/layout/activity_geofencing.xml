@@ -1,6 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <org.osmdroid.views.MapView
         android:id="@+id/map"
@@ -41,24 +42,33 @@
         android:id="@+id/btnAddGeofence"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/bottom"
+        android:layout_above="@+id/bottom_navigation"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginBottom="40dp"
         android:layout_marginEnd="15dp"
-        android:text="Add Geofence"
-        android:enabled="false" />
+        android:layout_marginBottom="20dp"
+        android:enabled="false"
+        android:text="Add Geofence" />
 
     <Button
         android:id="@+id/btnViewGeofences"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/bottom"
+        android:layout_above="@+id/bottom_navigation"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:layout_marginBottom="40dp"
         android:layout_marginStart="15dp"
+        android:layout_marginBottom="20dp"
         android:text="View Geofences" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_navbar" />
 
 </RelativeLayout>
 

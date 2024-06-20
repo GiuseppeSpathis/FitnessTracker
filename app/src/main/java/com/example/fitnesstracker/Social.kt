@@ -143,6 +143,13 @@ class Social : AppCompatActivity(), SocialInterface {
                         startActivity(intent, options.toBundle())
                         true
                     }
+                    R.id.geofence -> {
+                        socialController.closeConnections()
+                        val intent = Intent(this, GeoFenceActivity::class.java)
+                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                        startActivity(intent, options.toBundle())
+                        true
+                    }
                     else -> false
                 }
             }
@@ -182,6 +189,13 @@ class Social : AppCompatActivity(), SocialInterface {
                 R.id.nav_users -> {
                     socialController.closeConnections()
                     val intent = Intent(this, Social::class.java)
+                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+                    startActivity(intent, options.toBundle())
+                    true
+                }
+                R.id.geofence -> {
+                    socialController.closeConnections()
+                    val intent = Intent(this, GeoFenceActivity::class.java)
                     val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
                     startActivity(intent, options.toBundle())
                     true
