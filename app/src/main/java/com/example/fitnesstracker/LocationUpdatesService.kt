@@ -14,28 +14,37 @@ import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.ActivityCompat
+import androidx.core.app.JobIntentService
 import androidx.core.app.NotificationCompat
 import androidx.room.Room
 import com.google.android.gms.location.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.osmdroid.views.MapView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class LocationUpdatesService : Service() {
+
+class LocationUpdatesService : JobIntentService() {
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var db: AppDatabase
 
-    @SuppressLint("ForegroundServiceType")
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "app_database"
-        ).build()
+        db = AppDatabase.getDatabase(this)
 
 
         createLocationRequest()
-        startForeground(1, createNotification())
+        startForegroundService()
     }
 
     private fun createLocationRequest() {
@@ -45,7 +54,7 @@ class LocationUpdatesService : Service() {
         }.build()
     }
 
-    private fun createNotification(): Notification {
+    private fun startForegroundService() {
         val notificationChannelId = "location_service_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -61,17 +70,19 @@ class LocationUpdatesService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        return NotificationCompat.Builder(this, notificationChannelId).apply {
+        val notification = NotificationCompat.Builder(this, notificationChannelId).apply {
             setContentTitle("Tracking Location")
             setContentText("Your location is being tracked")
             setSmallIcon(R.drawable.logo)
             priority = NotificationCompat.PRIORITY_DEFAULT
         }.build()
+
+        startForeground(1, notification)
+        //simulateGeofenceTransitions()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onHandleWork(intent: Intent) {
         startLocationUpdates()
-        return START_STICKY
     }
 
     private fun startLocationUpdates() {
@@ -91,16 +102,88 @@ class LocationUpdatesService : Service() {
     }
 
     private fun handleLocationUpdate(location: Location) {
-        // Gestisci l'aggiornamento della posizione
-        // Verifica se l'utente entra/esce da un geofence e invia una notifica se necessario
+        CoroutineScope(Dispatchers.IO).launch {
+            val geofences = db.attivitàDao().getAllGeofences()
+
+            for (geofence in geofences) {
+                val distance = FloatArray(2)
+                Location.distanceBetween(
+                    location.latitude, location.longitude,
+                    geofence.latitude, geofence.longitude,
+                    distance
+                )
+                if (distance[0] < geofence.radius) {
+                    val enterTime = System.currentTimeMillis()
+                    withContext(Dispatchers.Main) {
+                        sendNotification("Entered Geofence", "You have entered a geofence.")
+                    }
+
+                    // Create and save a new instance of timeGeofence for the entry
+                    val timeGeofence = timeGeofence(
+                        latitude = geofence.latitude,
+                        longitude = geofence.longitude,
+                        radius = geofence.radius,
+                        enterTime = enterTime,
+                        exitTime = 0L, // Placeholder, will be updated on exit
+                        date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    )
+                    db.attivitàDao().insertTimeGeofence(timeGeofence)
+
+                } else {
+                    val exitTime = System.currentTimeMillis()
+                    withContext(Dispatchers.Main) {
+                        sendNotification("Exited Geofence", "You have exited a geofence.")
+                    }
+
+                    // Update the timeGeofence instance with the exit time
+                    val timeGeofence = db.attivitàDao().getLastTimeGeofenceByCoordinates(
+                        geofence.latitude, geofence.longitude, geofence.radius
+                    )
+                    timeGeofence.exitTime = exitTime
+                    db.attivitàDao().updateTimeGeofence(timeGeofence)
+                }
+
+            }
+        }
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+    private fun sendNotification(title: String, message: String) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = NotificationCompat.Builder(this, "location_service_channel")
+            .setContentTitle(title)
+            .setContentText(message)
+            .setSmallIcon(R.drawable.logo)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+        notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notification)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+    fun simulateGeofenceTransitions() {
+        val insideLocation = Location("fused").apply {
+            latitude = 44.4998854 // Inside geofence coordinates
+            longitude = 11.3710302
+            accuracy = 3.0f
+            time = System.currentTimeMillis()
+        }
+
+        val outsideLocation = Location("fused").apply {
+            latitude = 54.4998854 // Outside geofence coordinates
+            longitude = 19.37103
+            accuracy = 3.0f
+            time = System.currentTimeMillis()
+        }
+
+        handleLocationUpdate(insideLocation) // Simulate entering geofence
+        handleLocationUpdate(outsideLocation) // Simulate exiting geofence
+
+    }
+
+    companion object {
+        private const val JOB_ID = 1000
+
+        fun enqueueWork(context: Context, intent: Intent) {
+            enqueueWork(context, LocationUpdatesService::class.java, JOB_ID, intent)
+        }
     }
 }
+

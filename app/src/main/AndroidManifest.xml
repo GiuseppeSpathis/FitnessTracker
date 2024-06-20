@@ -74,7 +74,9 @@
             android:value="org.osmdroid.config.Configuration" />
         <service
             android:name=".LocationUpdatesService"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            />
 
 
     </application>

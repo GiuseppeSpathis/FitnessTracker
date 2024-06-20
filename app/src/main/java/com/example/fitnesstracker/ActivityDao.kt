@@ -7,6 +7,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.google.android.gms.location.Geofence
 import java.time.LocalDate
 
@@ -33,12 +34,26 @@ interface ActivityDao {
     @Insert
     suspend fun insertGeofence(geofence: GeoFence)
 
-    @Query("SELECT * FROM geofences")
+    @Query("SELECT * FROM geofences_new")
     suspend fun getAllGeofences(): List<GeoFence>
 
     @Delete
     suspend fun deleteGeofence(geofence: GeoFence)
 
+    @Update
+    suspend fun updateGeofence(geoFence: GeoFence)
+
+    @Insert
+    suspend fun insertTimeGeofence(timegeofence: timeGeofence)
+
+    @Query("SELECT * FROM timeGeofences WHERE latitude = :latitude AND longitude = :longitude AND radius = :radius ORDER BY id DESC LIMIT 1")
+    suspend fun getLastTimeGeofenceByCoordinates(latitude: Double, longitude: Double, radius: Float): timeGeofence
+
+    @Update
+    suspend fun updateTimeGeofence(timegeofence: timeGeofence)
+
+    @Query("SELECT * FROM timeGeofences")
+    suspend fun getAllTimeGeofences(): List<timeGeofence>
 
 }
 

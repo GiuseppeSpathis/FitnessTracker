@@ -46,13 +46,21 @@ data class OthersActivity(
     )
 }
 
-@Entity(tableName = "geofences")
+@Entity(tableName = "geofences_new")
 data class GeoFence(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val latitude: Double,
     val longitude: Double,
     val radius: Float,
+)
+
+@Entity(tableName = "timeGeofences")
+data class timeGeofence(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val latitude: Double,
+    val longitude: Double,
+    val radius: Float,
     val enterTime: Long? = null,
-    val exitTime: Long? = null,
+    var exitTime: Long? = null,
     val date: String
 )

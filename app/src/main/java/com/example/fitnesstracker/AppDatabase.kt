@@ -9,7 +9,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Attività::class, OthersActivity::class, GeoFence::class], version = 2)
+@Database(entities = [Attività::class, OthersActivity::class, GeoFence::class, timeGeofence::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -57,6 +57,33 @@ abstract class AppDatabase : RoomDatabase() {
                         "`maxSpeed` REAL)")
             }
         }
+        private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create new table with the updated schema
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `geofences_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `radius` REAL NOT NULL
+                    )
+                """)
 
+                // Copy the data from the old table to the new table
+                database.execSQL("""
+                    INSERT INTO `geofences_new` (id, latitude, longitude, radius)
+                    SELECT id, latitude, longitude, radius
+                    FROM geofences
+                """)
+
+                // Remove the old table
+                database.execSQL("DROP TABLE geofences")
+
+                // Rename the new table to the old table name
+                database.execSQL("ALTER TABLE geofences_new RENAME TO geofences")
+            }
+        }
     }
 }
+
+

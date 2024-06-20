@@ -89,7 +89,7 @@ class GeoFenceActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
                 REQUEST_LOCATION_PERMISSION)
         } else {
-            startService(Intent(this, LocationUpdatesService::class.java))
+            LocationUpdatesService.enqueueWork(this, Intent(this, LocationUpdatesService::class.java))
         }
 
         getCurrentLocation { latitude, longitude ->
@@ -101,6 +101,7 @@ class GeoFenceActivity : AppCompatActivity() {
             map.overlays.add(marker)
         }
     }
+
 
     private fun searchLocation(query: String) {
         lifecycleScope.launch {
@@ -158,7 +159,6 @@ class GeoFenceActivity : AppCompatActivity() {
             latitude = location.latitude,
             longitude = location.longitude,
             radius = geofenceRadius.toFloat(),
-            date = System.currentTimeMillis().toString()
         )
 
         lifecycleScope.launch {
