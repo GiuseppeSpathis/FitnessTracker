@@ -80,7 +80,7 @@ class LocationUpdatesService : JobIntentService() {
         }.build()
 
         startForeground(1, notification)
-        simulateGeofenceTransitions()
+     //   simulateGeofenceTransitions()
     }
 
     override fun onHandleWork(intent: Intent) {
