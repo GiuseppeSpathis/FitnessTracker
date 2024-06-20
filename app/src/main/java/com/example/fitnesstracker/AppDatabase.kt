@@ -9,11 +9,12 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Attività::class, OthersActivity::class], version = 2)
+@Database(entities = [Attività::class, OthersActivity::class, GeoFence::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun attivitàDao(): ActivityDao
+
 
 
     companion object {

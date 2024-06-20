@@ -45,3 +45,14 @@ data class OthersActivity(
         maxSpeed = attività.maxSpeed
     )
 }
+
+@Entity(tableName = "geofences")
+data class GeoFence(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val latitude: Double,
+    val longitude: Double,
+    val radius: Float,
+    val enterTime: Long? = null,
+    val exitTime: Long? = null,
+    val date: String
+)

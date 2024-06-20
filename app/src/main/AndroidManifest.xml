@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="true"/>
     <uses-feature android:name="android.hardware.sensor.stepdetector" android:required="true"/>
@@ -56,6 +58,7 @@
         <activity android:name=".SpeedActivity"/>
         <activity android:name=".SitActivity"/>
         <activity android:name=".StatsActivity"/>
+        <activity android:name=".GeoFenceActivity"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -69,6 +72,10 @@
         </activity>
         <meta-data android:name="org.osmdroid.config"
             android:value="org.osmdroid.config.Configuration" />
+        <service
+            android:name=".LocationUpdatesService"
+            android:foregroundServiceType="location" />
+
 
     </application>
 
