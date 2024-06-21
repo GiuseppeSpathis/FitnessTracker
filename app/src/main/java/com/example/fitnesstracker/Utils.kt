@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.CalendarView
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -20,7 +21,9 @@ import com.example.fitnesstracker.R
 import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
+import com.example.fitnesstracker.Attività
 import com.example.fitnesstracker.LoggedUser
+import com.example.fitnesstracker.OthersActivity
 import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.StatsActivity
 import com.google.firebase.database.FirebaseDatabase
@@ -52,7 +55,7 @@ object Utils {
         }
     }
 
-    @SuppressLint("InflateParams")
+    @SuppressLint("InflateParams", "SetTextI18n")
     fun receiveMessage(context: Context, name: String, message: String, gender: String, fileShared: Boolean = false) {
         val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val layout = layoutInflater.inflate(R.layout.custom_toast_layout, null, false)
@@ -73,7 +76,15 @@ object Utils {
             val dialog = Dialog(context)
             okButton.visibility = View.VISIBLE
             okButton.setOnClickListener {
+                dialog.setContentView(R.layout.dialog_stats)
 
+                val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
+                val textView = dialog.findViewById<TextView>(R.id.title)
+                textView.text = "Attività di $name"
+
+                calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
+                    //showDateDialog(year, month + 1, dayOfMonth, true)  //da sistemare
+                }
                 //dialog.dismiss()
             }
 
@@ -155,6 +166,24 @@ object Utils {
         }
     }
 
+
+     fun convertToActivities(othersActivities: List<OthersActivity>): List<Attività> {
+        return othersActivities.map {
+            Attività(
+                id = it.id,
+                userId = "",
+                startTime = it.startTime,
+                endTime = it.endTime,
+                date = it.date,
+                activityType = it.activityType,
+                stepCount = it.stepCount,
+                distance = it.distance,
+                pace = it.pace,
+                avgSpeed = it.avgSpeed,
+                maxSpeed = it.maxSpeed
+            )
+        }
+    }
 
 
 

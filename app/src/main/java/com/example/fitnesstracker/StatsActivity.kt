@@ -1,15 +1,13 @@
 package com.example.fitnesstracker
 
+import Utils.convertToActivities
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.CalendarView
 import android.widget.ImageButton
-import android.widget.ListView
-import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
 import android.graphics.Typeface
@@ -17,36 +15,25 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.example.fitnesstracker.databinding.ActivityStatsBinding
-import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.HorizontalBarChart
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.KeyStore
 import java.time.LocalDateTime
-import java.time.LocalDate
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -68,6 +55,9 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var db: AppDatabase
     private lateinit var binding: ActivityStatsBinding
     private lateinit var pieChart: PieChart
+
+
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,8 +130,13 @@ class StatsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun showDateDialog(year: Int, month: Int, day: Int) {
-        val dialogView = layoutInflater.inflate(R.layout.custom_dialog, null)
+     fun showDateDialog(year: Int, month: Int, day: Int, isDialog: Boolean = false) {
+        val dialogView: View = if(isDialog){
+            layoutInflater.inflate(R.layout.custom_dialog2, null)
+
+        } else {
+            layoutInflater.inflate(R.layout.custom_dialog, null)
+        }
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
 
@@ -161,7 +156,15 @@ class StatsActivity : AppCompatActivity() {
         val chartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
         lifecycleScope.launch {
             try {
-                val activities = getActivitiesForDate(year, month, day)
+                val activities = if(isDialog) {
+
+                    val othersActivities = getOtherActivitiesForDate(year, month, day)
+                    convertToActivities(othersActivities)
+                }
+                else {
+                    getActivitiesForDate(year, month, day)
+                }
+
                 Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
                 displayActivitiesForDate(chartContainer, activities)
             } catch (e: Exception) {
@@ -180,6 +183,16 @@ class StatsActivity : AppCompatActivity() {
             db.attivitàDao().getAttivitàByDate(date)
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int): List<OthersActivity> {
+        val date = String.format("%02d/%02d/%04d", day, month, year)
+        Log.d("StatsActivity", "Getting activities for date: $date")
+        return withContext(Dispatchers.IO) {
+            db.attivitàDao().getOtherActivitiesByDate(date)
+        }
+    }
+
 
 
 
