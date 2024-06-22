@@ -1,5 +1,6 @@
 package com.example.fitnesstracker
 
+import Utils.convertToActivities
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Intent
@@ -84,7 +85,7 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(year, month + 1, dayOfMonth)
+            showDateDialog(year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -121,7 +122,7 @@ class StatsActivity : AppCompatActivity() {
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
         //resetDatabase()
-
+        //insertFakeData()
         pieChart = binding.pieChart
         val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear)
         val listener = View.OnClickListener { view ->
@@ -179,7 +180,7 @@ class StatsActivity : AppCompatActivity() {
 
         dialog.window?.setLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            1500
+            1500 // Altezza in pixel
         )
 
         val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
@@ -193,20 +194,25 @@ class StatsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 //insertFakeGeofences()
-                val activities = getActivitiesForDate(year, month, day)
-                val geofences = getGeofencesForDate(year, month, day)
+
+                val activities = if(isDialog) {
+
+                    val othersActivities = getOtherActivitiesForDate(year, month, day)
+                    convertToActivities(othersActivities)
+                }
+                else {
+                    val geofences = getGeofencesForDate(year, month, day)
+                    getActivitiesForDate(year, month, day)
+                    displayGeofencesForDate(geofenceChartContainer, geofences)
+                }
 
                 Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
-                Log.d("StatsActivity", "Number of geofences retrieved: ${geofences.size}")
-
                 displayActivitiesForDate(activityChartContainer, activities)
-                displayGeofencesForDate(geofenceChartContainer, geofences)
             } catch (e: Exception) {
                 Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
-
 
 
 
@@ -218,6 +224,16 @@ class StatsActivity : AppCompatActivity() {
             db.attivitàDao().getAttivitàByDate(date)
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int): List<OthersActivity> {
+        val date = String.format("%02d/%02d/%04d", day, month, year)
+        Log.d("StatsActivity", "Getting activities for date: $date")
+        return withContext(Dispatchers.IO) {
+            db.attivitàDao().getOtherActivitiesByDate(date)
+        }
+    }
+
 
 
 
@@ -580,6 +596,7 @@ class StatsActivity : AppCompatActivity() {
 
         container.addView(legendLayout)
     }
+
 
 
     private fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {

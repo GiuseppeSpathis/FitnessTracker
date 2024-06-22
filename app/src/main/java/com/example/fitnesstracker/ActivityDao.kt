@@ -31,6 +31,9 @@ interface ActivityDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOthersActivity(attivita: OthersActivity)
 
+    @Query("SELECT * FROM OthersActivity WHERE date = :date")
+    fun getOtherActivitiesByDate(date: String): List<OthersActivity>
+
     @Insert
     suspend fun insertGeofence(geofence: GeoFence)
 
