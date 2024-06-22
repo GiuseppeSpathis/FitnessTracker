@@ -195,16 +195,16 @@ class StatsActivity : AppCompatActivity() {
             try {
                 //insertFakeGeofences()
 
-                val activities = if(isDialog) {
+              /*  val activities = if(isDialog) {
 
                     val othersActivities = getOtherActivitiesForDate(year, month, day)
                     convertToActivities(othersActivities)
-                }
-                else {
+                }*/
+              //  else {
+                    val activities = getActivitiesForDate(year, month, day)
                     val geofences = getGeofencesForDate(year, month, day)
-                    getActivitiesForDate(year, month, day)
                     displayGeofencesForDate(geofenceChartContainer, geofences)
-                }
+               // }
 
                 Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
                 displayActivitiesForDate(activityChartContainer, activities)
