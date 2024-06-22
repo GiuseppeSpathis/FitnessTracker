@@ -68,6 +68,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/chartContainer" />
 
+        <LinearLayout
+            android:id="@+id/geofenceCchartContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/places_subtitle"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
 

@@ -52,6 +52,7 @@ data class GeoFence(
     val latitude: Double,
     val longitude: Double,
     val radius: Float,
+    val placeName: String
 )
 
 @Entity(tableName = "timeGeofences")
@@ -62,5 +63,7 @@ data class timeGeofence(
     val radius: Float,
     val enterTime: Long? = null,
     var exitTime: Long? = null,
-    val date: String
+    val date: String,
+    val placeName: String
 )
+

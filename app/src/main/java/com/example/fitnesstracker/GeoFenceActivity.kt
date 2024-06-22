@@ -195,10 +195,12 @@ class GeoFenceActivity : AppCompatActivity() {
         map.overlays.add(circle)
         map.invalidate()
 
+        val place = findViewById<EditText>(R.id.searchBar).text as String
         val geofence = GeoFence(
             latitude = location.latitude,
             longitude = location.longitude,
             radius = geofenceRadius.toFloat(),
+            placeName = place
         )
 
         lifecycleScope.launch {

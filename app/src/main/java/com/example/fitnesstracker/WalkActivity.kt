@@ -189,6 +189,9 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             withContext(Dispatchers.IO) {
                 attivitàDao.insertActivity(attività)
                 Log.d("WalkActivity", "Attività salvata: $attività")
+                var attivitàRandom = attivitàDao.getAttivitàByDate("20/06/2024")
+                println("attività random: $attivitàRandom")
+
             }
             withContext(Dispatchers.Main) {
                 showSuccessPopup()

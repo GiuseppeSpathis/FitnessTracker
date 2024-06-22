@@ -55,6 +55,9 @@ interface ActivityDao {
     @Query("SELECT * FROM timeGeofences")
     suspend fun getAllTimeGeofences(): List<timeGeofence>
 
+
+    @Query("SELECT * FROM timeGeofences WHERE date = :date")
+    suspend fun getGeofencesForDate(date: String): List<timeGeofence>
 }
 
 

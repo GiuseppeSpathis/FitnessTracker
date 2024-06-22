@@ -133,7 +133,8 @@ class LocationUpdatesService : JobIntentService() {
                             radius = geofence.radius,
                             enterTime = enterTime,
                             exitTime = 0L, // Placeholder, will be updated on exit
-                            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                            date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                            placeName = geofence.placeName
                         )
                         db.attivitàDao().insertTimeGeofence(timeGeofence)
                     }
@@ -149,7 +150,7 @@ class LocationUpdatesService : JobIntentService() {
                     sendNotification("Exited Geofence", "You have exited a geofence.")
                 }
 
-                // Update the timeGeofence instance with the exit time
+
                 for (geofence in geofences) {
                     val timeGeofence = db.attivitàDao().getLastTimeGeofenceByCoordinates(
                         geofence.latitude, geofence.longitude, geofence.radius

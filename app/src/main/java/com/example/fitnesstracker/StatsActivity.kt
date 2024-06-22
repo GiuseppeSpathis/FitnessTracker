@@ -57,9 +57,11 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
+import java.util.Random
 
 
 class StatsActivity : AppCompatActivity() {
@@ -82,7 +84,7 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
+            showDateDialog(year, month + 1, dayOfMonth)
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -119,7 +121,7 @@ class StatsActivity : AppCompatActivity() {
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
         //resetDatabase()
-        //insertFakeData()
+
         pieChart = binding.pieChart
         val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear)
         val listener = View.OnClickListener { view ->
@@ -139,6 +141,33 @@ class StatsActivity : AppCompatActivity() {
         buttons.forEach { it.setOnClickListener(listener) }
     }
 
+    suspend fun insertFakeGeofences() {
+        withContext(Dispatchers.IO) {
+            val random = Random()
+
+            for (i in 1..10) {
+                val latitude = 37.7749 + random.nextDouble() / 100
+                val longitude = -122.4194 + random.nextDouble() / 100
+                val radius = (100..500).random().toFloat()
+                val enterTime = System.currentTimeMillis() - (random.nextInt(10000) * 1000).toLong()
+                val exitTime = enterTime + (random.nextInt(10000) * 1000).toLong()
+                val date = "2024-06-22"
+                val placeName = "Fake Place $i"
+
+                val geofence = timeGeofence(
+                    latitude = latitude,
+                    longitude = longitude,
+                    radius = radius,
+                    enterTime = enterTime,
+                    exitTime = exitTime,
+                    date = date,
+                    placeName = placeName
+                )
+                db.attivitàDao().insertTimeGeofence(geofence)
+                println("geofence inserita: $geofence")
+            }
+        }
+    }
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showDateDialog(year: Int, month: Int, day: Int) {
         val dialogView = layoutInflater.inflate(R.layout.custom_dialog, null)
@@ -150,7 +179,7 @@ class StatsActivity : AppCompatActivity() {
 
         dialog.window?.setLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            1500 // Altezza in pixel
+            1500
         )
 
         val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
@@ -158,17 +187,26 @@ class StatsActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
-        val chartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
+        val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
+        val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
+
         lifecycleScope.launch {
             try {
+                //insertFakeGeofences()
                 val activities = getActivitiesForDate(year, month, day)
+                val geofences = getGeofencesForDate(year, month, day)
+
                 Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
-                displayActivitiesForDate(chartContainer, activities)
+                Log.d("StatsActivity", "Number of geofences retrieved: ${geofences.size}")
+
+                displayActivitiesForDate(activityChartContainer, activities)
+                displayGeofencesForDate(geofenceChartContainer, geofences)
             } catch (e: Exception) {
                 Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
+
 
 
 
@@ -374,6 +412,174 @@ class StatsActivity : AppCompatActivity() {
         container.addView(legendLayout)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun displayGeofencesForDate(container: LinearLayout, geofences: List<timeGeofence>) {
+        val geofenceColors = mutableMapOf<String, Int>()
+        val random = Random()
+
+        geofences.forEach { geofence ->
+            if (!geofenceColors.containsKey(geofence.placeName)) {
+                val color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256))
+                geofenceColors[geofence.placeName] = color
+            }
+        }
+
+        val totalMinutesPerHour = Array(24) { mutableListOf<Pair<String, Int>>() }
+
+        for (geofence in geofences) {
+            var startHour = Instant.ofEpochMilli(geofence.enterTime ?: 0).atZone(ZoneId.systemDefault()).hour
+            val endHour = Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour
+            var startMinute = Instant.ofEpochMilli(geofence.enterTime ?: 0).atZone(ZoneId.systemDefault()).minute
+            val endMinute = Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).minute
+
+            while (startHour <= endHour) {
+                val placeName = geofence.placeName
+                val currentHourList = totalMinutesPerHour[startHour]
+
+                val duration = when {
+                    startHour == endHour -> endMinute - startMinute
+                    startHour == Instant.ofEpochMilli(geofence.enterTime ?: 0).atZone(ZoneId.systemDefault()).hour -> 60 - startMinute
+                    startHour < endHour && startHour != Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour -> 60
+                    startHour == Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour -> endMinute
+                    else -> 0
+                }
+
+                if (duration > 0) {
+                    currentHourList.add(Pair(placeName, duration))
+                }
+
+                startHour++
+                startMinute = 0
+            }
+        }
+
+        container.removeAllViews()
+
+        for (hour in 0..23) {
+            val hourLayoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                100
+            ).apply {
+                if (hour == 23) {
+                    setMargins(0, -10, 0, 15)
+                } else {
+                    setMargins(0, -10, 0, -10)
+                }
+            }
+
+            val hourLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = hourLayoutParams
+            }
+
+            val hourLabel = TextView(this).apply {
+                text = String.format("%02d - %02d", hour, hour + 1)
+                layoutParams = LinearLayout.LayoutParams(
+                    200,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                ).apply {
+                    setPadding(0, 40, 0, 0)
+                }
+            }
+
+            val chart = HorizontalBarChart(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    150
+                ).apply {
+                    weight = 1f
+                }
+                setDrawGridBackground(false)
+                axisLeft.isEnabled = false
+                axisRight.isEnabled = false
+                xAxis.isEnabled = false
+                legend.isEnabled = false
+                description.isEnabled = false
+                setExtraOffsets(0f, 0f, 0f, 0f)
+            }
+
+            val currentHourList = totalMinutesPerHour[hour]
+            val durations = mutableListOf<Float>()
+            val colors = mutableListOf<Int>()
+
+            var totalDuration = 0
+
+            if (currentHourList.isEmpty()) {
+                durations.add(60f)
+                colors.add(Color.GRAY)
+            } else {
+                for ((placeName, duration) in currentHourList) {
+                    durations.add(duration.toFloat())
+                    colors.add(geofenceColors[placeName] ?: Color.GRAY)
+                    totalDuration += duration
+
+                    durations.add(1f)
+                    colors.add(Color.BLACK)
+                }
+                if (totalDuration < 60) {
+                    durations.add((60 - totalDuration).toFloat())
+                    colors.add(Color.GRAY)
+                }
+            }
+
+            val barEntries = listOf(BarEntry(0f, durations.toFloatArray()))
+            val barDataSet = BarDataSet(barEntries, "")
+            barDataSet.colors = colors
+            barDataSet.setDrawValues(false)
+
+            val barData = BarData(barDataSet)
+            chart.data = barData
+            chart.invalidate()
+
+            hourLayout.addView(hourLabel)
+            hourLayout.addView(chart)
+
+            container.addView(hourLayout)
+        }
+
+        // Crea e aggiungi la legenda
+        val legendLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setPadding(16, 16, 16, 16)
+            }
+        }
+
+        geofenceColors.forEach { (placeName, color) ->
+            val legendItemLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 8, 0, 8)
+                }
+            }
+
+            val colorView = View(this).apply {
+                setBackgroundColor(color)
+                layoutParams = LinearLayout.LayoutParams(50, 50)
+            }
+
+            val placeNameLabel = TextView(this).apply {
+                text = placeName
+                setPadding(16, 0, 0, 0)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            legendItemLayout.addView(colorView)
+            legendItemLayout.addView(placeNameLabel)
+            legendLayout.addView(legendItemLayout)
+        }
+
+        container.addView(legendLayout)
+    }
 
 
     private fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
@@ -519,6 +725,11 @@ class StatsActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateDuration(startTime: LocalDateTime, endTime: LocalDateTime): Long {
         return Duration.between(startTime, endTime).toMinutes()
+    }
+
+    suspend fun getGeofencesForDate(year: Int, month: Int, day: Int): List<timeGeofence> {
+        val date = String.format("%04d-%02d-%02d", year, month, day)
+        return db.attivitàDao().getGeofencesForDate(date)
     }
 
 
