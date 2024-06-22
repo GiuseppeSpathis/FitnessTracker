@@ -3,6 +3,7 @@ package com.example.fitnesstracker
 import Utils.convertToActivities
 import android.app.ActivityOptions
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Build
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -85,7 +87,7 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
+            showDateDialog(this, year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -169,8 +171,57 @@ class StatsActivity : AppCompatActivity() {
             }
         }
     }
+
+    companion object {
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun showDateDialog(context: Context, year: Int, month: Int, day: Int, isDialog: Boolean = false) {
+            val dialogView = LayoutInflater.from(context).inflate(R.layout.custom_dialog, null)
+            val builder = AlertDialog.Builder(context)
+                .setView(dialogView)
+
+            val dialog = builder.create()
+            dialog.show()
+
+            dialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                1500 // Altezza in pixel
+            )
+
+            val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
+            closeButton.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
+            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
+
+            // Assuming the context is an Activity
+            val activity = context as? StatsActivity
+            activity?.lifecycleScope?.launch {
+                try {
+                    val activities = if (isDialog) {
+                        val othersActivities = activity.getOtherActivitiesForDate(year, month, day)
+                        convertToActivities(othersActivities)
+                    } else {
+                        activity.getActivitiesForDate(year, month, day)
+                    }
+                    val geofences = activity.getGeofencesForDate(year, month, day)
+                    activity.displayGeofencesForDate(geofenceChartContainer, geofences)
+
+                    Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
+                    activity.displayActivitiesForDate(activityChartContainer, activities)
+                } catch (e: Exception) {
+                    Snackbar.make(activity.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+
+
+    /*
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun showDateDialog(year: Int, month: Int, day: Int, isDialog: Boolean=false) {
+    fun showDateDialog(year: Int, month: Int, day: Int, isDialog: Boolean=false) {
         val dialogView = layoutInflater.inflate(R.layout.custom_dialog, null)
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -201,10 +252,11 @@ class StatsActivity : AppCompatActivity() {
                     convertToActivities(othersActivities)
                 }
                  else {
-                    val activities = getActivitiesForDate(year, month, day)
+                    getActivitiesForDate(year, month, day)
+                }
                     val geofences = getGeofencesForDate(year, month, day)
                     displayGeofencesForDate(geofenceChartContainer, geofences)
-                }
+
 
                 Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
                 displayActivitiesForDate(activityChartContainer, activities)
@@ -212,7 +264,7 @@ class StatsActivity : AppCompatActivity() {
                 Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
             }
         }
-    }
+    }*/
 
 
 

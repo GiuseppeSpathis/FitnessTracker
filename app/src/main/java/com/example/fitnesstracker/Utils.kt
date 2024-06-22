@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import android.widget.CalendarView
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
@@ -55,8 +57,10 @@ object Utils {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("InflateParams", "SetTextI18n")
     fun receiveMessage(context: Context, name: String, message: String, gender: String, fileShared: Boolean = false) {
+
         val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val layout = layoutInflater.inflate(R.layout.custom_toast_layout, null, false)
 
@@ -72,6 +76,7 @@ object Utils {
 
         val okButton = layout.findViewById<Button>(R.id.okButton)
         if (fileShared) {
+
             // Show the OK button and create a Dialog
             val dialog = Dialog(context)
             okButton.visibility = View.VISIBLE
@@ -83,7 +88,12 @@ object Utils {
                 textView.text = "Attività di $name"
 
                 calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
-                    //showDateDialog(year, month + 1, dayOfMonth, true)  //da sistemare
+                    val activity = context as? StatsActivity
+                    if (activity != null) {
+                        StatsActivity.showDateDialog(activity, year, month + 1, dayOfMonth, true)
+                    } else {
+                        throw IllegalArgumentException("Context must be an instance of StatsActivity")
+                    }
                 }
                 //dialog.dismiss()
             }
