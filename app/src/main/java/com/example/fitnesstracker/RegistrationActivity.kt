@@ -33,6 +33,8 @@ import kotlinx.coroutines.withContext
 import java.net.InetAddress
 import java.net.NetworkInterface
 import android.Manifest.permission.ACCESS_WIFI_STATE
+import android.text.InputType
+import android.widget.ImageButton
 import android.widget.Spinner
 import androidx.core.content.ContextCompat
 import java.util.UUID
@@ -48,6 +50,8 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var registerButton: Button
     private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
+    private lateinit var togglePasswordVisibilityButton : ImageButton
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,20 +61,33 @@ class RegistrationActivity : AppCompatActivity() {
         email = findViewById(R.id.email)
         username = findViewById(R.id.username)
         password = findViewById(R.id.password)
+        togglePasswordVisibilityButton = findViewById(R.id.togglePasswordVisibilityButton)
         genderSpinner = findViewById(R.id.gender_spinner)
         registerButton = findViewById(R.id.register)
         goBack = findViewById(R.id.go_back)
 
-        // Set up gender spinner
+
         val genderArray = resources.getStringArray(R.array.gender_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, genderArray)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         genderSpinner.adapter = adapter
 
+
         val firebaseAppCheck: FirebaseAppCheck = FirebaseAppCheck.getInstance()
         firebaseAppCheck.installAppCheckProviderFactory(
             SafetyNetAppCheckProviderFactory.getInstance()
         )
+
+        togglePasswordVisibilityButton.setOnClickListener {
+            if (password.inputType == (InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                togglePasswordVisibilityButton.setImageResource(R.drawable.visible)
+            } else {
+                password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                togglePasswordVisibilityButton.setImageResource(R.drawable.not_visible)
+            }
+            password.setSelection(password.text.length)
+        }
 
         registerButton.setOnClickListener {
             val email = email.text.toString()
@@ -83,7 +100,7 @@ class RegistrationActivity : AppCompatActivity() {
                     try {
                         registerUser(email, username, password, selectedGender)
                     } catch (e: Exception) {
-                        Toast.makeText(this@RegistrationActivity, "Errore durante la registrazione", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@RegistrationActivity, R.string.errore_registrazione, Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -110,7 +127,7 @@ class RegistrationActivity : AppCompatActivity() {
 
                 // Switch to main thread for Toast
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@RegistrationActivity, "Registrazione avvenuta con successo!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RegistrationActivity, R.string.registrazione_successo, Toast.LENGTH_SHORT).show()
                     Handler(Looper.getMainLooper()).postDelayed({
                         startActivity(Intent(this@RegistrationActivity, MainActivity::class.java))
                         finish()
@@ -119,10 +136,8 @@ class RegistrationActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Log.e("RegistrationActivity", "Registration failed", e)
-
-            // Switch to main thread for Toast
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@RegistrationActivity, "Errore durante la registrazione", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@RegistrationActivity, R.string.errore_registrazione, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -151,41 +166,38 @@ class RegistrationActivity : AppCompatActivity() {
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
 
         if (!emailPattern.matcher(email).matches()) {
-            Toast.makeText(this, "Formato email non valido", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.email_non_valida, Toast.LENGTH_SHORT).show()
             return false
         }
 
         if (!passwordPattern.matches(password)) {
-            Toast.makeText(this, "La password deve contenere: almeno una maiuscola, un numero e un carattere speciale", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.password_non_valida, Toast.LENGTH_LONG).show()
             return false
         }
 
-        // Check if email exists using coroutine helper
         if (emailExists(email)) {
-            Toast.makeText(this, "Email già utilizzata", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
             return false
         }
 
         if(usernameExists(username)){
-            Toast.makeText(this, "Username già utilizzato", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
             return false
         }
 
         return true
     }
 
-    // Helper function to check email existence (suspending)
     private suspend fun emailExists(email: String): Boolean {
         val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
 
-        // Use a suspending function inside coroutines (e.g., withContext)
         return withContext(Dispatchers.IO) {
             try {
                 val result = database.child("users").orderByChild("email").equalTo(email).get().await()
                 result.exists()
             } catch (e: Exception) {
                 Log.e("RegistrationActivity", "Error checking email existence", e)
-                false // Handle error appropriately
+                false
             }
         }
     }
@@ -200,7 +212,7 @@ class RegistrationActivity : AppCompatActivity() {
                 result.exists()
             } catch (e: Exception) {
                 Log.e("RegistrationActivity", "Error checking username existence", e)
-                false // Handle error appropriately
+                false
             }
         }
     }

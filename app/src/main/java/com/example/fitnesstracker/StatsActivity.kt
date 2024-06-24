@@ -1,16 +1,12 @@
 package com.example.fitnesstracker
 
-import Utils.convertToActivities
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.CalendarView
 import android.widget.ImageButton
-import android.widget.ListView
-import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
 import android.graphics.Typeface
@@ -18,7 +14,6 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -71,6 +66,9 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var db: AppDatabase
     private lateinit var binding: ActivityStatsBinding
     private lateinit var pieChart: PieChart
+    private lateinit var periodMessage: TextView
+    private lateinit var geofencePieChart: PieChart
+    private lateinit var periodMessageActivities: TextView
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +79,9 @@ class StatsActivity : AppCompatActivity() {
             applicationContext,
             AppDatabase::class.java, "app_database"
         ).build()
+
+        periodMessage = binding.periodMessage
+        periodMessageActivities = binding.periodMessageActivities
 
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
@@ -124,22 +125,28 @@ class StatsActivity : AppCompatActivity() {
         //resetDatabase()
         //insertFakeData()
         pieChart = binding.pieChart
-        val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear)
+        geofencePieChart = binding.geofencePieChart
+        val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear, binding.btnGeofenceDay, binding.btnGeofenceWeek, binding.btnGeofenceMonth, binding.btnGeofenceYear)
         val listener = View.OnClickListener { view ->
             buttons.forEach { button ->
                 button.isSelected = button == view
-                button.setTextColor(
-                    Color.WHITE
-                )
+                button.setTextColor(Color.WHITE)
             }
             when (view.id) {
-                R.id.btn_day -> updatePieChartForPeriod("day")
-                R.id.btn_week -> updatePieChartForPeriod("week")
-                R.id.btn_month -> updatePieChartForPeriod("month")
-                R.id.btn_year -> updatePieChartForPeriod("year")
+                R.id.btn_day -> updatePieChartForPeriod("day", "activities")
+                R.id.btn_week -> updatePieChartForPeriod("week", "activities")
+                R.id.btn_month -> updatePieChartForPeriod("month", "activities")
+                R.id.btn_year -> updatePieChartForPeriod("year", "activities")
+                R.id.btn_geofence_day -> updatePieChartForPeriod("day", "geofences")
+                R.id.btn_geofence_week -> updatePieChartForPeriod("week", "geofences")
+                R.id.btn_geofence_month -> updatePieChartForPeriod("month", "geofences")
+                R.id.btn_geofence_year -> updatePieChartForPeriod("year", "geofences")
             }
         }
         buttons.forEach { it.setOnClickListener(listener) }
+
+
+
     }
 
     suspend fun insertFakeGeofences() {
@@ -152,7 +159,7 @@ class StatsActivity : AppCompatActivity() {
                 val radius = (100..500).random().toFloat()
                 val enterTime = System.currentTimeMillis() - (random.nextInt(10000) * 1000).toLong()
                 val exitTime = enterTime + (random.nextInt(10000) * 1000).toLong()
-                val date = "2024-06-22"
+                val date = "2024-06-23"
                 val placeName = "Fake Place $i"
 
                 val geofence = timeGeofence(
@@ -680,12 +687,69 @@ class StatsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun updatePieChartForPeriod(period: String) {
-        println("sono nella statsActivity9")
+
+    private fun updatePieChartForPeriod(period: String, chartType: String) {
         lifecycleScope.launch {
-            val activities = getActivitiesForPeriod(period)
-            println("sono nella statsActivity10")
-            displayPieChart(activities)
+            try {
+                if(chartType == "activities"){
+                    val activities: List<Attività> = when (period) {
+                        "day" -> {
+                            periodMessageActivities.text = "Dati relativi all'ultimo giorno"
+                            getActivitiesForPeriod(period)
+                        }
+                        "week" -> {
+                            periodMessageActivities.text = "Dati relativi all'ultima settimana"
+                            getActivitiesForPeriod(period)
+                        }
+                        "month" -> {
+                            periodMessageActivities.text = "Dati relativi all'ultimo mese"
+                            getActivitiesForPeriod(period)
+                        }
+                        "year" -> {
+                            periodMessageActivities.text = "Dati relativi all'ultimo anno"
+                            getActivitiesForPeriod(period)
+                        }
+                        else -> emptyList()
+                    }
+
+                    if (activities.isEmpty()) {
+                        pieChart.clear()
+                        Snackbar.make(binding.root, "Nessun dato disponibile", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        displayPieChart(activities)
+                    }
+                } else {
+                    val geofences : List<timeGeofence> = when (period) {
+                        "day" -> {
+                            periodMessage.text = "Dati relativi all'ultimo giorno"
+                           getGeofencesForPeriod(period)
+                        }
+                        "week" -> {
+                            periodMessage.text = "Dati relativi all'ultima settimana"
+                            getGeofencesForPeriod(period)
+                        }
+                        "month" -> {
+                            periodMessage.text = "Dati relativi all'ultimo mese"
+                            getGeofencesForPeriod(period)
+                        }
+                        "year" -> {
+                            periodMessage.text ="Dati relativi all'ultimo anno"
+                            getGeofencesForPeriod(period)
+                        }
+                        else -> emptyList()
+
+                    }
+                    if (geofences.isEmpty()) {
+                        geofencePieChart.clear()
+                        Snackbar.make(binding.root, "Nessun dato disponibile", Snackbar.LENGTH_SHORT).show()
+                    } else {
+                        displayGeofencePieChart(geofences)
+                    }
+                }
+
+            } catch (e: Exception) {
+                Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -705,6 +769,22 @@ class StatsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
+    private suspend fun getGeofencesForPeriod(period: String) : List<timeGeofence>{
+        val now = LocalDateTime.now()
+        val startDate = when (period) {
+            "day" -> now.minusDays(1)
+            "week" -> now.minusWeeks(1)
+            "month" -> now.minusMonths(1)
+            "year" -> now.minusYears(1)
+            else -> now
+        }
+        println("For period: $period, startDate: $startDate")
+        return withContext(Dispatchers.IO){
+            db.attivitàDao().getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun displayPieChart(activities: List<Attività>) {
         val activityDurations = mutableMapOf<String, Long>()
         for (activity in activities) {
@@ -719,7 +799,7 @@ class StatsActivity : AppCompatActivity() {
             ColorTemplate.rgb("#F66942"), // Corsa
             ColorTemplate.rgb("#96D74C"), // Stare fermo
             ColorTemplate.rgb("#FFD500"), // Guidare
-            ColorTemplate.rgb("#FFD6FF")  // Not tracked
+            ColorTemplate.rgb("#FFD6FF")
         )
         dataSet.valueTextSize = 14f
 
@@ -738,10 +818,55 @@ class StatsActivity : AppCompatActivity() {
         pieChart.invalidate()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun displayGeofencePieChart(geofences: List<timeGeofence>) {
+        val activityDurations = mutableMapOf<String, Long>()
+        val geofenceColors = mutableMapOf<String, Int>()
+
+        for (geofence in geofences) {
+            val duration = calculateDuration(geofence.enterTime, geofence.exitTime)
+            activityDurations[geofence.placeName] = activityDurations.getOrDefault(geofence.placeName, 0L) + duration
+            if (!geofenceColors.containsKey(geofence.placeName)) {
+                geofenceColors[geofence.placeName] = generateRandomColor()
+            }
+        }
+
+        val entries = activityDurations.map { PieEntry(it.value.toFloat(), it.key) }
+        val dataSet = PieDataSet(entries, "Geofence Activities")
+        dataSet.colors = geofenceColors.values.toList()
+        dataSet.valueTextSize = 14f
+
+        val data = PieData(dataSet)
+        geofencePieChart.data = data
+
+
+        val tf = Typeface.DEFAULT_BOLD
+        geofencePieChart.setEntryLabelTypeface(tf)
+        geofencePieChart.data.setValueTypeface(tf)
+
+
+        geofencePieChart.setEntryLabelColor(Color.BLACK)
+        geofencePieChart.data.setValueTextColor(Color.BLACK)
+
+        geofencePieChart.invalidate()
+    }
+
+    private fun generateRandomColor(): Int {
+        val rnd = Random()
+        return Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateDuration(startTime: LocalDateTime, endTime: LocalDateTime): Long {
         return Duration.between(startTime, endTime).toMinutes()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun calculateDuration(startTimeMillis: Long?, endTimeMillis: Long?): Long {
+        if (startTimeMillis == null || endTimeMillis == null) return 0L
+        val startTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTimeMillis), ZoneId.systemDefault())
+        val endTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(endTimeMillis), ZoneId.systemDefault())
+        return calculateDuration(startTime, endTime)
     }
 
     suspend fun getGeofencesForDate(year: Int, month: Int, day: Int): List<timeGeofence> {

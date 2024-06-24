@@ -53,6 +53,21 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
-
+    <string name="lastday">Dati relativi all\'ultimo giorno</string>
+    <string name="lastweek">Dati relativi all\'ultima settimana</string>
+    <string name="lastmonth">Dati relativi all\'ultimo mese</string>
+    <string name="lastyear">Dati relativi all\'ultimo anno</string>
+    <string name="email_non_valida">Formato email non valido</string>
+    <string name="password_non_valida">La password deve contenere almeno: una lettera maiuscola, un numero e un carattere speciale</string>
+    <string name="email_utilizzata">Email già utilizzata</string>
+    <string name="username_utilizzato">Username già utilizzato</string>
+    <string name="errore_registrazione">Errore durante la registrazione</string>
+    <string name="registrazione_successo">Registrazione avvenuta con successo!</string>
+    <string name="email_errata">L\'email inserita non è valida.</string>
+    <string name="password_errata">Password errata</string>
+    <string name="wrong_credentials">Credenziali non valide</string>
+    <string name="user_not_found">Non esiste un utente con questa email.</string>
+    <string name="not_valid_user">Utente non valido</string>
+    <string name="errore_login">Errore durante il login</string>
+    <string name="successo_login">Login avvenuto con successo</string>
 </resources>
