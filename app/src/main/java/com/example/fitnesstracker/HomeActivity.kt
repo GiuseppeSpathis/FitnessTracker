@@ -25,6 +25,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.navigation.NavigationBarView
+import com.google.firebase.auth.FirebaseAuth
 import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapListener
@@ -38,7 +39,6 @@ import org.w3c.dom.Text
 
 class HomeActivity : AppCompatActivity(), MapListener {
 
-    private lateinit var socialButton: Button
     private lateinit var map: MapView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val REQUEST_PERMISSION_REQUEST_CODE = 1
@@ -52,16 +52,14 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
         val imageProfile = findViewById<ImageView>(R.id.image_profile)
         var gender = LoggedUser.gender
-        gender = "Maschio"
         println(gender)
         when (gender) {
             "Maschio" -> imageProfile.setImageResource(R.drawable.male)
             "Femmina" -> imageProfile.setImageResource(R.drawable.female)
             else -> imageProfile.setImageResource(R.drawable.other)
         }
-        welcomeBack = findViewById<TextView>(R.id.username_text)
+        welcomeBack = findViewById(R.id.username_text)
         var username = LoggedUser.username
-        username = "Cono"
         welcomeBack.setText("Bentornato, $username")
         val activityArray = resources.getStringArray(R.array.activity_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
@@ -69,9 +67,6 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
         val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
         spinnerActivity.adapter = adapter
-
-
-
 
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
 
@@ -108,20 +103,10 @@ class HomeActivity : AppCompatActivity(), MapListener {
             }
         }
 
-        /*
-        socialButton = findViewById(R.id.socialButton)
-        socialButton.setOnClickListener {
-            startActivity(Intent(this, Social::class.java))
-        }
-        */
-
-
-        // Imposta la mappa
         map = findViewById(R.id.osmmap)
         map.setTileSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
 
-        // Inizializza il client per ottenere la posizione
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
@@ -143,6 +128,15 @@ class HomeActivity : AppCompatActivity(), MapListener {
                     startActivity(intent)
                 }
             }
+        }
+
+        val logoutButton = findViewById<ImageView>(R.id.logout)
+        logoutButton.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
     }
 

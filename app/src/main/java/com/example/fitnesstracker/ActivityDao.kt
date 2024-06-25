@@ -61,6 +61,8 @@ interface ActivityDao {
 
     @Query("SELECT * FROM timeGeofences WHERE date = :date")
     suspend fun getGeofencesForDate(date: String): List<timeGeofence>
+    @Query("SELECT * FROM timeGeofences WHERE date BETWEEN :startDate AND :endDate")
+    fun getGeofencesByDateRange(startDate: String, endDate: String): List<timeGeofence>
 }
 
 
