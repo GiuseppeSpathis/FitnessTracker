@@ -59,6 +59,8 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
@@ -87,7 +89,7 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(this, year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
+            showDateDialog(this, year, month + 1, dayOfMonth, db)  // month is zero-based in CalendarView
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -124,7 +126,7 @@ class StatsActivity : AppCompatActivity() {
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
         //resetDatabase()
-        //insertFakeData()
+
         pieChart = binding.pieChart
         val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear)
         val listener = View.OnClickListener { view ->
@@ -173,9 +175,289 @@ class StatsActivity : AppCompatActivity() {
     }
 
     companion object {
+
         @RequiresApi(Build.VERSION_CODES.O)
-        fun showDateDialog(context: Context, year: Int, month: Int, day: Int, isDialog: Boolean = false) {
-            val dialogView = LayoutInflater.from(context).inflate(R.layout.custom_dialog, null)
+        fun showActivityPopup(activityType: String, activity: Attività, context: Context) {
+
+            val inflater = LayoutInflater.from(context)
+            val view = inflater.inflate(R.layout.popup_activity_details, null)
+
+            val startTimeTextView = view.findViewById<TextView>(R.id.start_time)
+            startTimeTextView.text = "Start: ${activity.startTime.toLocalTime()}"
+
+            val endTimeTextView = view.findViewById<TextView>(R.id.end_time)
+            endTimeTextView.text = "End: ${activity.endTime.toLocalTime()}"
+
+            val stepCountLayout = view.findViewById<LinearLayout>(R.id.step_count_layout)
+            val stepCountTextView = view.findViewById<TextView>(R.id.step_count)
+            if (activity.stepCount != null) {
+                stepCountTextView.text = "Step Count: ${activity.stepCount}"
+            } else {
+                stepCountLayout.visibility = View.GONE
+            }
+
+            val distanceLayout = view.findViewById<LinearLayout>(R.id.distance_layout)
+            val distanceTextView = view.findViewById<TextView>(R.id.distance)
+            if (activity.distance != null) {
+                distanceTextView.text = "Distance: ${activity.distance}"
+            } else {
+                distanceLayout.visibility = View.GONE
+            }
+
+            val paceLayout = view.findViewById<LinearLayout>(R.id.pace_layout)
+            val paceTextView = view.findViewById<TextView>(R.id.pace)
+            if (activity.pace != null) {
+                paceTextView.text = "Pace: ${activity.pace}"
+            } else {
+                paceLayout.visibility = View.GONE
+            }
+
+            val avgSpeedLayout = view.findViewById<LinearLayout>(R.id.avg_speed_layout)
+            val avgSpeedTextView = view.findViewById<TextView>(R.id.avg_speed)
+            if (activity.avgSpeed != null) {
+                avgSpeedTextView.text = "Avg Speed: ${activity.avgSpeed}"
+            } else {
+                avgSpeedLayout.visibility = View.GONE
+            }
+
+            val maxSpeedLayout = view.findViewById<LinearLayout>(R.id.max_speed_layout)
+            val maxSpeedTextView = view.findViewById<TextView>(R.id.max_speed)
+            if (activity.maxSpeed != null) {
+                maxSpeedTextView.text = "Max Speed: ${activity.maxSpeed}"
+            } else {
+                maxSpeedLayout.visibility = View.GONE
+            }
+
+            val dateTextView = view.findViewById<TextView>(R.id.date)
+            dateTextView.text = "Date: ${activity.date}"
+
+            AlertDialog.Builder(context)
+                .setTitle("Activity Details: $activityType")
+                .setView(view)
+                .setPositiveButton("OK", null)
+                .show()
+        }
+
+        fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
+            stackIndex?.let {
+                val colorIndex = it % colors.size
+                return activityColors.entries.firstOrNull { it.value == colors[colorIndex] }?.key ?: "Not tracked"
+            }
+            return "Not tracked"
+        }
+        @RequiresApi(Build.VERSION_CODES.O)
+         fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>) {
+            val activityColors = mapOf(
+                "Passeggiata" to ContextCompat.getColor(context, R.color.passeggiata),
+                "Corsa" to ContextCompat.getColor(context, R.color.corsa),
+                "Stare fermo" to ContextCompat.getColor(context, R.color.stare_fermo),
+                "Guidare" to ContextCompat.getColor(context, R.color.guidare),
+                "Not tracked" to ContextCompat.getColor(context, R.color.not_tracked)
+            )
+
+            val totalMinutesPerHour = Array(24) { mutableListOf<Pair<String, Int>>() }
+
+            for (activity in activities) {
+                Log.d("ActivityDebug", "processing activity: $activity")
+                var startHour = activity.startTime.hour
+                val endHour = activity.endTime.hour
+                var startMinute = activity.startTime.minute
+                val endMinute = activity.endTime.minute
+
+                while (startHour <= endHour) {
+                    val activityType = activity.activityType
+                    val currentHourList = totalMinutesPerHour[startHour]
+
+                    val duration = when {
+                        startHour == endHour -> endMinute - startMinute
+                        startHour == activity.startTime.hour -> 60 - startMinute
+                        startHour < endHour && startHour != activity.endTime.hour -> 60
+                        startHour == activity.endTime.hour -> endMinute
+                        else -> 0
+                    }
+
+                    if (duration > 0) {
+                        currentHourList.add(Pair(activityType, duration))
+                    }
+
+                    startHour++
+                    startMinute = 0  // Reset startMinute for the next hour
+                }
+            }
+
+            container.removeAllViews()
+
+            for (hour in 0..23) {
+                val hourLayoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    100
+                ).apply {
+                    if (hour == 23) {
+                        setMargins(0, -10, 0, 15)
+                    } else {
+                        setMargins(0, -10, 0, -10)
+                    }
+                }
+
+                val hourLayout = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = hourLayoutParams
+                }
+
+                val hourLabel = TextView(context).apply {
+                    text = String.format("%02d - %02d", hour, hour + 1)
+                    layoutParams = LinearLayout.LayoutParams(
+                        200,
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                    ).apply {
+                        setPadding(0, 40, 0, 0)
+                    }
+                }
+
+                val chart = HorizontalBarChart(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        150
+                    ).apply {
+                        weight = 1f
+                    }
+                    setDrawGridBackground(false)
+                    axisLeft.isEnabled = false
+                    axisRight.isEnabled = false
+                    xAxis.isEnabled = false
+                    legend.isEnabled = false
+                    description.isEnabled = false
+                    setExtraOffsets(0f, 0f, 0f, 0f)
+                }
+
+                val currentHourList = totalMinutesPerHour[hour]
+                val durations = mutableListOf<Float>()
+                val colors = mutableListOf<Int>()
+
+                var totalDuration = 0
+
+                if (currentHourList.isEmpty()) {
+                    durations.add(60f)
+                    colors.add(activityColors["Not tracked"] ?: Color.GRAY)
+                } else {
+                    for ((activityType, duration) in currentHourList) {
+                        durations.add(duration.toFloat())
+                        colors.add(activityColors[activityType] ?: Color.GRAY)
+                        totalDuration += duration
+
+                        // Aggiungi una barra nera di separazione
+                        durations.add(1f) // Puoi regolare lo spessore della barra nera cambiando questo valore
+                        colors.add(Color.BLACK)
+                    }
+                    if (totalDuration < 60) {
+                        durations.add((60 - totalDuration).toFloat())
+                        colors.add(activityColors["Not tracked"] ?: Color.GRAY)
+                    }
+                }
+
+                val barEntries = listOf(BarEntry(0f, durations.toFloatArray()))
+                val barDataSet = BarDataSet(barEntries, "")
+                barDataSet.colors = colors
+                barDataSet.setDrawValues(false)
+
+                val barData = BarData(barDataSet)
+                chart.data = barData
+                chart.invalidate()
+
+                chart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+                    override fun onValueSelected(e: Entry?, h: Highlight?) {
+                        if (e is BarEntry) {
+                            val activityType = getActivityTypeByColor(colors, activityColors, h?.stackIndex)
+                            Log.d("ActivityDebug:", "Clicked activity: $activityType")
+
+                            val startMinute = (hour * 60) + ((h?.stackIndex ?: 0) * 60 / durations.size)
+                            val endMinute = startMinute + (60 / durations.size)
+
+                            val clickedActivities = activities.filter {
+                                it.activityType == activityType &&
+                                        it.startTime.hour * 60 + it.startTime.minute <= endMinute &&
+                                        it.endTime.hour * 60 + it.endTime.minute >= startMinute
+                            }
+
+                            clickedActivities.forEach { activity ->
+                                Log.d("ActivityDebug", "Activity Clicked: $activity")
+                                showActivityPopup(activityType, activity, context)
+                            }
+                        }
+                    }
+
+                    override fun onNothingSelected() {}
+                })
+
+                hourLayout.addView(hourLabel)
+                hourLayout.addView(chart)
+
+                container.addView(hourLayout)
+            }
+
+            val legendLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(16, 16, 16, 16)
+            }
+
+            activityColors.forEach { (activity, color) ->
+                val legendItemLayout = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 8, 0, 8)
+                    }
+                }
+
+                val colorView = View(context).apply {
+                    setBackgroundColor(color)
+                    layoutParams = LinearLayout.LayoutParams(50, 50)
+                }
+
+                val activityLabel = TextView(context).apply {
+                    text = activity
+                    setPadding(16, 0, 0, 0)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                legendItemLayout.addView(colorView)
+                legendItemLayout.addView(activityLabel)
+                legendLayout.addView(legendItemLayout)
+            }
+
+            container.addView(legendLayout)
+        }
+        @RequiresApi(Build.VERSION_CODES.O)
+        private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
+            val date = String.format("%02d/%02d/%04d", day, month, year)
+            Log.d("StatsActivity", "Getting activities for date: $date")
+            return withContext(Dispatchers.IO) {
+                db.attivitàDao().getOtherActivitiesByDate(date)
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        suspend fun getActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<Attività> {
+            val date = String.format("%02d/%02d/%04d", day, month, year)
+            Log.d("StatsActivity", "Getting activities for date: $date")
+            return withContext(Dispatchers.IO) {
+                db.attivitàDao().getAttivitàByDate(date)
+            }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
+            val dialogView = if(isDialog) {
+                LayoutInflater.from(context).inflate(R.layout.custom_dialog2, null)
+            }
+            else {
+                LayoutInflater.from(context).inflate(R.layout.custom_dialog, null)
+            }
             val builder = AlertDialog.Builder(context)
                 .setView(dialogView)
 
@@ -184,7 +466,7 @@ class StatsActivity : AppCompatActivity() {
 
             dialog.window?.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                1500 // Altezza in pixel
+                1500
             )
 
             val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
@@ -193,25 +475,32 @@ class StatsActivity : AppCompatActivity() {
             }
 
             val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
-            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
 
             // Assuming the context is an Activity
             val activity = context as? StatsActivity
-            activity?.lifecycleScope?.launch {
-                try {
-                    val activities = if (isDialog) {
-                        val othersActivities = activity.getOtherActivitiesForDate(year, month, day)
-                        convertToActivities(othersActivities)
-                    } else {
-                        activity.getActivitiesForDate(year, month, day)
-                    }
-                    val geofences = activity.getGeofencesForDate(year, month, day)
-                    activity.displayGeofencesForDate(geofenceChartContainer, geofences)
 
-                    Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
-                    activity.displayActivitiesForDate(activityChartContainer, activities)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val activities: List<Attività> = if (isDialog) {
+                            val othersActivities = getOtherActivitiesForDate(year, month, day, db)
+                            convertToActivities(othersActivities)
+                        } else {
+                            getActivitiesForDate(year, month, day, db)
+                        }
+                        if (!isDialog) {
+                            val geofenceChartContainer =
+                                dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
+                            val geofences = activity!!.getGeofencesForDate(year, month, day)
+                            withContext(Dispatchers.Main) {
+                                activity.displayGeofencesForDate(geofenceChartContainer, geofences)
+                            }
+                        }
+                        withContext(Dispatchers.Main){
+                            Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
+                            displayActivitiesForDate(context, activityChartContainer, activities)
+                        }
                 } catch (e: Exception) {
-                    Snackbar.make(activity.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -267,18 +556,19 @@ class StatsActivity : AppCompatActivity() {
     }*/
 
 
-
+/*
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getActivitiesForDate(year: Int, month: Int, day: Int): List<Attività> {
+    suspend fun getActivitiesForDate(year: Int, month: Int, day: Int): List<Attività> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
         Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
             db.attivitàDao().getAttivitàByDate(date)
         }
     }
-
+*/
+    /*
     @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int): List<OthersActivity> {
+    private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
         Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
@@ -287,10 +577,10 @@ class StatsActivity : AppCompatActivity() {
     }
 
 
+*/
 
 
-
-
+/*
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayActivitiesForDate(container: LinearLayout, activities: List<Attività>) {
@@ -479,6 +769,7 @@ class StatsActivity : AppCompatActivity() {
 
         container.addView(legendLayout)
     }
+    */
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayGeofencesForDate(container: LinearLayout, geofences: List<timeGeofence>) {
@@ -651,16 +942,18 @@ class StatsActivity : AppCompatActivity() {
 
 
 
-    private fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
+     /*
+    fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
         stackIndex?.let {
             val colorIndex = it % colors.size
             return activityColors.entries.firstOrNull { it.value == colors[colorIndex] }?.key ?: "Not tracked"
         }
         return "Not tracked"
     }
-
+*/
+/*
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun showActivityPopup(activityType: String, activity: Attività) {
+     fun showActivityPopup(activityType: String, activity: Attività) {
 
         val inflater = layoutInflater
         val view = inflater.inflate(R.layout.popup_activity_details, null)
@@ -719,7 +1012,7 @@ class StatsActivity : AppCompatActivity() {
             .setView(view)
             .setPositiveButton("OK", null)
             .show()
-    }
+    }*/
 
 
     @RequiresApi(Build.VERSION_CODES.O)

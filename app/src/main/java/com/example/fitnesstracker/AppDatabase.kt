@@ -9,7 +9,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Attività::class, OthersActivity::class, GeoFence::class, timeGeofence::class], version = 3)
+@Database(entities = [Attività::class, OthersActivity::class, GeoFence::class, timeGeofence::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -32,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fitness_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // Aggiungi la migrazione da 1 a 2
+                    .addMigrations(MIGRATION_1_2) // Aggiungi la migrazione da 1 a 2
                     .build()
                 INSTANCE = instance
                 return instance
