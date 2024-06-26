@@ -34,6 +34,8 @@ interface ActivityDao {
     @Query("SELECT * FROM OthersActivity WHERE date = :date")
     fun getOtherActivitiesByDate(date: String): List<OthersActivity>
 
+    @Query("SELECT DISTINCT date FROM Attività WHERE activityType = :type")
+    fun getDatesByActivityType(type: String): List<String>
     @Insert
     suspend fun insertGeofence(geofence: GeoFence)
 
