@@ -442,23 +442,26 @@ class StatsActivity : AppCompatActivity() {
         @RequiresApi(Build.VERSION_CODES.O)
         private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
             val date = String.format("%02d/%02d/%04d", day, month, year)
+            var attivitàDao : ActivityDao = db.attivitàDao()
             Log.d("StatsActivity", "Getting activities for date: $date")
             return withContext(Dispatchers.IO) {
-                db.attivitàDao().getOtherActivitiesByDate(date)
+                attivitàDao.getOtherActivitiesByDate(date)
             }
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
         suspend fun getActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<Attività> {
             val date = String.format("%02d/%02d/%04d", day, month, year)
+            var attivitàDao : ActivityDao = db.attivitàDao()
             Log.d("StatsActivity", "Getting activities for date: $date")
             return withContext(Dispatchers.IO) {
-                db.attivitàDao().getAttivitàByDate(date)
+                attivitàDao.getAttivitàByDate(date)
             }
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
+            println("sono dentro showDateDialog")
             val dialogView = if(isDialog) {
                 LayoutInflater.from(context).inflate(R.layout.custom_dialog2, null)
             }
