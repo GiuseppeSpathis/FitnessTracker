@@ -87,6 +87,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_walk)
@@ -189,8 +190,6 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             withContext(Dispatchers.IO) {
                 attivitàDao.insertActivity(attività)
                 Log.d("WalkActivity", "Attività salvata: $attività")
-                var attivitàRandom = attivitàDao.getAttivitàByDate("20/06/2024")
-                println("attività random: $attivitàRandom")
 
             }
             withContext(Dispatchers.Main) {

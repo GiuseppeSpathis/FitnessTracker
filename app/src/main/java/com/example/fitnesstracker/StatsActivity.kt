@@ -1,5 +1,6 @@
 package com.example.fitnesstracker
 
+import Utils.convertToActivities
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Context
@@ -71,16 +72,15 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var periodMessage: TextView
     private lateinit var geofencePieChart: PieChart
     private lateinit var periodMessageActivities: TextView
+    private lateinit var attivitàDao: ActivityDao
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "app_database"
-        ).build()
+        db = AppDatabase.getDatabase(this)
+        attivitàDao = db.attivitàDao()
 
         periodMessage = binding.periodMessage
         periodMessageActivities = binding.periodMessageActivities
@@ -88,7 +88,7 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
         val bottomNavigationView = binding.bottomNavigation
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(this, year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
+            showDateDialog( this, year, month + 1, dayOfMonth)  // month is zero-based in CalendarView
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -124,7 +124,7 @@ class StatsActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
-        //resetDatabase()
+
         //insertFakeData()
         pieChart = binding.pieChart
         geofencePieChart = binding.geofencePieChart
@@ -173,7 +173,7 @@ class StatsActivity : AppCompatActivity() {
                     date = date,
                     placeName = placeName
                 )
-                db.attivitàDao().insertTimeGeofence(geofence)
+                attivitàDao.insertTimeGeofence(geofence)
                 println("geofence inserita: $geofence")
             }
         }
@@ -202,7 +202,7 @@ class StatsActivity : AppCompatActivity() {
             val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
             val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
 
-            // Assuming the context is an Activity
+
             val activity = context as? StatsActivity
             activity?.lifecycleScope?.launch {
                 try {
@@ -210,7 +210,9 @@ class StatsActivity : AppCompatActivity() {
                         val othersActivities = activity.getOtherActivitiesForDate(year, month, day)
                         convertToActivities(othersActivities)
                     } else {
-                        activity.getActivitiesForDate(year, month, day)
+                        println("getting activities based on the date")
+                       // activity.resetDatabase()
+                       activity.getActivitiesForDate(year, month, day)
                     }
                     val geofences = activity.getGeofencesForDate(year, month, day)
                     activity.displayGeofencesForDate(geofenceChartContainer, geofences)
@@ -228,7 +230,7 @@ class StatsActivity : AppCompatActivity() {
 
     /*
     @RequiresApi(Build.VERSION_CODES.O)
-    fun showDateDialog(year: Int, month: Int, day: Int, isDialog: Boolean=false) {
+    fun showDateDialogA(year: Int, month: Int, day: Int, isDialog: Boolean=false) {
         val dialogView = layoutInflater.inflate(R.layout.custom_dialog, null)
         val builder = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -273,14 +275,38 @@ class StatsActivity : AppCompatActivity() {
         }
     }*/
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun insertFakeActivity(){
+        val endTimeMillis = System.currentTimeMillis()
+        val endTime = Instant.ofEpochMilli(endTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
+        val startTime = endTime.minusMinutes(30)  // Falso startTime 30 minuti prima dell'endTime
 
+        val attività = Attività(
+            userId = "ciao",
+            startTime = startTime,
+            endTime = endTime,
+            stepCount = 500,
+            distance = 5.0f,
+            date = "26/06/2024",
+            pace = null,
+            activityType = "Passeggiata",
+            avgSpeed = null,
+            maxSpeed = null
+        )
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                attivitàDao.insertActivity(attività)
+                Log.d("WalkActivity", "Attività salvata: $attività")
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun getActivitiesForDate(year: Int, month: Int, day: Int): List<Attività> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
-        Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
-            db.attivitàDao().getAttivitàByDate(date)
+            Log.d("StatsActivity", "searching for date: $date")
+            attivitàDao.getAttivitàByDate(date)
         }
     }
 
@@ -289,18 +315,14 @@ class StatsActivity : AppCompatActivity() {
         val date = String.format("%02d/%02d/%04d", day, month, year)
         Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
-            db.attivitàDao().getOtherActivitiesByDate(date)
+            attivitàDao.getOtherActivitiesByDate(date)
         }
     }
 
 
-
-
-
-
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayActivitiesForDate(container: LinearLayout, activities: List<Attività>) {
+        println("activities ricevute: $activities")
         val activityColors = mapOf(
             "Passeggiata" to ContextCompat.getColor(this, R.color.passeggiata),
             "Corsa" to ContextCompat.getColor(this, R.color.corsa),
@@ -310,6 +332,13 @@ class StatsActivity : AppCompatActivity() {
         )
 
         val totalMinutesPerHour = Array(24) { mutableListOf<Pair<String, Int>>() }
+
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                var attivitàRandom = attivitàDao.getAttivitàByDate("26/06/2024")
+                println("attività dentro display: $attivitàRandom")
+            }
+        }
 
         for (activity in activities) {
             Log.d("ActivityDebug", "processing activity: $activity")
@@ -733,7 +762,7 @@ class StatsActivity : AppCompatActivity() {
     private fun resetDatabase() {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                db.attivitàDao().deleteAll()
+                attivitàDao.deleteAll()
             }
         }
     }
@@ -816,7 +845,7 @@ class StatsActivity : AppCompatActivity() {
             else -> now
         }
         return withContext(Dispatchers.IO) {
-            db.attivitàDao().getAttivitàByDateRange(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            attivitàDao.getAttivitàByDateRange(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
         }
     }
 
@@ -832,7 +861,7 @@ class StatsActivity : AppCompatActivity() {
         }
         println("For period: $period, startDate: $startDate")
         return withContext(Dispatchers.IO){
-            db.attivitàDao().getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+            attivitàDao.getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
         }
     }
 
@@ -923,7 +952,7 @@ class StatsActivity : AppCompatActivity() {
 
     suspend fun getGeofencesForDate(year: Int, month: Int, day: Int): List<timeGeofence> {
         val date = String.format("%04d-%02d-%02d", year, month, day)
-        return db.attivitàDao().getGeofencesForDate(date)
+        return attivitàDao.getGeofencesForDate(date)
     }
 
 
