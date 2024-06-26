@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CalendarView
 import android.widget.ImageView
@@ -23,6 +24,8 @@ import com.example.fitnesstracker.R
 import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
+import androidx.room.Room
+import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.Attività
 import com.example.fitnesstracker.LoggedUser
 import com.example.fitnesstracker.OthersActivity
@@ -82,20 +85,17 @@ object Utils {
             okButton.visibility = View.VISIBLE
             okButton.setOnClickListener {
                 dialog.setContentView(R.layout.dialog_stats)
-
+                dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, 1500)
                 val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
                 val textView = dialog.findViewById<TextView>(R.id.title)
                 textView.text = "Attività di $name"
 
                 calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
-                    val activity = context as? StatsActivity
-                    if (activity != null) {
-                        StatsActivity.showDateDialog(activity, year, month + 1, dayOfMonth, true)
-                    } else {
-                        throw IllegalArgumentException("Context must be an instance of StatsActivity")
-                    }
+                    dialog.dismiss()
+                    val db = AppDatabase.getDatabase(context)
+                    StatsActivity.showDateDialog(context, year, month + 1, dayOfMonth,db, true)
                 }
-                //dialog.dismiss()
+
             }
 
             // Imposta il layout personalizzato nel dialogo
