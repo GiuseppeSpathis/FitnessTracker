@@ -85,7 +85,7 @@ object Utils {
             okButton.visibility = View.VISIBLE
             okButton.setOnClickListener {
                 dialog.setContentView(R.layout.dialog_stats)
-                dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, 1500)
+                dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
                 val textView = dialog.findViewById<TextView>(R.id.title)
                 textView.text = "Attività di $name"
@@ -181,7 +181,7 @@ object Utils {
         return othersActivities.map {
             Attività(
                 id = it.id,
-                userId = "",
+                userId = it.username,
                 startTime = it.startTime,
                 endTime = it.endTime,
                 date = it.date,

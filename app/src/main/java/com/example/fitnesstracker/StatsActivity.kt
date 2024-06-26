@@ -461,7 +461,6 @@ class StatsActivity : AppCompatActivity() {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
-            println("sono dentro showDateDialog")
             val dialogView = if(isDialog) {
                 LayoutInflater.from(context).inflate(R.layout.custom_dialog2, null)
             }
@@ -470,26 +469,22 @@ class StatsActivity : AppCompatActivity() {
             }
             val builder = AlertDialog.Builder(context)
                 .setView(dialogView)
-
             val dialog = builder.create()
             dialog.show()
-
             dialog.window?.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                1500 // Altezza in pixel
+                1200 // Altezza in pixel
             )
 
             val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
             closeButton.setOnClickListener {
                 dialog.dismiss()
             }
-
             val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
-            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
 
             // Assuming the context is an Activity
             val activity = context as? StatsActivity
-            activity?.lifecycleScope?.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val activities: List<Attività> = if (isDialog) {
                             val othersActivities = getOtherActivitiesForDate(year, month, day, db)
@@ -497,9 +492,10 @@ class StatsActivity : AppCompatActivity() {
                         } else {
                             getActivitiesForDate(year, month, day, db)
                         }
+                        println("stampo activity")
+                        println(activities)
                         if (!isDialog) {
-                            val geofenceChartContainer =
-                                dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
+                            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
                             val geofences = activity!!.getGeofencesForDate(year, month, day)
                             withContext(Dispatchers.Main) {
                                 activity.displayGeofencesForDate(geofenceChartContainer, geofences)
@@ -510,7 +506,7 @@ class StatsActivity : AppCompatActivity() {
                             displayActivitiesForDate(context, activityChartContainer, activities)
                         }
                 } catch (e: Exception) {
-                    Snackbar.make(activity.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
                 }
             }
         }

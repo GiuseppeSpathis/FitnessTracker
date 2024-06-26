@@ -1,7 +1,5 @@
 import Utils.checkGender
-import Utils.receiveMessage
-import Utils.socketError
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,34 +7,29 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitnesstracker.Person
-import com.example.fitnesstracker.PersonProfile
 import com.example.fitnesstracker.R
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
+import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
+import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.SocialController
+import com.example.fitnesstracker.StatsActivity
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.util.UUID
-
-
 
 
 class MyAdapter(private var personList: List<Person>, private var socialController: SocialController) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
@@ -61,6 +54,8 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
         return MyViewHolder(itemView)
     }
 
+    @SuppressLint("SetTextI18n")
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         if(socialController.alreadyConnected(personList[position].device)){
             holder.connect.visibility = View.GONE
@@ -75,10 +70,21 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
         holder.name.text = person.name
         checkGender(person.gender, holder.iconPerson, holder.itemView.context)
         holder.name.setOnClickListener {
-            val intent = Intent(it.context, PersonProfile::class.java)
-            intent.putExtra("name", person.name)
-            intent.putExtra("gender", person.gender)
-            it.context.startActivity(intent)
+            val dialog = Dialog(it.context)
+            dialog.setContentView(R.layout.dialog_stats)
+            dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
+            val textView = dialog.findViewById<TextView>(R.id.title)
+            textView.text = "Attività di ${holder.name.text}"
+
+            calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
+                dialog.dismiss()
+                val db = AppDatabase.getDatabase(it.context)
+                StatsActivity.showDateDialog(it.context, year, month + 1, dayOfMonth,db, true)
+
+            }
+
+            dialog.show()
         }
         holder.message.setOnClickListener{
             showDialog(it.context, holder.name.text.toString())
