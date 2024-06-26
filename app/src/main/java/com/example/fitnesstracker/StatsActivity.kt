@@ -16,6 +16,7 @@ import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -126,6 +127,29 @@ class StatsActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
+
+        spinnerActivity.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                // Azioni da intraprendere quando viene selezionato un elemento
+                val selectedItem = parent.getItemAtPosition(position).toString()
+                // Fai qualcosa con l'elemento selezionato
+                if(selectedItem != "niente"){
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val giorni = attivitàDao.getDatesByActivityType(selectedItem)
+                        println("stampo i giorni : $giorni")
+                    }
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                //niente
+            }
+        }
         //resetDatabase()
         //insertFakeData()
         pieChart = binding.pieChart
