@@ -56,6 +56,7 @@ class GeoFenceActivity : AppCompatActivity() {
     private lateinit var searchButton: Button
     private lateinit var addGeofenceButton: Button
     private var searchedLocation: GeoPoint? = null
+    private val socialModel = SocialModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,7 +73,6 @@ class GeoFenceActivity : AppCompatActivity() {
         addGeofenceButton = findViewById(R.id.btnAddGeofence)
         addGeofenceButton.isEnabled = false
 
-        // Initialize map with current user location
         getCurrentLocation { latitude, longitude ->
             val userLocation = GeoPoint(latitude, longitude)
             map.controller.setCenter(userLocation)
@@ -115,7 +115,6 @@ class GeoFenceActivity : AppCompatActivity() {
                     true
                 }
                 R.id.geofence -> {
-                    // Already on GeoFenceActivity, do nothing
                     true
                 }
                 else -> false
@@ -150,31 +149,17 @@ class GeoFenceActivity : AppCompatActivity() {
                 REQUEST_LOCATION_PERMISSION)
         } else {
 
-        //    startLocationUpdatesService()
         }
     }
 
-    private fun startLocationUpdatesService() {
-        val intent = Intent(this, LocationUpdatesService::class.java)
-        ContextCompat.startForegroundService(this, intent)
-    }
+
 
     private fun searchLocation(query: String) {
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                val url = URL("https://nominatim.openstreetmap.org/search?format=json&q=$query")
-                val connection = url.openConnection() as HttpURLConnection
-                try {
-                    connection.inputStream.bufferedReader().readText()
-                } finally {
-                    connection.disconnect()
-                }
-            }
-            val jsonArray = JSONArray(result)
-            if (jsonArray.length() > 0) {
-                val location = jsonArray.getJSONObject(0)
-                val lat = location.getDouble("lat")
-                val lon = location.getDouble("lon")
+            val result = socialModel.searchLocation(query)
+            if (result != null) {
+                val lat = result.latitude
+                val lon = result.longitude
                 moveToLocation(lat, lon)
                 addGeofenceButton.isEnabled = true
             } else {
@@ -220,7 +205,7 @@ class GeoFenceActivity : AppCompatActivity() {
         )
 
         lifecycleScope.launch {
-            db.attivitàDao().insertGeofence(geofence)
+            socialModel.insertGeofence(db, geofence)
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@GeoFenceActivity, "Geofencing aggiunta con successo", Toast.LENGTH_SHORT).show()
                 findViewById<EditText>(R.id.searchBar).text.clear()
@@ -243,9 +228,7 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun viewGeofences() {
         lifecycleScope.launch {
-            val geofences = withContext(Dispatchers.IO) {
-                db.attivitàDao().getAllGeofences()
-            }
+            val geofences = socialModel.getAllGeofences(db)
 
             map.overlays.clear()
 
@@ -285,9 +268,7 @@ class GeoFenceActivity : AppCompatActivity() {
             .setMessage("Vuoi rimuovere questa geofence?")
             .setPositiveButton("Sì") { _, _ ->
                 lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        db.attivitàDao().deleteGeofence(geofence)
-                    }
+                    socialModel.deleteGeofence(db, geofence)
                     viewGeofences() // Refresh the map to remove the deleted geofence
                 }
             }
@@ -299,6 +280,7 @@ class GeoFenceActivity : AppCompatActivity() {
         private const val REQUEST_LOCATION_PERMISSION = 1
     }
 }
+
 
 
 

@@ -14,7 +14,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
 
-class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
+class CheckNearbyUsersWorker(
+    appContext: Context,
+    workerParams: WorkerParameters
+) : CoroutineWorker(appContext, workerParams) {
+
+    private val socialModel = SocialModel()
 
     override suspend fun doWork(): Result {
         Log.d("CheckNearbyUsersWorker", "doWork called")
@@ -26,14 +31,7 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
         }
         Log.d("CheckNearbyUsersWorker", "Current user UID: $currentUserUid")
 
-        val database = FirebaseDatabase.getInstance(applicationContext.resources.getString(R.string.db_connection)).reference
-        val currentUserSnapshot = database.child("users").child(currentUserUid).get().await()
-        if (currentUserSnapshot == null) {
-            Log.e("CheckNearbyUsersWorker", "Current user snapshot is null")
-            return Result.failure()
-        }
-
-        val currentUserLocation = currentUserSnapshot.getValue(RegistrationActivity.User::class.java)
+        val currentUserLocation = socialModel.getCurrentUserLocation(currentUserUid)
         if (currentUserLocation == null) {
             Log.e("CheckNearbyUsersWorker", "Current user location is null")
             return Result.failure()
@@ -43,36 +41,26 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
         val tenMinutesAgo = (System.currentTimeMillis() - 10 * 60 * 1000).toDouble()
         Log.d("CheckNearbyUsersWorker", "Timestamp for 10 minutes ago: $tenMinutesAgo")
 
-        val nearbyUsersSnapshot = database.child("users")
-            .orderByChild("lastUpdated")
-            .startAt(tenMinutesAgo)  // Pass as Double
-            .get()
-            .await()
-
-        if (nearbyUsersSnapshot == null) {
+        val nearbyUsers = socialModel.getNearbyUsers(tenMinutesAgo)
+        if (nearbyUsers == null) {
             Log.e("CheckNearbyUsersWorker", "Nearby users snapshot is null")
             return Result.failure()
         }
 
-        nearbyUsersSnapshot.children.forEach { snapshot ->
-            val user = snapshot.getValue(RegistrationActivity.User::class.java)
-            if (user != null) {
-                Log.d("CheckNearbyUsersWorker", "Nearby user: $user")
-                if (user.username != LoggedUser.username) {
-                    val distance = FloatArray(1)
-                    Location.distanceBetween(
-                        currentUserLocation.lastLatitude, currentUserLocation.lastLongitude,
-                        user.lastLatitude, user.lastLongitude, distance
-                    )
-                    Log.d("CheckNearbyUsersWorker", "Distance to user ${user.id}: ${distance[0]} meters")
-                    if (distance[0] <= 10) {
-                        sendNotification(user.username ?: "Unknown")
-                    }
-                } else {
-                    Log.d("CheckNearbyUsersWorker", "Skipping current user in nearby users")
+        nearbyUsers.forEach { user ->
+            Log.d("CheckNearbyUsersWorker", "Nearby user: $user")
+            if (user.username != LoggedUser.username) {
+                val distance = FloatArray(1)
+                Location.distanceBetween(
+                    currentUserLocation.lastLatitude, currentUserLocation.lastLongitude,
+                    user.lastLatitude, user.lastLongitude, distance
+                )
+                Log.d("CheckNearbyUsersWorker", "Distance to user ${user.id}: ${distance[0]} meters")
+                if (distance[0] <= 10) {
+                    sendNotification(user.username ?: "Unknown")
                 }
             } else {
-                Log.e("CheckNearbyUsersWorker", "Failed to parse user from snapshot: ${snapshot.key}")
+                Log.d("CheckNearbyUsersWorker", "Skipping current user in nearby users")
             }
         }
 
@@ -80,13 +68,11 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
     }
 
     private fun sendNotification(username: String) {
-       
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "nearby_users_channel"
             val channelName = "Nearby Users Channel"
             val importance = NotificationManager.IMPORTANCE_HIGH
             val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
-
 
             if (notificationManager != null && notificationManager.getNotificationChannel(channelId) == null) {
                 val channel = NotificationChannel(channelId, channelName, importance)
@@ -109,7 +95,7 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
             Log.e("CheckNearbyUsersWorker", "Failed to send notification: notificationManager is null")
         }
     }
-
 }
+
 
 

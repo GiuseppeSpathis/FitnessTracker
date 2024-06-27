@@ -35,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var password: EditText
     private lateinit var goToRegistration: TextView
     private lateinit var togglePasswordVisibilityButton: ImageButton
-
+    private val socialModel = SocialModel()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_registration2)
@@ -46,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
         println("currentUser: $currentUser")
         if (currentUser != null) {
             lifecycleScope.launch {
-                val userData = fetchUserData(currentUser.uid)
+                val userData = socialModel.fetchUserData(currentUser.uid)
                 if (userData != null) {
                     LoggedUser.username = userData.username ?: ""
                     LoggedUser.gender = userData.gender ?: ""
@@ -93,18 +93,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun fetchUserData(uid: String): LoggedUser? {
-        return try {
-            val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-            val userDataSnapshot = withContext(Dispatchers.IO) {
-                database.child("users").child(uid).get().await()
-            }
-            userDataSnapshot.getValue(LoggedUser::class.java)
-        } catch (e: Exception) {
-            Log.e("LoginActivity", "Error fetching user data", e)
-            null
-        }
-    }
+
 
     private suspend fun signInAndFetchUserData(insertedEmail: String, insertedPassword: String) {
         try {
@@ -115,7 +104,7 @@ class LoginActivity : AppCompatActivity() {
             updateUI(authResult.user)
 
             val uid = FirebaseAuth.getInstance().currentUser!!.uid
-            val userData = fetchUserData(uid)
+            val userData = socialModel.fetchUserData(uid)
 
             if (userData != null) {
                 LoggedUser.username = userData.username ?: ""

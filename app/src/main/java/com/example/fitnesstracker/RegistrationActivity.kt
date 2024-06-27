@@ -52,7 +52,7 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
     private lateinit var togglePasswordVisibilityButton : ImageButton
-
+    private var socialModel = SocialModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +122,7 @@ class RegistrationActivity : AppCompatActivity() {
                     requestWifiPermission()
                     return@withContext
                 }
-                saveUserData(uid, email, username, gender)
+                socialModel.saveUserData(uid, email, username, gender, this@RegistrationActivity)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, R.string.registrazione_successo, Toast.LENGTH_SHORT).show()
@@ -140,28 +140,6 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String): Boolean {
-        try {
-            withContext(Dispatchers.IO) {
-                val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-                val uniqueId = UUID.randomUUID().toString()
-                val lastLongitude = 0.0
-                val lastLatitude = 0.0
-                val lastUpdated = System.currentTimeMillis()
-                val user = User(uniqueId, email, username, gender,lastLatitude,lastLongitude,lastUpdated)
-                database.child("users").child(uid).setValue(user).await()
-            }
-            return true
-        } catch (e: Exception) {
-            Log.e("RegistrationActivity", "Error saving user data", e)
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@RegistrationActivity, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
-            }
-            return false
-        }
-    }
-
-
     private suspend fun validateInput(email: String, username: String, password: String): Boolean {
         val emailPattern = android.util.Patterns.EMAIL_ADDRESS
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
@@ -176,12 +154,12 @@ class RegistrationActivity : AppCompatActivity() {
             return false
         }
 
-        if (emailExists(email)) {
+        if (socialModel.emailExists(email)) {
             Toast.makeText(this, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
             return false
         }
 
-        if(usernameExists(username)){
+        if(socialModel.usernameExists(username)){
             Toast.makeText(this, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
             return false
         }
@@ -189,34 +167,6 @@ class RegistrationActivity : AppCompatActivity() {
         return true
     }
 
-    private suspend fun emailExists(email: String): Boolean {
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val result = database.child("users").orderByChild("email").equalTo(email).get().await()
-                result.exists()
-            } catch (e: Exception) {
-                Log.e("RegistrationActivity", "Error checking email existence", e)
-                false
-            }
-        }
-    }
-
-    private suspend fun usernameExists(username: String): Boolean {
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val result = database.child("users").orderByChild("username").equalTo(username).get().await()
-                result.exists()
-            } catch (e: Exception) {
-                Log.e("RegistrationActivity", "Error checking username existence", e)
-                false
-            }
-        }
-    }
 
     private fun requestWifiPermission() {
         ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.ACCESS_NETWORK_STATE), REQUEST_WIFI_PERMISSION_CODE)
@@ -229,8 +179,6 @@ class RegistrationActivity : AppCompatActivity() {
             println("No access")
         }
     }
-
-
 
     data class User(val id: String?,
                     val email: String?,

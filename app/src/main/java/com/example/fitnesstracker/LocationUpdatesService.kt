@@ -40,20 +40,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
 class LocationUpdatesService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
-    private lateinit var  db : AppDatabase
-    private var inside : Boolean = false
+    private lateinit var db: AppDatabase
+    private var inside: Boolean = false
+    private lateinit var socialModel: SocialModel
 
     override fun onCreate() {
         super.onCreate()
         db = AppDatabase.getDatabase(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        socialModel = SocialModel()
         createLocationRequest()
         startLocationUpdates()
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -61,9 +61,10 @@ class LocationUpdatesService : Service() {
         startForegroundService()
         return START_STICKY
     }
+
     private fun startForegroundService() {
         val channelId = "location_updates"
-        val notificationManager = getSystemService(NotificationManager::class.java)
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelId, "Location Updates", NotificationManager.IMPORTANCE_HIGH)
@@ -101,18 +102,20 @@ class LocationUpdatesService : Service() {
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             for (location in locationResult.locations) {
-                handleLocationUpdate(location)
-                updateLocationInFirebase(location)
+                handleLocationUpdate(location, db, inside) { updatedInside ->
+                    inside = updatedInside
+                }
+                socialModel.updateLocationInFirebase(location)
             }
         }
     }
-
-    private fun handleLocationUpdate(location: Location) {
-        Log.d("LocationService", "Updating user location")
+    fun handleLocationUpdate(location: Location, db: AppDatabase, inside: Boolean, callback: (Boolean) -> Unit) {
+        println("tracking")
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val geofences = db.attivitàDao().getAllGeofences()
                 var foundGeofence = false
+                var isInside = inside
 
                 for (geofence in geofences) {
                     val distance = FloatArray(2)
@@ -125,10 +128,10 @@ class LocationUpdatesService : Service() {
                     if (distance[0] < geofence.radius) {
                         foundGeofence = true
 
-                        if (!inside) {
-                            println("Entered a geofence")
-                            inside = true
+                        if (!isInside) {
+                            isInside = true
                             val enterTime = System.currentTimeMillis()
+                            println("entered a geofence")
                             withContext(Dispatchers.Main) {
                                 sendNotification("Entered Geofence", "You have entered a geofence.")
                             }
@@ -142,15 +145,13 @@ class LocationUpdatesService : Service() {
                                 placeName = geofence.placeName
                             )
                             db.attivitàDao().insertTimeGeofence(timeGeofence)
-                        } else {
-                            println("alreadyInside value: $inside")
                         }
                         break
                     }
                 }
 
-                if (!foundGeofence && inside) {
-                    inside = false
+                if (!foundGeofence && isInside) {
+                    isInside = false
                     val exitTime = System.currentTimeMillis()
                     withContext(Dispatchers.Main) {
                         sendNotification("Exited Geofence", "You have exited a geofence.")
@@ -166,33 +167,10 @@ class LocationUpdatesService : Service() {
                         }
                     }
                 }
+                callback(isInside)
             } catch (e: Exception) {
-                Log.e("LocationUpdatesService", "Error updating location in Firebase", e)
+                Log.e("LocationModel", "Error handling location update", e)
             }
-        }
-    }
-
-    private fun updateLocationInFirebase(location: Location) {
-        val database = FirebaseDatabase.getInstance(getString(R.string.db_connection)).reference
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        val userUpdates = mapOf(
-            "lastLatitude" to location.latitude,
-            "lastLongitude" to location.longitude,
-            "lastUpdated" to System.currentTimeMillis()
-        )
-        LoggedUser.lastLatitude = location.latitude
-        LoggedUser.lastLongitude = location.longitude
-        LoggedUser.lastUpdated = System.currentTimeMillis()
-
-        database.child("users").child(uid).updateChildren(userUpdates).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                Log.d("LocationUpdateService", "User location updated successfully")
-            } else {
-                Log.e("LocationUpdateService", "Error updating location", task.exception)
-            }
-        }.addOnFailureListener { exception ->
-            Log.e("LocationUpdateService", "Failed to update location", exception)
         }
     }
 
@@ -215,19 +193,6 @@ class LocationUpdatesService : Service() {
 
         notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notification)
     }
-
-    private fun isUserRecentlyInGeofence(geofence: GeoFence): Boolean {
-        val distance = FloatArray(2)
-        Location.distanceBetween(
-            LoggedUser.lastLatitude, LoggedUser.lastLongitude,
-            geofence.latitude, geofence.longitude,
-            distance
-        )
-
-        val fiveMinutesInMillis = 1 * 60 * 1000
-        val currentTime = System.currentTimeMillis()
-        val timeDifference = currentTime - LoggedUser.lastUpdated
-
-        return distance[0] < geofence.radius && timeDifference <= fiveMinutesInMillis
-    }
 }
+
+

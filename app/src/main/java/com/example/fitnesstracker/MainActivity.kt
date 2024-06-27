@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.work.Configuration
 
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
 
     private fun checkAndRequestPermissions(): Boolean {
         val neededPermissions = mutableListOf<String>()
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             neededPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -43,9 +45,13 @@ class MainActivity : ComponentActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             neededPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            neededPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         return if (neededPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, neededPermissions.toTypedArray(), REQUEST_LOCATION_PERMISSION)
+            ActivityCompat.requestPermissions(this, neededPermissions.toTypedArray(), REQUEST_PERMISSIONS)
             false
         } else {
             true
@@ -69,19 +75,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION_PERMISSION) {
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+        if (requestCode == REQUEST_PERMISSIONS) {
+            val allPermissionsGranted = grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            if (allPermissionsGranted) {
                 startLocationService()
                 startCheckNearbyUsersWorker()
             } else {
                 // Gestisci il caso in cui i permessi non sono stati concessi
                 // Puoi mostrare un messaggio all'utente o disabilitare funzionalità
+                showPermissionDeniedMessage()
             }
         }
     }
 
+    private fun showPermissionDeniedMessage() {
+        Toast.makeText(this, "permesso negato", Toast.LENGTH_LONG).show()
+    }
+
     companion object {
-        private const val REQUEST_LOCATION_PERMISSION = 1
+        private const val REQUEST_PERMISSIONS = 1
     }
 }
 

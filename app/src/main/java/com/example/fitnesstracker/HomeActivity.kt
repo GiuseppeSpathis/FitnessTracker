@@ -43,6 +43,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val REQUEST_PERMISSION_REQUEST_CODE = 1
     private lateinit var welcomeBack: TextView
+    private val socialModel = SocialModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,63 +52,79 @@ class HomeActivity : AppCompatActivity(), MapListener {
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
 
         val imageProfile = findViewById<ImageView>(R.id.image_profile)
-        var gender = LoggedUser.gender
-        println(gender)
-        when (gender) {
-            "Maschio" -> imageProfile.setImageResource(R.drawable.male)
-            "Femmina" -> imageProfile.setImageResource(R.drawable.female)
-            else -> imageProfile.setImageResource(R.drawable.other)
-        }
-        welcomeBack = findViewById(R.id.username_text)
-        var username = LoggedUser.username
-        welcomeBack.setText("Bentornato, $username")
-        val activityArray = resources.getStringArray(R.array.activity_array)
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        setProfileImage(imageProfile)
 
-        val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
-        spinnerActivity.adapter = adapter
+        welcomeBack = findViewById(R.id.username_text)
+        setUsernameText(welcomeBack)
+
+        setupActivitySpinner()
 
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-
-        bottomNavigationView.selectedItemId = R.id.nav_home
-
-
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> {
-                    val intent = Intent(this, StatsActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_users -> {
-                    val intent = Intent(this, Social::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.geofence -> {
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                else -> false
-            }
-        }
+        setupBottomNavigationView(bottomNavigationView)
 
         map = findViewById(R.id.osmmap)
         map.setTileSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        checkLocationPermission()
+
+        val trackButton = findViewById<Button>(R.id.button_start_tracking)
+        trackButton.setOnClickListener {
+            handleTrackButtonClick()
+        }
+
+        val logoutButton = findViewById<ImageView>(R.id.logout)
+        logoutButton.setOnClickListener {
+            handleLogout()
+        }
+    }
+
+    private fun setProfileImage(imageProfile: ImageView) {
+        val gender = LoggedUser.gender
+        val imageRes = when (gender) {
+            "Maschio" -> R.drawable.male
+            "Femmina" -> R.drawable.female
+            else -> R.drawable.other
+        }
+        imageProfile.setImageResource(imageRes)
+    }
+
+    private fun setUsernameText(welcomeBack: TextView) {
+        val username = LoggedUser.username
+        welcomeBack.text = "Bentornato, $username"
+    }
+
+    private fun setupActivitySpinner() {
+        val activityArray = resources.getStringArray(R.array.activity_array)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
+        spinnerActivity.adapter = adapter
+    }
+
+    private fun setupBottomNavigationView(bottomNavigationView: NavigationBarView) {
+        bottomNavigationView.selectedItemId = R.id.nav_home
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> navigateTo(StatsActivity::class.java)
+                R.id.nav_home -> navigateTo(HomeActivity::class.java)
+                R.id.nav_users -> navigateTo(Social::class.java)
+                R.id.geofence -> navigateTo(GeoFenceActivity::class.java)
+                else -> false
+            }
+        }
+    }
+
+    private fun navigateTo(activityClass: Class<out AppCompatActivity>): Boolean {
+        val intent = Intent(this, activityClass)
+        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
+        startActivity(intent, options.toBundle())
+        return true
+    }
+
+    private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -116,28 +133,27 @@ class HomeActivity : AppCompatActivity(), MapListener {
         } else {
             getLastKnownLocation()
         }
+    }
 
-        val trackButton = findViewById<Button>(R.id.button_start_tracking)
-        trackButton.setOnClickListener{
-            when (spinnerActivity.selectedItem.toString()) {
-                "Passeggiata" -> showStepGoalDialog()
-                "Corsa" -> showDistanceGoalDialog()
-                "Guidare" -> showSpeedLimitDialog()
-                "Stare fermo" -> {
-                    val intent = Intent(this, SitActivity::class.java)
-                    startActivity(intent)
-                }
+    private fun handleTrackButtonClick() {
+        val spinnerActivity = findViewById<Spinner>(R.id.spinner_activity)
+        when (spinnerActivity.selectedItem.toString()) {
+            "Passeggiata" -> showStepGoalDialog()
+            "Corsa" -> showDistanceGoalDialog()
+            "Guidare" -> showSpeedLimitDialog()
+            "Stare fermo" -> {
+                val intent = Intent(this, SitActivity::class.java)
+                startActivity(intent)
             }
         }
+    }
 
-        val logoutButton = findViewById<ImageView>(R.id.logout)
-        logoutButton.setOnClickListener {
-            FirebaseAuth.getInstance().signOut()
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        }
+    private fun handleLogout() {
+        FirebaseAuth.getInstance().signOut()
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun showStepGoalDialog() {
@@ -189,7 +205,6 @@ class HomeActivity : AppCompatActivity(), MapListener {
         alertDialog.show()
     }
 
-
     private fun showSpeedLimitDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_speed_limit, null)
         val speedLimitEditText = dialogView.findViewById<EditText>(R.id.speedLimitEditText)
@@ -215,24 +230,19 @@ class HomeActivity : AppCompatActivity(), MapListener {
     }
 
     private fun getLastKnownLocation() {
-        try {
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location: Location? ->
-                    if (location != null) {
-                        val startPoint = GeoPoint(location.latitude, location.longitude)
-                        val mapController: IMapController = map.controller
-                        mapController.setZoom(18.0)
-                        mapController.setCenter(startPoint)
+        socialModel.getLastKnownLocation(fusedLocationClient) { location ->
+            location?.let {
+                val startPoint = GeoPoint(it.latitude, it.longitude)
+                val mapController: IMapController = map.controller
+                mapController.setZoom(18.0)
+                mapController.setCenter(startPoint)
 
-                        val startMarker = Marker(map)
-                        startMarker.position = startPoint
-                        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        startMarker.title = "You are here"
-                        map.overlays.add(startMarker)
-                    }
-                }
-        } catch (unlikely: SecurityException) {
-            println("Lost location permission.$unlikely")
+                val startMarker = Marker(map)
+                startMarker.position = startPoint
+                startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                startMarker.title = "You are here"
+                map.overlays.add(startMarker)
+            }
         }
     }
 
