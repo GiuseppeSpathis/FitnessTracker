@@ -37,6 +37,7 @@ import android.text.InputType
 import android.widget.ImageButton
 import android.widget.Spinner
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 import java.util.UUID
 
 
@@ -121,11 +122,8 @@ class RegistrationActivity : AppCompatActivity() {
                     requestWifiPermission()
                     return@withContext
                 }
-                val mac = getMacAddress()
-                Log.d("RegistrationActivity", "Retrieved macAddress: $mac") // Print macAddress for debugging
-                saveUserData(uid, email, username, gender, mac)
+                saveUserData(uid, email, username, gender)
 
-                // Switch to main thread for Toast
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, R.string.registrazione_successo, Toast.LENGTH_SHORT).show()
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -142,13 +140,15 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String, mac: String): Boolean {
+    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String): Boolean {
         try {
             withContext(Dispatchers.IO) {
                 val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
                 val uniqueId = UUID.randomUUID().toString()
-                val user = User(uniqueId, email, username, gender, mac)
-
+                val lastLongitude = 0.0
+                val lastLatitude = 0.0
+                val lastUpdated = System.currentTimeMillis()
+                val user = User(uniqueId, email, username, gender,lastLatitude,lastLongitude,lastUpdated)
                 database.child("users").child(uid).setValue(user).await()
             }
             return true
@@ -160,6 +160,7 @@ class RegistrationActivity : AppCompatActivity() {
             return false
         }
     }
+
 
     private suspend fun validateInput(email: String, username: String, password: String): Boolean {
         val emailPattern = android.util.Patterns.EMAIL_ADDRESS
@@ -224,17 +225,22 @@ class RegistrationActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getMacAddress()
         } else {
             println("No access")
         }
     }
 
-    private fun getMacAddress(): String {
-        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        return wifiManager.connectionInfo.macAddress ?: "02:00:00:00:00:00"
-    }
 
-    data class User(val id: String, val email: String?, val username: String?, val gender: String?, val macAddress: String?)
+
+    data class User(val id: String?,
+                    val email: String?,
+                    val username: String?,
+                    val gender: String?,
+                    val lastLatitude: Double = 0.0,
+                    val lastLongitude: Double = 0.0,
+                    val lastUpdated: Long = System.currentTimeMillis()){
+            constructor() : this(null, null, null, null, 0.0, 0.0, 0)
+
+    }
 }
 

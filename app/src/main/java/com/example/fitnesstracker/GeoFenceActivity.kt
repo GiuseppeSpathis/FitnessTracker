@@ -16,9 +16,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.room.Room
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.LocationServices
@@ -28,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -35,6 +42,7 @@ import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polygon
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import java.util.logging.Handler
 
 
@@ -64,12 +72,27 @@ class GeoFenceActivity : AppCompatActivity() {
         addGeofenceButton = findViewById(R.id.btnAddGeofence)
         addGeofenceButton.isEnabled = false
 
+        // Initialize map with current user location
+        getCurrentLocation { latitude, longitude ->
+            val userLocation = GeoPoint(latitude, longitude)
+            map.controller.setCenter(userLocation)
 
+            val marker = Marker(map)
+            marker.position = userLocation
+            map.overlays.add(marker)
+        }
+
+        map.overlays.add(object : Overlay() {
+            override fun onDoubleTap(e: MotionEvent, mapView: MapView): Boolean {
+                val projection = mapView.projection
+                val geoPoint = projection.fromPixels(e.x.toInt(), e.y.toInt()) as GeoPoint
+                addGeofenceAtLocation(geoPoint)
+                return true
+            }
+        })
 
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-
         bottomNavigationView.selectedItemId = R.id.geofence
-
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -92,15 +115,12 @@ class GeoFenceActivity : AppCompatActivity() {
                     true
                 }
                 R.id.geofence -> {
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
+                    // Already on GeoFenceActivity, do nothing
                     true
                 }
                 else -> false
             }
         }
-
 
         findViewById<Button>(R.id.btnViewGeofences).setOnClickListener {
             viewGeofences()
@@ -129,19 +149,15 @@ class GeoFenceActivity : AppCompatActivity() {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
                 REQUEST_LOCATION_PERMISSION)
         } else {
-            LocationUpdatesService.enqueueWork(this, Intent(this, LocationUpdatesService::class.java))
-        }
 
-        getCurrentLocation { latitude, longitude ->
-            val userLocation = GeoPoint(latitude, longitude)
-            map.controller.setCenter(userLocation)
-
-            val marker = Marker(map)
-            marker.position = userLocation
-            map.overlays.add(marker)
+        //    startLocationUpdatesService()
         }
     }
 
+    private fun startLocationUpdatesService() {
+        val intent = Intent(this, LocationUpdatesService::class.java)
+        ContextCompat.startForegroundService(this, intent)
+    }
 
     private fun searchLocation(query: String) {
         lifecycleScope.launch {
@@ -283,6 +299,8 @@ class GeoFenceActivity : AppCompatActivity() {
         private const val REQUEST_LOCATION_PERMISSION = 1
     }
 }
+
+
 
 
 

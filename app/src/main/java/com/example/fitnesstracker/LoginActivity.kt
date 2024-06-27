@@ -51,7 +51,6 @@ class LoginActivity : AppCompatActivity() {
                     LoggedUser.username = userData.username ?: ""
                     LoggedUser.gender = userData.gender ?: ""
                     LoggedUser.email = userData.email ?: ""
-                    LoggedUser.macAddress = userData.macAddress ?: ""
                     LoggedUser.id = currentUser.uid
 
                     startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
@@ -122,7 +121,6 @@ class LoginActivity : AppCompatActivity() {
                 LoggedUser.username = userData.username ?: ""
                 LoggedUser.gender = userData.gender ?: ""
                 LoggedUser.email = userData.email ?: ""
-                LoggedUser.macAddress = userData.macAddress ?: ""
                 LoggedUser.id = uid
             } else {
                 Log.e("LoginActivity", "Error while saving user data")
