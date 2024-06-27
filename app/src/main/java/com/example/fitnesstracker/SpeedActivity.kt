@@ -169,6 +169,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // Handle accuracy changes if needed
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
         val endTimeMillis = System.currentTimeMillis()
@@ -215,7 +216,6 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
             .show()
     }
 
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -226,6 +226,35 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
                 }
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("startTime", startTime)
+        outState.putDouble("speed", speed)
+        outState.putDouble("avgSpeed", avgSpeed)
+        outState.putDouble("maxSpeedRecorded", maxSpeedRecorded)
+        outState.putDouble("totalSpeed", totalSpeed)
+        outState.putInt("speedCount", speedCount)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        startTime = savedInstanceState.getLong("startTime")
+        speed = savedInstanceState.getDouble("speed")
+        avgSpeed = savedInstanceState.getDouble("avgSpeed")
+        maxSpeedRecorded = savedInstanceState.getDouble("maxSpeedRecorded")
+        totalSpeed = savedInstanceState.getDouble("totalSpeed")
+        speedCount = savedInstanceState.getInt("speedCount")
+
+        updateTextViews()
+        sensorManager.registerListener(this, speedSensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    private fun updateTextViews() {
+        speedTextView.text = String.format(Locale.getDefault(), "Speed: %.2f km/h", speed)
+        avgSpeedTextView.text = String.format(Locale.getDefault(), "Avg Speed: %.2f km/h", avgSpeed)
+        maxSpeedTextView.text = String.format(Locale.getDefault(), "Max Speed: %.2f km/h", maxSpeedRecorded)
     }
 }
 

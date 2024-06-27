@@ -118,6 +118,23 @@ class SitActivity : AppCompatActivity() {
             }
         }
     }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("totalTime", totalTime)
+        outState.putLong("lastStandTime", lastStandTime)
+        outState.putLong("startTime", startTime)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        totalTime = savedInstanceState.getLong("totalTime")
+        lastStandTime = savedInstanceState.getLong("lastStandTime")
+        startTime = savedInstanceState.getLong("startTime")
+
+        updateTextViews()
+        handler.post(updateTimeRunnable)
+    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

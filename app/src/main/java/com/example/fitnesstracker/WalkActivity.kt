@@ -126,6 +126,28 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("stepCount", stepCount)
+        outState.putInt("initialStepCount", initialStepCount)
+        outState.putLong("startTime", startTime)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        stepCount = savedInstanceState.getInt("stepCount")
+        initialStepCount = savedInstanceState.getInt("initialStepCount")
+        startTime = savedInstanceState.getLong("startTime")
+
+        stepCounterText.text = "Step Count: $stepCount"
+        progressBar.progress = stepCount
+
+        val distanceInKm = stepCount * stepLenghtInMeters / 1000
+        distanceCounterText.text = String.format(Locale.getDefault(), "Distance: %.2f km", distanceInKm)
+
+        timerHandler.postDelayed(timerRunnable, 0)
+    }
+
     override fun onSensorChanged(event: SensorEvent) {
         if(event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
             val totalSteps = event.values[0].toInt()

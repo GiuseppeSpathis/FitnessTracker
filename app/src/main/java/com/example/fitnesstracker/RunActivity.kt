@@ -133,6 +133,33 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("stepCount", stepCount)
+        outState.putInt("initialStepCount", initialStepCount)
+        outState.putLong("startTime", startTime)
+        outState.putFloat("pace", pace)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        stepCount = savedInstanceState.getInt("stepCount")
+        initialStepCount = savedInstanceState.getInt("initialStepCount")
+        startTime = savedInstanceState.getLong("startTime")
+        pace = savedInstanceState.getFloat("pace")
+
+        stepCounterText.text = "Step Count: $stepCount"
+        val distanceInMeters = stepCount * stepLengthInMeters
+        distanceCounterText.text = String.format(Locale.getDefault(), "Distance: %.2f km", distanceInMeters / 1000)
+        progressBar.progress = distanceInMeters.toInt()
+        paceText.text = String.format(Locale.getDefault(), "Pace: %.2f min/km", pace)
+
+        if (distanceInMeters >= distanceGoal * 1000) {
+            distanceGoalTextView.text = "Distance Goal Achieved"
+        }
+
+        timerHandler.postDelayed(timerRunnable, 0)
+    }
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {

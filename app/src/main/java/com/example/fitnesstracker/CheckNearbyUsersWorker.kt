@@ -80,21 +80,20 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
     }
 
     private fun sendNotification(username: String) {
-        // Verifica se l'app ha i permessi per mostrare le notifiche
+       
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "nearby_users_channel"
             val channelName = "Nearby Users Channel"
             val importance = NotificationManager.IMPORTANCE_HIGH
             val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
 
-            // Crea il canale delle notifiche se non esiste già
+
             if (notificationManager != null && notificationManager.getNotificationChannel(channelId) == null) {
                 val channel = NotificationChannel(channelId, channelName, importance)
                 notificationManager.createNotificationChannel(channel)
             }
         }
 
-        // Costruisci la notifica
         val notificationBuilder = NotificationCompat.Builder(applicationContext, "nearby_users_channel")
             .setContentTitle("Utente nelle vicinanze")
             .setContentText("C'è un utente vicino a te: $username. Vuoi condividere i dati?")
@@ -102,10 +101,8 @@ class CheckNearbyUsersWorker(appContext: Context, workerParams: WorkerParameters
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
 
-        // Ottieni il NotificationManager
         val notificationManager = applicationContext.getSystemService(NotificationManager::class.java)
         if (notificationManager != null) {
-            // Invia la notifica
             notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notificationBuilder.build())
             Log.d("CheckNearbyUsersWorker", "Notification sent for user: $username")
         } else {
