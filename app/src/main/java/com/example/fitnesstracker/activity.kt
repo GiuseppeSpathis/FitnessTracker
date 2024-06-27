@@ -1,5 +1,6 @@
 package com.example.fitnesstracker
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
@@ -18,7 +19,10 @@ data class Attività(
     val maxSpeed: Double?,
 )
 
-@Entity(tableName = "othersActivity")
+@Entity(
+    tableName = "othersActivity",
+    indices = [Index(value = ["username", "startTime", "endTime", "date", "activityType"], unique = true)]
+)
 data class OthersActivity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val username: String,

@@ -16,6 +16,7 @@ import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -126,6 +127,29 @@ class StatsActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         val spinnerActivity = binding.filtro
         spinnerActivity.adapter = adapter
+
+        spinnerActivity.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                // Azioni da intraprendere quando viene selezionato un elemento
+                val selectedItem = parent.getItemAtPosition(position).toString()
+                // Fai qualcosa con l'elemento selezionato
+                if(selectedItem != "niente"){
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val giorni = attivitàDao.getDatesByActivityType(selectedItem)
+                        println("stampo i giorni : $giorni")
+                    }
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                //niente
+            }
+        }
         //resetDatabase()
         //insertFakeData()
         pieChart = binding.pieChart
@@ -461,7 +485,6 @@ class StatsActivity : AppCompatActivity() {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
-            println("sono dentro showDateDialog")
             val dialogView = if(isDialog) {
                 LayoutInflater.from(context).inflate(R.layout.custom_dialog2, null)
             }
@@ -470,26 +493,22 @@ class StatsActivity : AppCompatActivity() {
             }
             val builder = AlertDialog.Builder(context)
                 .setView(dialogView)
-
             val dialog = builder.create()
             dialog.show()
-
             dialog.window?.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                1500 // Altezza in pixel
+                1200 // Altezza in pixel
             )
 
             val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
             closeButton.setOnClickListener {
                 dialog.dismiss()
             }
-
             val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
-            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
 
             // Assuming the context is an Activity
             val activity = context as? StatsActivity
-            activity?.lifecycleScope?.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val activities: List<Attività> = if (isDialog) {
                             val othersActivities = getOtherActivitiesForDate(year, month, day, db)
@@ -497,9 +516,10 @@ class StatsActivity : AppCompatActivity() {
                         } else {
                             getActivitiesForDate(year, month, day, db)
                         }
+                        println("stampo activity")
+                        println(activities)
                         if (!isDialog) {
-                            val geofenceChartContainer =
-                                dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
+                            val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
                             val geofences = activity!!.getGeofencesForDate(year, month, day)
                             withContext(Dispatchers.Main) {
                                 activity.displayGeofencesForDate(geofenceChartContainer, geofences)
@@ -510,7 +530,7 @@ class StatsActivity : AppCompatActivity() {
                             displayActivitiesForDate(context, activityChartContainer, activities)
                         }
                 } catch (e: Exception) {
-                    Snackbar.make(activity.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
                 }
             }
         }

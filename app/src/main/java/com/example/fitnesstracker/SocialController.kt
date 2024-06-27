@@ -376,6 +376,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun receiveFromSocket(activity: Activity, username: String) {
         Thread {
             try {
