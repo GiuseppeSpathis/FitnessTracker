@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
+import android.text.InputType
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
@@ -86,7 +87,7 @@ class GeoFenceActivity : AppCompatActivity() {
             override fun onDoubleTap(e: MotionEvent, mapView: MapView): Boolean {
                 val projection = mapView.projection
                 val geoPoint = projection.fromPixels(e.x.toInt(), e.y.toInt()) as GeoPoint
-                addGeofenceAtLocation(geoPoint)
+                showGeofenceNameDialog(geoPoint)
                 return true
             }
         })
@@ -136,7 +137,7 @@ class GeoFenceActivity : AppCompatActivity() {
 
         addGeofenceButton.setOnClickListener {
             searchedLocation?.let {
-                addGeofenceAtLocation(it)
+                showGeofenceNameDialog(it)
             }
         }
 
@@ -150,6 +151,30 @@ class GeoFenceActivity : AppCompatActivity() {
         } else {
 
         }
+    }
+
+    private fun showGeofenceNameDialog(location: GeoPoint) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Inserisci il nome della Geofence")
+
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        builder.setView(input)
+
+        builder.setPositiveButton("OK") { dialog, _ ->
+            val geofenceName = input.text.toString()
+            if (geofenceName.isNotEmpty()) {
+                addGeofenceAtLocation(location, geofenceName)
+            } else {
+                Toast.makeText(this, "Il nome della Geofence non può essere vuoto", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.cancel()
+        }
+
+        builder.show()
     }
 
 
@@ -180,7 +205,7 @@ class GeoFenceActivity : AppCompatActivity() {
         searchedLocation = newLocation
     }
 
-    private fun addGeofenceAtLocation(location: GeoPoint) {
+    private fun addGeofenceAtLocation(location: GeoPoint, placeName: String) {
         val geofenceRadius = 10.0
         val circle = Polygon().apply {
             points = Polygon.pointsAsCircle(location, geofenceRadius)
@@ -196,18 +221,17 @@ class GeoFenceActivity : AppCompatActivity() {
         map.overlays.add(circle)
         map.invalidate()
 
-        val place = findViewById<EditText>(R.id.searchBar).text.toString()
         val geofence = GeoFence(
             latitude = location.latitude,
             longitude = location.longitude,
             radius = geofenceRadius.toFloat(),
-            placeName = place
+            placeName = placeName
         )
 
         lifecycleScope.launch {
             socialModel.insertGeofence(db, geofence)
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@GeoFenceActivity, "Geofencing aggiunta con successo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GeoFenceActivity, "Geofence aggiunta con successo", Toast.LENGTH_SHORT).show()
                 findViewById<EditText>(R.id.searchBar).text.clear()
                 addGeofenceButton.isEnabled = false
                 viewGeofences()

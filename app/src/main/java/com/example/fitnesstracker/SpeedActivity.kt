@@ -170,9 +170,27 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         // Handle accuracy changes if needed
     }
 
+    private fun showShortActivityPopup() {
+        AlertDialog.Builder(this)
+            .setTitle("Attività troppo breve")
+            .setMessage("L'attività dura meno di un minuto e non verrà salvata. Per favore, registra attività più lunghe.")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+                startActivity(Intent(this, HomeActivity::class.java))
+                finish()
+            }
+            .show()
+    }
     @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
         val endTimeMillis = System.currentTimeMillis()
+        val durationMillis = endTimeMillis - startTime
+
+        if (durationMillis < 60000) {
+            showShortActivityPopup()
+            return
+        }
+
         val endTime = Instant.ofEpochMilli(endTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
         val startTime = Instant.ofEpochMilli(this.startTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
 

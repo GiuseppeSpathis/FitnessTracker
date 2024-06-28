@@ -133,7 +133,7 @@ class LocationUpdatesService : Service() {
                             val enterTime = System.currentTimeMillis()
                             println("entered a geofence")
                             withContext(Dispatchers.Main) {
-                                sendNotification("Entered Geofence", "You have entered a geofence.")
+                                sendNotification("Entered Geofence", "You have entered ${geofence.placeName}.")
                             }
                             val timeGeofence = timeGeofence(
                                 latitude = geofence.latitude,
