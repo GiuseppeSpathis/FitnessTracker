@@ -52,6 +52,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
@@ -122,6 +123,7 @@ class StatsActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
         val activityArray = arrayOf(getString(R.string.nothing)) + resources.getStringArray(R.array.activity_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -138,7 +140,7 @@ class StatsActivity : AppCompatActivity() {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
                 // Fai qualcosa con l'elemento selezionato
-                if(selectedItem != "niente"){
+                if (selectedItem != "niente") {
                     CoroutineScope(Dispatchers.IO).launch {
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
                         println("stampo i giorni : $giorni")
@@ -150,8 +152,25 @@ class StatsActivity : AppCompatActivity() {
                 //niente
             }
         }
-        //resetDatabase()
-        //insertFakeData()
+
+
+        val activityTypes = arrayOf("Passeggiata", "Corsa", "Guidare", "Stare fermo")
+        val activityTypeSpinner = binding.activityTypeSpinner
+        val adapterLineChart = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityTypes)
+        adapterLineChart.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        activityTypeSpinner.adapter = adapterLineChart
+
+        activityTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedActivity = parent.getItemAtPosition(position).toString()
+                updateLineChart(selectedActivity)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // No action needed
+            }
+        }
+
         pieChart = binding.pieChart
         geofencePieChart = binding.geofencePieChart
         val buttons = listOf(binding.btnDay, binding.btnWeek, binding.btnMonth, binding.btnYear, binding.btnGeofenceDay, binding.btnGeofenceWeek, binding.btnGeofenceMonth, binding.btnGeofenceYear)
@@ -175,8 +194,6 @@ class StatsActivity : AppCompatActivity() {
 
         binding.btnMonth.performClick()
         binding.btnGeofenceMonth.performClick()
-
-
     }
 
     suspend fun insertFakeGeofences() {
@@ -1240,6 +1257,199 @@ class StatsActivity : AppCompatActivity() {
         val date = String.format("%04d-%02d-%02d", year, month, day)
         return attivitàDao.getGeofencesForDate(date)
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateLineChart(activityType: String) {
+       // insertFakeWalkActivities()
+        CoroutineScope(Dispatchers.IO).launch {
+            val data =getActivitiesForPeriod("week")
+
+            val filteredData = data.filter { it.activityType == activityType }
+
+
+            val chartData = when (activityType) {
+                "Passeggiata" -> prepareStepCountData(filteredData)
+                "Corsa" -> prepareDistanceData(filteredData)
+                "Guidare" -> prepareAvgSpeedData(filteredData)
+                "Stare fermo" -> prepareStationaryTimeData(filteredData)
+                else -> emptyList()
+            }
+
+            withContext(Dispatchers.Main) {
+                val entries = chartData.mapIndexed { index, value ->
+                    Entry(index.toFloat(), value.second.toFloat())
+                }
+                val lineDataSet = LineDataSet(entries, activityType)
+                val lineData = LineData(lineDataSet)
+
+                val xAxis = binding.lineChart.xAxis
+                xAxis.valueFormatter = IndexAxisValueFormatter(chartData.map { it.first.substring(0, 5) }) // Mostra solo giorno e mese
+                xAxis.position = XAxis.XAxisPosition.BOTTOM
+                xAxis.granularity = 1f
+                xAxis.setDrawLabels(true)
+
+                val yAxis = binding.lineChart.axisLeft
+                yAxis.valueFormatter = object : ValueFormatter() {
+                    override fun getFormattedValue(value: Float): String {
+                        return value.toInt().toString()
+                    }
+                }
+                yAxis.axisMinimum = 0f
+                yAxis.granularity = 1f
+
+                binding.lineChart.axisRight.isEnabled = false
+
+                binding.lineChart.data = lineData
+                binding.lineChart.invalidate()
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun prepareStepCountData(data: List<Attività>): List<Pair<String, Int>> {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val dailySteps = mutableMapOf<String, Int>()
+
+
+        data.forEach { attività ->
+            val date = LocalDate.parse(attività.date, formatter).format(formatter)
+            dailySteps[date] = dailySteps.getOrDefault(date, 0) + (attività.stepCount ?: 0)
+        }
+
+
+        val today = LocalDate.now()
+        val lastWeekDates = (0..6).map { today.minusDays(it.toLong()).format(formatter) }
+
+
+        lastWeekDates.forEach { date ->
+            dailySteps.putIfAbsent(date, 0)
+        }
+
+        println("dailySteps: $dailySteps")
+
+        return dailySteps.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun prepareDistanceData(data: List<Attività>): List<Pair<String, Float>> {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val dailyDistances = mutableMapOf<String, Float>()
+        data.forEach { attività ->
+            val date = LocalDate.parse(attività.date, formatter).format(formatter)
+            dailyDistances[date] = dailyDistances.getOrDefault(date, 0f) + (attività.distance ?: 0f)
+        }
+
+        val today = LocalDate.now()
+        val lastWeekDates = (0..6).map { today.minusDays(it.toLong()).format(formatter) }
+
+        lastWeekDates.forEach { date ->
+            dailyDistances.putIfAbsent(date, 0f)
+        }
+
+        println("dailySteps: $dailyDistances")
+
+        return dailyDistances.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun prepareAvgSpeedData(data: List<Attività>): List<Pair<String, Double>> {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val dailySpeeds = mutableMapOf<String, Double>()
+        val speedCount = mutableMapOf<String, Int>()
+
+        data.forEach { attività ->
+            val date = LocalDate.parse(attività.date, formatter).format(formatter)
+            dailySpeeds[date] = dailySpeeds.getOrDefault(date, 0.0) + (attività.avgSpeed ?: 0.0)
+            speedCount[date] = speedCount.getOrDefault(date, 0) + 1
+        }
+
+        val today = LocalDate.now()
+        val lastWeekDates = (0..6).map { today.minusDays(it.toLong()).format(formatter) }
+
+        lastWeekDates.forEach { date ->
+            if (!dailySpeeds.containsKey(date)) {
+                dailySpeeds[date] = 0.0
+                speedCount[date] = 1
+            }
+        }
+
+        return dailySpeeds.map { (date, speed) ->
+            date to if (speedCount[date]!! > 0) speed / speedCount[date]!! else 0.0
+        }.sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun prepareStationaryTimeData(data: List<Attività>): List<Pair<String, Long>> {
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val dailyStationaryTime = mutableMapOf<String, Long>()
+
+        data.forEach { attività ->
+            val date = LocalDate.parse(attività.date, formatter).format(formatter)
+            val duration = Duration.between(attività.startTime, attività.endTime).toMinutes()
+            dailyStationaryTime[date] = dailyStationaryTime.getOrDefault(date, 0L) + duration
+        }
+
+        val today = LocalDate.now()
+        val lastWeekDates = (0..6).map { today.minusDays(it.toLong()).format(formatter) }
+
+        lastWeekDates.forEach { date ->
+            dailyStationaryTime.putIfAbsent(date, 0L)
+        }
+
+        return dailyStationaryTime.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun insertFakeWalkActivities() {
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        val today = LocalDate.now()
+        val userId = LoggedUser.id
+
+        val random = Random()
+
+
+        for (i in 0..6) {
+            val date = today.minusDays(i.toLong())
+            val formattedDate = date.format(dateFormat)
+            val startTime = date.atStartOfDay()
+            val endTime = startTime.plusHours(random.nextInt( 5).toLong())
+
+            val stepCount = random.nextInt(10000)
+            val stepLengthInMeters = 0.8f
+            val distanceInKm = stepCount * stepLengthInMeters / 1000
+
+            val attività = Attività(
+                userId = userId,
+                startTime = startTime,
+                endTime = endTime,
+                stepCount = stepCount,
+                distance = distanceInKm,
+                date = formattedDate,
+                pace = null,
+                activityType = "Passeggiata",
+                avgSpeed = null,
+                maxSpeed = null
+            )
+
+            // Inserisci l'attività nel database
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    attivitàDao.insertActivity(attività)
+                    Log.d("FakeData", "Attività fittizia salvata: $attività")
+                }
+                withContext(Dispatchers.Main) {
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
 
 
 

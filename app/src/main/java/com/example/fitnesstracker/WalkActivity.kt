@@ -250,4 +250,6 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+
+
 }
