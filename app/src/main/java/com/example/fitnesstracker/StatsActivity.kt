@@ -173,6 +173,8 @@ class StatsActivity : AppCompatActivity() {
         }
         buttons.forEach { it.setOnClickListener(listener) }
 
+        binding.btnMonth.performClick()
+        binding.btnGeofenceMonth.performClick()
 
 
     }
@@ -1170,13 +1172,10 @@ class StatsActivity : AppCompatActivity() {
 
         val data = PieData(dataSet)
         pieChart.data = data
-
-        // Imposta il tipo di carattere delle etichette a grassetto
         val tf = Typeface.DEFAULT_BOLD
         pieChart.setEntryLabelTypeface(tf)
         pieChart.data.setValueTypeface(tf)
 
-        // Imposta il colore delle etichette a nero
         pieChart.setEntryLabelColor(Color.BLACK)
         pieChart.data.setValueTextColor(Color.BLACK)
 
@@ -1189,13 +1188,16 @@ class StatsActivity : AppCompatActivity() {
         val geofenceColors = mutableMapOf<String, Int>()
 
         for (geofence in geofences) {
-            val duration = calculateDuration(geofence.enterTime, geofence.exitTime)
-            activityDurations[geofence.placeName] = activityDurations.getOrDefault(geofence.placeName, 0L) + duration
+            val duration = calculateDuration(geofence.exitTime, geofence.enterTime)
+            val durationInMinute = duration / 60000
+            println("duration: $durationInMinute")
+            activityDurations[geofence.placeName] = activityDurations.getOrDefault(geofence.placeName, 0L) + durationInMinute
             if (!geofenceColors.containsKey(geofence.placeName)) {
                 geofenceColors[geofence.placeName] = generateRandomColor()
             }
         }
 
+        println("geofence colors: $geofenceColors")
         val entries = activityDurations.map { PieEntry(it.value.toFloat(), it.key) }
         val dataSet = PieDataSet(entries, "Geofence Activities")
         dataSet.colors = geofenceColors.values.toList()
