@@ -72,7 +72,11 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             val distanceInKm = stepCount * stepLengthInMeters / 1000
             if (distanceInKm > 0) {
                 pace = minutes / distanceInKm
-                paceText.setText(String.format(Locale.getDefault(), getString(R.string.passo), pace))
+                Log.d("RunActivity", "Pace: $pace")
+                paceText.text = String.format(Locale.getDefault(), getString(R.string.passo), pace)
+            } else {
+                Log.d("RunActivity", "Distance is zero, cannot calculate pace.")
+                paceText.text = getString(R.string.no_pace_data) // Imposta un testo di default se la distanza è zero
             }
         }
     }

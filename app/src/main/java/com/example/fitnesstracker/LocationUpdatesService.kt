@@ -49,7 +49,6 @@ class LocationUpdatesService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        super.onDestroy()
         saveServiceRunningState(true)
         db = AppDatabase.getDatabase(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -197,6 +196,7 @@ class LocationUpdatesService : Service() {
     }
     override fun onDestroy() {
         super.onDestroy()
+        println("Destroyed")
         saveServiceRunningState(false)
     }
 

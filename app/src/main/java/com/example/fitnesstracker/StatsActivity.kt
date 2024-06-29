@@ -140,7 +140,7 @@ class StatsActivity : AppCompatActivity() {
             ) {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
-                // Fai qualcosa con l'elemento selezionato
+
                 if (selectedItem != "niente") {
                     CoroutineScope(Dispatchers.IO).launch {
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
@@ -300,6 +300,7 @@ class StatsActivity : AppCompatActivity() {
         }
         @RequiresApi(Build.VERSION_CODES.O)
          fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>) {
+            val filteredActivities = activities.filter { it.userId == LoggedUser.id }
             val activityColors = mapOf(
                 "Passeggiata" to ContextCompat.getColor(context, R.color.passeggiata),
                 "Corsa" to ContextCompat.getColor(context, R.color.corsa),
@@ -310,7 +311,7 @@ class StatsActivity : AppCompatActivity() {
 
             val totalMinutesPerHour = Array(24) { mutableListOf<Pair<String, Int>>() }
 
-            for (activity in activities) {
+            for (activity in filteredActivities) {
                 Log.d("ActivityDebug", "processing activity: $activity")
                 var startHour = activity.startTime.hour
                 val endHour = activity.endTime.hour
@@ -426,7 +427,7 @@ class StatsActivity : AppCompatActivity() {
                             val startMinute = (hour * 60) + ((h?.stackIndex ?: 0) * 60 / durations.size)
                             val endMinute = startMinute + (60 / durations.size)
 
-                            val clickedActivities = activities.filter {
+                            val clickedActivities = filteredActivities.filter {
                                 it.activityType == activityType &&
                                         it.startTime.hour * 60 + it.startTime.minute <= endMinute &&
                                         it.endTime.hour * 60 + it.endTime.minute >= startMinute
@@ -509,7 +510,6 @@ class StatsActivity : AppCompatActivity() {
             }
             val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
 
-            // Assuming the context is an Activity
             val activity = context as? StatsActivity
             CoroutineScope(Dispatchers.IO).launch {
                 try {
