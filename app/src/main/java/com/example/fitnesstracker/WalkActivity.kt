@@ -63,7 +63,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             var seconds = milis / 1000
             var min = seconds / 60
             seconds = seconds % 60
-            timeCounterText.text = String.format(Locale.getDefault(), "Time: %02d:%02d", min, seconds)
+            timeCounterText.text = getString(R.string.tempo, min, seconds)
             timerHandler.postDelayed(this, 1000)
         }
     }
@@ -113,9 +113,9 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         progressBar.max = stepCountTarget
 
         if(stepCounterSensor == null) {
-            stepCounterText.text = "Step counter not available"
+            stepCounterText.text = getString(R.string.step_counter_not_av)
         } else {
-            stepCounterTargetTextView.text = "Step Goal: $stepCountTarget"
+            stepCounterTargetTextView.text = getString(R.string.step_count_format, stepCountTarget)
         }
 
         db = AppDatabase.getDatabase(this)
@@ -139,11 +139,11 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         initialStepCount = savedInstanceState.getInt("initialStepCount")
         startTime = savedInstanceState.getLong("startTime")
 
-        stepCounterText.text = "Step Count: $stepCount"
+        stepCounterText.text = getString(R.string.step_count_format, stepCount)
         progressBar.progress = stepCount
 
         val distanceInKm = stepCount * stepLenghtInMeters / 1000
-        distanceCounterText.text = String.format(Locale.getDefault(), "Distance: %.2f km", distanceInKm)
+        distanceCounterText.text = getString(R.string.distanza, distanceInKm)
 
         timerHandler.postDelayed(timerRunnable, 0)
     }
@@ -155,27 +155,27 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
                 initialStepCount = totalSteps
             }
             stepCount = totalSteps - initialStepCount
-            stepCounterText.text = "Step Count: $stepCount"
+            stepCounterText.text = getString(R.string.step_count_format, stepCount)
             progressBar.progress = stepCount
 
             if(stepCount >= stepCountTarget) {
-                stepCounterTargetTextView.text = "Step Goal Achieved"
+                stepCounterTargetTextView.text = getString(R.string.gol_raggiunto)
             }
 
             val distanceInKm = stepCount * stepLenghtInMeters / 1000
-            distanceCounterText.text = String.format(Locale.getDefault(), "Distance: %.2f km", distanceInKm)
+            distanceCounterText.text = getString(R.string.distanza, distanceInKm)
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        //dskf
+        // Handle accuracy changes if needed
     }
 
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Successo")
-            .setMessage("Dati salvati con successo!")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.successo)
+            .setMessage(R.string.dati_salvati)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -185,9 +185,9 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
 
     private fun showShortActivityPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Attività troppo breve")
-            .setMessage("L'attività dura meno di un minuto e non verrà salvata. Per favore, registra attività più lunghe.")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.attività_breve)
+            .setMessage(R.string.attività_breve_testo)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -250,6 +250,5 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
-
-
 }
+

@@ -92,8 +92,10 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
     private fun setUsernameText(welcomeBack: TextView) {
         val username = LoggedUser.username
-        welcomeBack.text = "Bentornato, $username"
+        val welcomeMessage = getString(R.string.welcome_message, username)
+        welcomeBack.text = welcomeMessage
     }
+
 
     private fun setupActivitySpinner() {
         val activityArray = resources.getStringArray(R.array.activity_array)
@@ -169,11 +171,11 @@ class HomeActivity : AppCompatActivity(), MapListener {
             val stepGoal = stepsEditText.text.toString().toIntOrNull()
             if (stepGoal != null) {
                 val intent = Intent(this, WalkActivity::class.java)
-                intent.putExtra("STEP_GOAL", stepGoal)
+                intent.putExtra(getString(R.string.step_goal), stepGoal)
                 startActivity(intent)
                 alertDialog.dismiss()
             } else {
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.inserisci_numero, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -193,12 +195,12 @@ class HomeActivity : AppCompatActivity(), MapListener {
             val distanceGoal = distanceEditText.text.toString().toFloatOrNull()
             if (distanceGoal != null) {
                 val intent = Intent(this, RunActivity::class.java)
-                intent.putExtra("DISTANCE_GOAL", distanceGoal)
+                intent.putExtra(getString(R.string.distance_goal), distanceGoal)
                 Log.d("HomeActivity", "Passando distanza obiettivo: $distanceGoal")
                 startActivity(intent)
                 alertDialog.dismiss()
             } else {
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.inserisci_numero, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -218,11 +220,11 @@ class HomeActivity : AppCompatActivity(), MapListener {
             val speedLimit = speedLimitEditText.text.toString().toDoubleOrNull()
             if (speedLimit != null) {
                 val intent = Intent(this, SpeedActivity::class.java)
-                intent.putExtra("SPEED_LIMIT", speedLimit)
+                intent.putExtra(getString(R.string.speed_limit), speedLimit)
                 startActivity(intent)
                 alertDialog.dismiss()
             } else {
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.inserisci_numero, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -240,7 +242,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
                 val startMarker = Marker(map)
                 startMarker.position = startPoint
                 startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                startMarker.title = "You are here"
+                startMarker.title = getString(R.string.sei_qui)
                 map.overlays.add(startMarker)
             }
         }

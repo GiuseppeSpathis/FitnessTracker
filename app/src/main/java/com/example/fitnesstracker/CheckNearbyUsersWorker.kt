@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getString
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.google.firebase.auth.FirebaseAuth
@@ -81,8 +82,8 @@ class CheckNearbyUsersWorker(
         }
 
         val notificationBuilder = NotificationCompat.Builder(applicationContext, "nearby_users_channel")
-            .setContentTitle("Utente nelle vicinanze")
-            .setContentText("C'è un utente vicino a te: $username. Vuoi condividere i dati?")
+            .setContentTitle(applicationContext.getString(R.string.utente_vicino))
+            .setContentText(applicationContext.getString(R.string.notifica_testo, username))
             .setSmallIcon(R.drawable.logo)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)

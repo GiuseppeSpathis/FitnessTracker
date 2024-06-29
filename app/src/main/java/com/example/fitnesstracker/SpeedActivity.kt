@@ -66,7 +66,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         avgSpeedTextView = findViewById(R.id.avgSpeedTextView)
         maxSpeedTextView = findViewById(R.id.maxSpeedTextView)
 
-        maxSpeedTextView.text = String.format(Locale.getDefault(), "Max Speed: %.2f km/h", maxSpeed)
+        maxSpeedTextView.text = getString(R.string.max_speed, maxSpeed)
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         speedSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)!!
@@ -120,9 +120,9 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
                 maxSpeedRecorded = speed
             }
 
-            speedTextView.text = String.format(Locale.getDefault(), "Speed: %.2f km/h", speed)
-            avgSpeedTextView.text = String.format(Locale.getDefault(), "Avg Speed: %.2f km/h", avgSpeed)
-            maxSpeedTextView.text = String.format(Locale.getDefault(), "Max Speed: %.2f km/h", maxSpeedRecorded)
+            speedTextView.text = getString(R.string.speed, speed)
+            avgSpeedTextView.text = getString(R.string.avg_speed, avgSpeed)
+            maxSpeedTextView.text = getString(R.string.max_speed_recorded, maxSpeedRecorded)
 
             if (speed > maxSpeed) {
                 avgSpeedTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark))
@@ -137,8 +137,8 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     private fun sendNotification() {
         val notificationBuilder = NotificationCompat.Builder(this, "speed_channel")
             .setSmallIcon(R.drawable.notification_icon)
-            .setContentTitle("Velocità eccessiva")
-            .setContentText("Stai superando la velocità impostata! Rallenta.")
+            .setContentTitle(getString(R.string.speeding_notification_title))
+            .setContentText(getString(R.string.speeding_notification_text))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         with(notificationManager) {
@@ -154,8 +154,8 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Speed Channel"
-            val descriptionText = "Channel for speed limit notifications"
+            val name = getString(R.string.speed_channel_name)
+            val descriptionText = getString(R.string.speed_channel_description)
             val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel("speed_channel", name, importance).apply {
                 description = descriptionText
@@ -172,9 +172,9 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
     private fun showShortActivityPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Attività troppo breve")
-            .setMessage("L'attività dura meno di un minuto e non verrà salvata. Per favore, registra attività più lunghe.")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.attività_breve)
+            .setMessage(R.string.attività_breve_testo)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -224,9 +224,9 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Successo")
-            .setMessage("Dati salvati con successo!")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.successo)
+            .setMessage(R.string.dati_salvati)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -270,9 +270,10 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun updateTextViews() {
-        speedTextView.text = String.format(Locale.getDefault(), "Speed: %.2f km/h", speed)
-        avgSpeedTextView.text = String.format(Locale.getDefault(), "Avg Speed: %.2f km/h", avgSpeed)
-        maxSpeedTextView.text = String.format(Locale.getDefault(), "Max Speed: %.2f km/h", maxSpeedRecorded)
+        speedTextView.text = getString(R.string.speed, speed)
+        avgSpeedTextView.text = getString(R.string.avg_speed, avgSpeed)
+        maxSpeedTextView.text = getString(R.string.max_speed_recorded, maxSpeedRecorded)
     }
 }
+
 

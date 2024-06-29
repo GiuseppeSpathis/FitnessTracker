@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showPermissionDeniedMessage() {
-        Toast.makeText(this, "permesso negato", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, R.string.denied, Toast.LENGTH_LONG).show()
     }
 
     private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {

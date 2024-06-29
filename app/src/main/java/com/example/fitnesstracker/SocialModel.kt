@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -25,6 +26,8 @@ import org.osmdroid.util.GeoPoint
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -254,6 +257,62 @@ class SocialModel {
                 Toast.makeText(context, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
             }
             return false
+        }
+    }
+    suspend fun getGeofencesForDate(db: AppDatabase, year: Int, month: Int, day: Int): List<timeGeofence> {
+        val date = String.format("%04d-%02d-%02d", year, month, day)
+        return db.attivitàDao().getGeofencesForDate(date)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getActivitiesForPeriod(db: AppDatabase, period: String): List<Attività> {
+        val now = LocalDateTime.now()
+        val startDate = when (period) {
+            "day" -> now.minusDays(1)
+            "week" -> now.minusWeeks(1)
+            "month" -> now.minusMonths(1)
+            "year" -> now.minusYears(1)
+            else -> now
+        }
+        return withContext(Dispatchers.IO) {
+            db.attivitàDao().getAttivitàByDateRange(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), now.format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getGeofencesForPeriod(db: AppDatabase, period: String) : List<timeGeofence>{
+        val now = LocalDateTime.now()
+        val startDate = when (period) {
+            "day" -> now.minusDays(1)
+            "week" -> now.minusWeeks(1)
+            "month" -> now.minusMonths(1)
+            "year" -> now.minusYears(1)
+            else -> now
+        }
+        println("For period: $period, startDate: $startDate")
+        return withContext(Dispatchers.IO){
+            db.attivitàDao().getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+     suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
+        val date = String.format("%02d/%02d/%04d", day, month, year)
+        var attivitàDao : ActivityDao = db.attivitàDao()
+        Log.d("StatsActivity", "Getting activities for date: $date")
+        return withContext(Dispatchers.IO) {
+            attivitàDao.getOtherActivitiesByDate(date)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<Attività> {
+        val date = String.format("%02d/%02d/%04d", day, month, year)
+        var attivitàDao : ActivityDao = db.attivitàDao()
+        Log.d("StatsActivity", "Getting activities for date: $date")
+        return withContext(Dispatchers.IO) {
+            attivitàDao.getAttivitàByDate(date)
         }
     }
 

@@ -77,6 +77,7 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var geofencePieChart: PieChart
     private lateinit var periodMessageActivities: TextView
     private lateinit var attivitàDao: ActivityDao
+    private val socialModel = SocialModel()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -226,7 +227,7 @@ class StatsActivity : AppCompatActivity() {
     }
 
     companion object {
-
+        private val socialModel = SocialModel()
         @RequiresApi(Build.VERSION_CODES.O)
         fun showActivityPopup(activityType: String, activity: Attività, context: Context) {
 
@@ -234,15 +235,15 @@ class StatsActivity : AppCompatActivity() {
             val view = inflater.inflate(R.layout.popup_activity_details, null)
 
             val startTimeTextView = view.findViewById<TextView>(R.id.start_time)
-            startTimeTextView.text = "Start: ${activity.startTime.toLocalTime()}"
+            startTimeTextView.text = context.getString(R.string.start_time, activity.startTime.toLocalTime())
 
             val endTimeTextView = view.findViewById<TextView>(R.id.end_time)
-            endTimeTextView.text = "End: ${activity.endTime.toLocalTime()}"
+            endTimeTextView.text = context.getString(R.string.end_time, activity.endTime.toLocalTime())
 
             val stepCountLayout = view.findViewById<LinearLayout>(R.id.step_count_layout)
             val stepCountTextView = view.findViewById<TextView>(R.id.step_count)
             if (activity.stepCount != null) {
-                stepCountTextView.text = "Step Count: ${activity.stepCount}"
+                stepCountTextView.text = context.getString(R.string.step_count_format, activity.stepCount)
             } else {
                 stepCountLayout.visibility = View.GONE
             }
@@ -250,7 +251,7 @@ class StatsActivity : AppCompatActivity() {
             val distanceLayout = view.findViewById<LinearLayout>(R.id.distance_layout)
             val distanceTextView = view.findViewById<TextView>(R.id.distance)
             if (activity.distance != null) {
-                distanceTextView.text = "Distance: ${activity.distance}"
+                distanceTextView.text = context.getString(R.string.distanza, activity.distance)
             } else {
                 distanceLayout.visibility = View.GONE
             }
@@ -258,7 +259,7 @@ class StatsActivity : AppCompatActivity() {
             val paceLayout = view.findViewById<LinearLayout>(R.id.pace_layout)
             val paceTextView = view.findViewById<TextView>(R.id.pace)
             if (activity.pace != null) {
-                paceTextView.text = "Pace: ${activity.pace}"
+                paceTextView.text = context.getString(R.string.passo, activity.pace)
             } else {
                 paceLayout.visibility = View.GONE
             }
@@ -266,7 +267,7 @@ class StatsActivity : AppCompatActivity() {
             val avgSpeedLayout = view.findViewById<LinearLayout>(R.id.avg_speed_layout)
             val avgSpeedTextView = view.findViewById<TextView>(R.id.avg_speed)
             if (activity.avgSpeed != null) {
-                avgSpeedTextView.text = "Avg Speed: ${activity.avgSpeed}"
+                avgSpeedTextView.text = context.getString(R.string.avg_speed, activity.avgSpeed)
             } else {
                 avgSpeedLayout.visibility = View.GONE
             }
@@ -274,20 +275,21 @@ class StatsActivity : AppCompatActivity() {
             val maxSpeedLayout = view.findViewById<LinearLayout>(R.id.max_speed_layout)
             val maxSpeedTextView = view.findViewById<TextView>(R.id.max_speed)
             if (activity.maxSpeed != null) {
-                maxSpeedTextView.text = "Max Speed: ${activity.maxSpeed}"
+                maxSpeedTextView.text = context.getString(R.string.max_speed, activity.maxSpeed)
             } else {
                 maxSpeedLayout.visibility = View.GONE
             }
 
             val dateTextView = view.findViewById<TextView>(R.id.date)
-            dateTextView.text = "Date: ${activity.date}"
+            dateTextView.text = context.getString(R.string.date, activity.date)
 
             AlertDialog.Builder(context)
-                .setTitle("Activity Details: $activityType")
+                .setTitle(context.getString(R.string.activity_details, activityType))
                 .setView(view)
-                .setPositiveButton("OK", null)
+                .setPositiveButton(R.string.ok, null)
                 .show()
         }
+
 
         fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
             stackIndex?.let {
@@ -483,25 +485,6 @@ class StatsActivity : AppCompatActivity() {
 
             container.addView(legendLayout)
         }
-        @RequiresApi(Build.VERSION_CODES.O)
-        private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
-            val date = String.format("%02d/%02d/%04d", day, month, year)
-            var attivitàDao : ActivityDao = db.attivitàDao()
-            Log.d("StatsActivity", "Getting activities for date: $date")
-            return withContext(Dispatchers.IO) {
-                attivitàDao.getOtherActivitiesByDate(date)
-            }
-        }
-
-        @RequiresApi(Build.VERSION_CODES.O)
-        suspend fun getActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<Attività> {
-            val date = String.format("%02d/%02d/%04d", day, month, year)
-            var attivitàDao : ActivityDao = db.attivitàDao()
-            Log.d("StatsActivity", "Getting activities for date: $date")
-            return withContext(Dispatchers.IO) {
-                attivitàDao.getAttivitàByDate(date)
-            }
-        }
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
@@ -531,18 +514,18 @@ class StatsActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val activities: List<Attività> = if (isDialog) {
-                            val othersActivities = getOtherActivitiesForDate(year, month, day, db)
+                            val othersActivities = socialModel.getOtherActivitiesForDate(year, month, day, db)
                             convertToActivities(othersActivities)
                         } else {
-                            getActivitiesForDate(year, month, day, db)
+                            socialModel.getActivitiesForDate(year, month, day, db)
                         }
                         println("stampo activity")
                         println(activities)
                         if (!isDialog) {
                             val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
-                            val geofences = activity!!.getGeofencesForDate(year, month, day)
+                            val geofences = socialModel.getGeofencesForDate(db, year, month, day)
                             withContext(Dispatchers.Main) {
-                                activity.displayGeofencesForDate(geofenceChartContainer, geofences)
+                                activity!!.displayGeofencesForDate(geofenceChartContainer, geofences)
                             }
                         }
                         withContext(Dispatchers.Main){
@@ -554,270 +537,6 @@ class StatsActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-
-
-    /*
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun showDateDialog(year: Int, month: Int, day: Int, isDialog: Boolean=false) {
-        val dialogView = layoutInflater.inflate(R.layout.custom_dialog, null)
-        val builder = AlertDialog.Builder(this)
-            .setView(dialogView)
-
-        val dialog = builder.create()
-        dialog.show()
-
-        dialog.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            1500 // Altezza in pixel
-        )
-
-        val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
-        closeButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        val activityChartContainer = dialogView.findViewById<LinearLayout>(R.id.chartContainer)
-        val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
-
-        lifecycleScope.launch {
-            try {
-                //insertFakeGeofences()
-
-                val activities = if(isDialog) {
-
-                    val othersActivities = getOtherActivitiesForDate(year, month, day)
-                    convertToActivities(othersActivities)
-                }
-                 else {
-                    getActivitiesForDate(year, month, day)
-                }
-                    val geofences = getGeofencesForDate(year, month, day)
-                    displayGeofencesForDate(geofenceChartContainer, geofences)
-
-
-                Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
-                displayActivitiesForDate(activityChartContainer, activities)
-            } catch (e: Exception) {
-                Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
-            }
-        }
-    }*/
-
-
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getActivitiesForDate(year: Int, month: Int, day: Int): List<Attività> {
-        val date = String.format("%02d/%02d/%04d", day, month, year)
-        Log.d("StatsActivity", "Getting activities for date: $date")
-        return withContext(Dispatchers.IO) {
-            Log.d("StatsActivity", "searching for date: $date")
-            attivitàDao.getAttivitàByDate(date)
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int): List<OthersActivity> {
-        val date = String.format("%02d/%02d/%04d", day, month, year)
-        Log.d("StatsActivity", "Getting activities for date: $date")
-        return withContext(Dispatchers.IO) {
-            attivitàDao.getOtherActivitiesByDate(date)
-        }
-    }
-
-
-
-
-
-
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun displayActivitiesForDate(container: LinearLayout, activities: List<Attività>) {
-        val activityColors = mapOf(
-            "Passeggiata" to ContextCompat.getColor(this, R.color.passeggiata),
-            "Corsa" to ContextCompat.getColor(this, R.color.corsa),
-            "Stare fermo" to ContextCompat.getColor(this, R.color.stare_fermo),
-            "Guidare" to ContextCompat.getColor(this, R.color.guidare),
-            "Not tracked" to ContextCompat.getColor(this, R.color.not_tracked)
-        )
-
-        val totalMinutesPerHour = Array(24) { mutableListOf<Pair<String, Int>>() }
-
-        for (activity in activities) {
-            Log.d("ActivityDebug", "processing activity: $activity")
-            var startHour = activity.startTime.hour
-            val endHour = activity.endTime.hour
-            var startMinute = activity.startTime.minute
-            val endMinute = activity.endTime.minute
-
-            while (startHour <= endHour) {
-                val activityType = activity.activityType
-                val currentHourList = totalMinutesPerHour[startHour]
-
-                val duration = when {
-                    startHour == endHour -> endMinute - startMinute
-                    startHour == activity.startTime.hour -> 60 - startMinute
-                    startHour < endHour && startHour != activity.endTime.hour -> 60
-                    startHour == activity.endTime.hour -> endMinute
-                    else -> 0
-                }
-
-                if (duration > 0) {
-                    currentHourList.add(Pair(activityType, duration))
-                }
-
-                startHour++
-                startMinute = 0  // Reset startMinute for the next hour
-            }
-        }
-
-        container.removeAllViews()
-
-        for (hour in 0..23) {
-            val hourLayoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                100
-            ).apply {
-                if (hour == 23) {
-                    setMargins(0, -10, 0, 15)
-                } else {
-                    setMargins(0, -10, 0, -10)
-                }
-            }
-
-            val hourLayout = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = hourLayoutParams
-            }
-
-            val hourLabel = TextView(this).apply {
-                text = String.format("%02d - %02d", hour, hour + 1)
-                layoutParams = LinearLayout.LayoutParams(
-                    200,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                ).apply {
-                    setPadding(0, 40, 0, 0)
-                }
-            }
-
-            val chart = HorizontalBarChart(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    0,
-                    150
-                ).apply {
-                    weight = 1f
-                }
-                setDrawGridBackground(false)
-                axisLeft.isEnabled = false
-                axisRight.isEnabled = false
-                xAxis.isEnabled = false
-                legend.isEnabled = false
-                description.isEnabled = false
-                setExtraOffsets(0f, 0f, 0f, 0f)
-            }
-
-            val currentHourList = totalMinutesPerHour[hour]
-            val durations = mutableListOf<Float>()
-            val colors = mutableListOf<Int>()
-
-            var totalDuration = 0
-
-            if (currentHourList.isEmpty()) {
-                durations.add(60f)
-                colors.add(activityColors["Not tracked"] ?: Color.GRAY)
-            } else {
-                for ((activityType, duration) in currentHourList) {
-                    durations.add(duration.toFloat())
-                    colors.add(activityColors[activityType] ?: Color.GRAY)
-                    totalDuration += duration
-
-                    // Aggiungi una barra nera di separazione
-                    durations.add(1f) // Puoi regolare lo spessore della barra nera cambiando questo valore
-                    colors.add(Color.BLACK)
-                }
-                if (totalDuration < 60) {
-                    durations.add((60 - totalDuration).toFloat())
-                    colors.add(activityColors["Not tracked"] ?: Color.GRAY)
-                }
-            }
-
-            val barEntries = listOf(BarEntry(0f, durations.toFloatArray()))
-            val barDataSet = BarDataSet(barEntries, "")
-            barDataSet.colors = colors
-            barDataSet.setDrawValues(false)
-
-            val barData = BarData(barDataSet)
-            chart.data = barData
-            chart.invalidate()
-
-            chart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
-                override fun onValueSelected(e: Entry?, h: Highlight?) {
-                    if (e is BarEntry) {
-                        val activityType = getActivityTypeByColor(colors, activityColors, h?.stackIndex)
-                        Log.d("ActivityDebug:", "Clicked activity: $activityType")
-
-                        val startMinute = (hour * 60) + ((h?.stackIndex ?: 0) * 60 / durations.size)
-                        val endMinute = startMinute + (60 / durations.size)
-
-                        val clickedActivities = activities.filter {
-                            it.activityType == activityType &&
-                                    it.startTime.hour * 60 + it.startTime.minute <= endMinute &&
-                                    it.endTime.hour * 60 + it.endTime.minute >= startMinute
-                        }
-
-                        clickedActivities.forEach { activity ->
-                            Log.d("ActivityDebug", "Activity Clicked: $activity")
-                            showActivityPopup(activityType, activity)
-                        }
-                    }
-                }
-
-                override fun onNothingSelected() {}
-            })
-
-            hourLayout.addView(hourLabel)
-            hourLayout.addView(chart)
-
-            container.addView(hourLayout)
-        }
-
-        val legendLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16, 16, 16, 16)
-        }
-
-        activityColors.forEach { (activity, color) ->
-            val legendItemLayout = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 8, 0, 8)
-                }
-            }
-
-            val colorView = View(this).apply {
-                setBackgroundColor(color)
-                layoutParams = LinearLayout.LayoutParams(50, 50)
-            }
-
-            val activityLabel = TextView(this).apply {
-                text = activity
-                setPadding(16, 0, 0, 0)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
-
-            legendItemLayout.addView(colorView)
-            legendItemLayout.addView(activityLabel)
-            legendLayout.addView(legendItemLayout)
-        }
-
-        container.addView(legendLayout)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -1017,12 +736,12 @@ class StatsActivity : AppCompatActivity() {
         val exitTime = Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).toLocalDateTime()
 
         dateTextView.text = enterTime.toLocalDate().format(dateFormatter)
-        startTimeTextView.text = "Start: ${enterTime.toLocalTime().format(timeFormatter)}"
-        endTimeTextView.text = "End: ${exitTime.toLocalTime().format(timeFormatter)}"
+        startTimeTextView.text = getString(R.string.start_time, enterTime.toLocalTime().format(timeFormatter))
+        endTimeTextView.text = getString(R.string.end_time, exitTime.toLocalTime().format(timeFormatter))
 
         AlertDialog.Builder(this)
             .setView(dialogView)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(R.string.ok, null)
             .show()
     }
 
@@ -1035,69 +754,6 @@ class StatsActivity : AppCompatActivity() {
         }
         return "Not tracked"
     }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun showActivityPopup(activityType: String, activity: Attività) {
-
-        val inflater = layoutInflater
-        val view = inflater.inflate(R.layout.popup_activity_details, null)
-
-        val startTimeTextView = view.findViewById<TextView>(R.id.start_time)
-        startTimeTextView.text = "Start: ${activity.startTime.toLocalTime()}"
-
-        val endTimeTextView = view.findViewById<TextView>(R.id.end_time)
-        endTimeTextView.text = "End: ${activity.endTime.toLocalTime()}"
-
-        val stepCountLayout = view.findViewById<LinearLayout>(R.id.step_count_layout)
-        val stepCountTextView = view.findViewById<TextView>(R.id.step_count)
-        if (activity.stepCount != null) {
-            stepCountTextView.text = "Step Count: ${activity.stepCount}"
-        } else {
-            stepCountLayout.visibility = View.GONE
-        }
-
-        val distanceLayout = view.findViewById<LinearLayout>(R.id.distance_layout)
-        val distanceTextView = view.findViewById<TextView>(R.id.distance)
-        if (activity.distance != null) {
-            distanceTextView.text = "Distance: ${activity.distance}"
-        } else {
-            distanceLayout.visibility = View.GONE
-        }
-
-        val paceLayout = view.findViewById<LinearLayout>(R.id.pace_layout)
-        val paceTextView = view.findViewById<TextView>(R.id.pace)
-        if (activity.pace != null) {
-            paceTextView.text = "Pace: ${activity.pace}"
-        } else {
-            paceLayout.visibility = View.GONE
-        }
-
-        val avgSpeedLayout = view.findViewById<LinearLayout>(R.id.avg_speed_layout)
-        val avgSpeedTextView = view.findViewById<TextView>(R.id.avg_speed)
-        if (activity.avgSpeed != null) {
-            avgSpeedTextView.text = "Avg Speed: ${activity.avgSpeed}"
-        } else {
-            avgSpeedLayout.visibility = View.GONE
-        }
-
-        val maxSpeedLayout = view.findViewById<LinearLayout>(R.id.max_speed_layout)
-        val maxSpeedTextView = view.findViewById<TextView>(R.id.max_speed)
-        if (activity.maxSpeed != null) {
-            maxSpeedTextView.text = "Max Speed: ${activity.maxSpeed}"
-        } else {
-            maxSpeedLayout.visibility = View.GONE
-        }
-
-        val dateTextView = view.findViewById<TextView>(R.id.date)
-        dateTextView.text = "Date: ${activity.date}"
-
-        AlertDialog.Builder(this)
-            .setTitle("Activity Details: $activityType")
-            .setView(view)
-            .setPositiveButton("OK", null)
-            .show()
-    }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun resetDatabase() {
@@ -1116,54 +772,54 @@ class StatsActivity : AppCompatActivity() {
                 if(chartType == "activities"){
                     val activities: List<Attività> = when (period) {
                         "day" -> {
-                            periodMessageActivities.text = "Dati relativi all'ultimo giorno"
-                            getActivitiesForPeriod(period)
+                            periodMessageActivities.text = getString(R.string.dati_ultimo_giorno)
+                            socialModel.getActivitiesForPeriod(db, period)
                         }
                         "week" -> {
-                            periodMessageActivities.text = "Dati relativi all'ultima settimana"
-                            getActivitiesForPeriod(period)
+                            periodMessageActivities.text = getString(R.string.dati_ultima_settimana)
+                            socialModel.getActivitiesForPeriod(db, period)
                         }
                         "month" -> {
-                            periodMessageActivities.text = "Dati relativi all'ultimo mese"
-                            getActivitiesForPeriod(period)
+                            periodMessageActivities.text = getString(R.string.dati_ultimo_mese)
+                            socialModel.getActivitiesForPeriod(db, period)
                         }
                         "year" -> {
-                            periodMessageActivities.text = "Dati relativi all'ultimo anno"
-                            getActivitiesForPeriod(period)
+                            periodMessageActivities.text = getString(R.string.dati_ultimo_anno)
+                            socialModel.getActivitiesForPeriod(db, period)
                         }
                         else -> emptyList()
                     }
 
                     if (activities.isEmpty()) {
                         pieChart.clear()
-                        Snackbar.make(binding.root, "Nessun dato disponibile", Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(binding.root, R.string.no_data, Snackbar.LENGTH_SHORT).show()
                     } else {
                         displayPieChart(activities)
                     }
                 } else {
                     val geofences : List<timeGeofence> = when (period) {
                         "day" -> {
-                            periodMessage.text = "Dati relativi all'ultimo giorno"
-                           getGeofencesForPeriod(period)
+                            periodMessage.text = getString(R.string.dati_ultimo_giorno)
+                            socialModel.getGeofencesForPeriod(db, period)
                         }
                         "week" -> {
-                            periodMessage.text = "Dati relativi all'ultima settimana"
-                            getGeofencesForPeriod(period)
+                            periodMessage.text = getString(R.string.dati_ultima_settimana)
+                            socialModel.getGeofencesForPeriod(db, period)
                         }
                         "month" -> {
-                            periodMessage.text = "Dati relativi all'ultimo mese"
-                            getGeofencesForPeriod(period)
+                            periodMessage.text = getString(R.string.dati_ultimo_mese)
+                            socialModel.getGeofencesForPeriod(db, period)
                         }
                         "year" -> {
-                            periodMessage.text ="Dati relativi all'ultimo anno"
-                            getGeofencesForPeriod(period)
+                            periodMessage.text =getString(R.string.dati_ultimo_anno)
+                            socialModel.getGeofencesForPeriod(db, period)
                         }
                         else -> emptyList()
 
                     }
                     if (geofences.isEmpty()) {
                         geofencePieChart.clear()
-                        Snackbar.make(binding.root, "Nessun dato disponibile", Snackbar.LENGTH_SHORT).show()
+                        Snackbar.make(binding.root, R.string.no_data, Snackbar.LENGTH_SHORT).show()
                     } else {
                         displayGeofencePieChart(geofences)
                     }
@@ -1175,39 +831,10 @@ class StatsActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getActivitiesForPeriod(period: String): List<Attività> {
-        val now = LocalDateTime.now()
-        val startDate = when (period) {
-            "day" -> now.minusDays(1)
-            "week" -> now.minusWeeks(1)
-            "month" -> now.minusMonths(1)
-            "year" -> now.minusYears(1)
-            else -> now
-        }
-        return withContext(Dispatchers.IO) {
-            attivitàDao.getAttivitàByDateRange(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private suspend fun getGeofencesForPeriod(period: String) : List<timeGeofence>{
-        val now = LocalDateTime.now()
-        val startDate = when (period) {
-            "day" -> now.minusDays(1)
-            "week" -> now.minusWeeks(1)
-            "month" -> now.minusMonths(1)
-            "year" -> now.minusYears(1)
-            else -> now
-        }
-        println("For period: $period, startDate: $startDate")
-        return withContext(Dispatchers.IO){
-            attivitàDao.getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayPieChart(activities: List<Attività>) {
+
         val activityDurations = mutableMapOf<String, Long>()
         val filtered_activities = activities.filter { it.userId == LoggedUser.id }
         for (activity in filtered_activities) {
@@ -1290,17 +917,12 @@ class StatsActivity : AppCompatActivity() {
         return calculateDuration(startTime, endTime)
     }
 
-    suspend fun getGeofencesForDate(year: Int, month: Int, day: Int): List<timeGeofence> {
-        val date = String.format("%04d-%02d-%02d", year, month, day)
-       // insertFakeGeofences()
-        return attivitàDao.getGeofencesForDate(date)
-    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateLineChart(activityType: String) {
-       // insertFakeWalkActivities()
         CoroutineScope(Dispatchers.IO).launch {
-            val data =getActivitiesForPeriod("week")
+            val data = socialModel.getActivitiesForPeriod(db, "week")
 
             val filteredData = data.filter { it.activityType == activityType && it.userId == LoggedUser.id }
 
@@ -1385,8 +1007,6 @@ class StatsActivity : AppCompatActivity() {
         lastWeekDates.forEach { date ->
             dailyDistances.putIfAbsent(date, 0f)
         }
-
-        println("dailySteps: $dailyDistances")
 
         return dailyDistances.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }

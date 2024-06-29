@@ -135,7 +135,7 @@ class GeoFenceActivity : AppCompatActivity() {
             if (query.isNotEmpty()) {
                 searchLocation(query)
             } else {
-                Toast.makeText(this, "Inserisci un luogo da cercare", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.inserisci_luogo_cercare, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -194,22 +194,22 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun showGeofenceNameDialog(location: GeoPoint) {
         val builder = AlertDialog.Builder(this)
-        builder.setTitle("Inserisci il nome della Geofence")
+        builder.setTitle(R.string.nome_gf)
 
         val input = EditText(this)
         input.inputType = InputType.TYPE_CLASS_TEXT
         builder.setView(input)
 
-        builder.setPositiveButton("OK") { dialog, _ ->
+        builder.setPositiveButton(R.string.ok) { dialog, _ ->
             val geofenceName = input.text.toString()
             if (geofenceName.isNotEmpty()) {
                 addGeofenceAtLocation(location, geofenceName)
             } else {
-                Toast.makeText(this, "Il nome della Geofence non può essere vuoto", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.nome_non_vuoto, Toast.LENGTH_SHORT).show()
             }
             dialog.dismiss()
         }
-        builder.setNegativeButton("Cancel") { dialog, _ ->
+        builder.setNegativeButton(R.string.cancel) { dialog, _ ->
             dialog.cancel()
         }
 
@@ -227,7 +227,7 @@ class GeoFenceActivity : AppCompatActivity() {
                 moveToLocation(lat, lon)
                 addGeofenceButton.isEnabled = true
             } else {
-                Toast.makeText(this@GeoFenceActivity, "Nessun risultato trovato", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GeoFenceActivity, R.string.nessun_risultato, Toast.LENGTH_SHORT).show()
                 addGeofenceButton.isEnabled = false
             }
         }
@@ -270,7 +270,7 @@ class GeoFenceActivity : AppCompatActivity() {
         lifecycleScope.launch {
             socialModel.insertGeofence(db, geofence)
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@GeoFenceActivity, "Geofence aggiunta con successo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GeoFenceActivity, R.string.gf_successo, Toast.LENGTH_SHORT).show()
                 findViewById<EditText>(R.id.searchBar).text.clear()
                 addGeofenceButton.isEnabled = false
                 viewGeofences()
@@ -327,15 +327,15 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun showDeleteGeofenceDialog(geofence: GeoFence) {
         AlertDialog.Builder(this)
-            .setTitle("Rimuovere Geofence")
-            .setMessage("Vuoi rimuovere questa geofence?")
-            .setPositiveButton("Sì") { _, _ ->
+            .setTitle(R.string.rimuovere_gf)
+            .setMessage(R.string.rim_domanda)
+            .setPositiveButton(R.string.si) { _, _ ->
                 lifecycleScope.launch {
                     socialModel.deleteGeofence(db, geofence)
-                    viewGeofences() // Refresh the map to remove the deleted geofence
+                    viewGeofences()
                 }
             }
-            .setNegativeButton("No", null)
+            .setNegativeButton(R.string.no, null)
             .show()
     }
 

@@ -74,8 +74,8 @@ class LocationUpdatesService : Service() {
         }
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Location Service")
-            .setContentText("Tracking location in the background")
+            .setContentTitle(getString(R.string.location_service))
+            .setContentText(getString(R.string.track_background))
             .setSmallIcon(R.drawable.logo)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
@@ -133,9 +133,8 @@ class LocationUpdatesService : Service() {
                         if (!isInside) {
                             isInside = true
                             val enterTime = System.currentTimeMillis()
-                            println("entered a geofence")
                             withContext(Dispatchers.Main) {
-                                sendNotification("Entered Geofence", "You have entered ${geofence.placeName}.")
+                                sendNotification(getString(R.string.entered_geofence_title),  getString(R.string.geofence_entered_message, geofence.placeName))
                             }
                             val timeGeofence = timeGeofence(
                                 latitude = geofence.latitude,
@@ -157,7 +156,7 @@ class LocationUpdatesService : Service() {
                     isInside = false
                     val exitTime = System.currentTimeMillis()
                     withContext(Dispatchers.Main) {
-                        sendNotification("Exited Geofence", "You have exited a geofence.")
+                        sendNotification(getString(R.string.exited_geofence_title), getString(R.string.exited_geofence))
                     }
 
                     for (geofence in geofences) {

@@ -66,14 +66,13 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             val seconds = millis / 1000
             val minutes = seconds / 60
             val remainingSeconds = seconds % 60
-            timeCounterText.setText(String.format(Locale.getDefault(), "Time: %02d:%02d", minutes, remainingSeconds))
+            timeCounterText.setText(String.format(Locale.getDefault(), getString(R.string.tempo), minutes, remainingSeconds))
             timerHandler.postDelayed(this, 1000)
 
-            // Calcolare la media minuti per km
             val distanceInKm = stepCount * stepLengthInMeters / 1000
             if (distanceInKm > 0) {
                 pace = minutes / distanceInKm
-                paceText.setText(String.format(Locale.getDefault(), "Pace: %.2f min/km", pace))
+                paceText.setText(String.format(Locale.getDefault(), getString(R.string.passo), pace))
             }
         }
     }
@@ -116,14 +115,14 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) as Sensor
 
-        distanceGoal = intent.getFloatExtra("DISTANCE_GOAL", 5.0f)
+        distanceGoal = intent.getFloatExtra(getString(R.string.distance_goal), 5.0f)
         Log.d("RunActivity", "Ricevuto distanza obiettivo: $distanceGoal")
         progressBar.max = (distanceGoal * 1000).toInt() // Convertire in metri
 
-        distanceGoalTextView.text = "Distance Goal: %.2f km".format(distanceGoal)
+        distanceGoalTextView.text = getString(R.string.distance_goal_format, distanceGoal)
 
         if (stepCounterSensor == null) {
-            stepCounterText.text = "Step counter not available"
+            stepCounterText.text = getString(R.string.step_counter_not_av)
         }
 
         db = AppDatabase.getDatabase(this)
@@ -149,14 +148,14 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         startTime = savedInstanceState.getLong("startTime")
         pace = savedInstanceState.getFloat("pace")
 
-        stepCounterText.text = "Step Count: $stepCount"
+        stepCounterText.text = getString(R.string.step_count_format, stepCount)
         val distanceInMeters = stepCount * stepLengthInMeters
-        distanceCounterText.text = String.format(Locale.getDefault(), "Distance: %.2f km", distanceInMeters / 1000)
+        distanceCounterText.text = String.format(Locale.getDefault(), getString(R.string.distanza), distanceInMeters / 1000)
         progressBar.progress = distanceInMeters.toInt()
-        paceText.text = String.format(Locale.getDefault(), "Pace: %.2f min/km", pace)
+        paceText.text = String.format(Locale.getDefault(), getString(R.string.passo), pace)
 
         if (distanceInMeters >= distanceGoal * 1000) {
-            distanceGoalTextView.text = "Distance Goal Achieved"
+            distanceGoalTextView.text = getString(R.string.gol_raggiunto)
         }
 
         timerHandler.postDelayed(timerRunnable, 0)
@@ -169,14 +168,14 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
                 initialStepCount = totalSteps
             }
             stepCount = totalSteps - initialStepCount
-            stepCounterText.setText("Step Count: " + stepCount)
+            stepCounterText.setText(getString(R.string.step_count_format, stepCount))
 
             val distanceInMeters = stepCount * stepLengthInMeters
-            distanceCounterText.setText(String.format(Locale.getDefault(), "Distance: %.2f km", distanceInMeters / 1000))
+            distanceCounterText.setText(String.format(Locale.getDefault(), getString(R.string.distanza), distanceInMeters / 1000))
             progressBar.setProgress(distanceInMeters.toInt())
 
             if (distanceInMeters >= distanceGoal * 1000) {
-                distanceGoalTextView.setText("Distance Goal Achieved")
+                distanceGoalTextView.setText(getString(R.string.gol_raggiunto))
             }
         }
     }
@@ -187,9 +186,9 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
     private fun showShortActivityPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Attività troppo breve")
-            .setMessage("L'attività dura meno di un minuto e non verrà salvata. Per favore, registra attività più lunghe.")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.attività_breve)
+            .setMessage(R.string.attività_breve_testo)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -232,7 +231,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 attivitàDao.insertActivity(attività)
-                Log.d("RunActivity", "Attività salvata: $attività")
+
             }
             withContext(Dispatchers.Main) {
                 showSuccessPopup()
@@ -241,9 +240,9 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
     }
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Successo")
-            .setMessage("Dati salvati con successo!")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.successo)
+            .setMessage(R.string.dati_salvati)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
