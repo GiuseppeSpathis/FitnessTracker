@@ -104,9 +104,7 @@ class MainActivity : ComponentActivity() {
 
 
 
-    companion object {
-        private const val REQUEST_PERMISSIONS = 1
-    }
+
 }
 
 
