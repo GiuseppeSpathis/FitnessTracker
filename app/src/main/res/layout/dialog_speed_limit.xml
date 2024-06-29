@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set Speed Limit (km/h)"
+        android:text="@string/limite_velocità"
         android:textSize="18sp"
         android:layout_gravity="center_horizontal"
         android:paddingBottom="16dp" />
@@ -18,13 +18,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="numberDecimal"
-        android:hint="Enter speed limit" />
+        android:hint="@string/inserisci_limite_velocità" />
 
     <Button
         android:id="@+id/confirmButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Confirm"
+        android:text="@string/conferma"
         android:background="@drawable/rounded_button"
         android:textColor="@color/white"
         android:layout_marginTop="16dp" />

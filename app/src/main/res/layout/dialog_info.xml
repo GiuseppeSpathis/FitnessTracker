@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Geofences"
+        android:text="@string/geofences"
         android:layout_gravity="center_horizontal"
         android:textStyle="bold"
         android:textSize="30dp"

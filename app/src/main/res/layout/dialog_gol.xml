@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set a step goal"
+        android:text="@string/inserisci_gol_passi"
         android:textSize="18sp"
         android:layout_gravity="center_horizontal"
         android:paddingBottom="16dp" />
@@ -17,7 +17,7 @@
         android:id="@+id/stepsEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter step goal"
+        android:hint="@string/inserisci_gol_passi_hint"
         android:inputType="number" />
 
     <Button
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/rounded_button"
         android:textColor="@color/white"
-        android:text="Confirm"
+        android:text="@string/conferma"
         android:layout_marginTop="16dp"
         />
 </LinearLayout>

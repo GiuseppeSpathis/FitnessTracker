@@ -10,9 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-
-        >
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -36,14 +34,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
-                android:text="Bentornato, $nomeutente"
+                android:text="@string/welcome_user"
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toEndOf="@+id/image_profile"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="@+id/image_profile"
-                app:layout_constraintWidth_percent="0.5"/>
+                app:layout_constraintWidth_percent="0.5" />
 
             <ImageView
                 android:id="@+id/logout"
@@ -64,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:gravity="center"
-                android:text="Scegli l'attività da tracciare:"
+                android:text="@string/select_activity"
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -101,7 +99,7 @@
                 android:layout_height="125dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/cerchio"
-                android:text="Traccia ora"
+                android:text="@string/start_tracking"
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -122,3 +120,4 @@
         app:menu="@menu/bottom_navbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

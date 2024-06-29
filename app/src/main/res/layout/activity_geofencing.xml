@@ -16,7 +16,7 @@
         android:layout_toStartOf="@id/btnSearch"
         android:layout_toLeftOf="@id/btnSearch"
         android:layout_margin="16dp"
-        android:hint="Cerca luogo"
+        android:hint="@string/search_hint"
         android:background="@drawable/edit_text_background"
         android:padding="10dp" />
 
@@ -29,7 +29,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginTop="15dp"
         android:layout_marginEnd="50dp"
-        android:text="Cerca" />
+        android:text="@string/search_button" />
 
     <ImageButton
         android:id="@+id/infoButton"
@@ -61,7 +61,7 @@
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="20dp"
         android:enabled="false"
-        android:text="Add Geofence" />
+        android:text="@string/add_geofence_button" />
 
     <Button
         android:id="@+id/btnViewGeofences"
@@ -72,7 +72,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginStart="15dp"
         android:layout_marginBottom="20dp"
-        android:text="View Geofences" />
+        android:text="@string/view_geofences_button" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
@@ -84,4 +84,5 @@
         app:menu="@menu/bottom_navbar" />
 
 </RelativeLayout>
+
 

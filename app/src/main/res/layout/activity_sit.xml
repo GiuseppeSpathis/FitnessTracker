@@ -33,7 +33,7 @@
             android:id="@+id/totalTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Total Time: 00:00:00"
+            android:text="@string/total_time"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"/>
@@ -42,7 +42,7 @@
             android:id="@+id/lastStandTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Time since last stand: 00:00:00"
+            android:text="@string/time_since_last_stand"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginBottom="32dp"/>
@@ -51,7 +51,7 @@
             android:id="@+id/resetButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reset Stand Timer"
+            android:text="@string/reset_timer"
             android:background="@drawable/rounded_button"
             android:textColor="@color/white"
             android:padding="@dimen/dimen_8"
@@ -63,6 +63,6 @@
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_button"
             android:textColor="@color/white"
-            android:text="Stop"/>
+            android:text="@string/stop"/>
     </LinearLayout>
 </ScrollView>

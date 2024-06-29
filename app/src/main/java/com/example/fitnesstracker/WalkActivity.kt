@@ -115,7 +115,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         if(stepCounterSensor == null) {
             stepCounterText.text = getString(R.string.step_counter_not_av)
         } else {
-            stepCounterTargetTextView.text = getString(R.string.step_count_format, stepCountTarget)
+            stepCounterTargetTextView.text = getString(R.string.gol_passi, stepCountTarget)
         }
 
         db = AppDatabase.getDatabase(this)

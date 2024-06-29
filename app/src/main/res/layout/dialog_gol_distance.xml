@@ -7,7 +7,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set a goal distance (km)"
+        android:text="@string/distance_goal_dialog"
         android:textSize="18sp"
         android:layout_gravity="center_horizontal"
         android:paddingBottom="16dp" />
@@ -16,14 +16,14 @@
         android:id="@+id/distanceEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter distance goal"
+        android:hint="@string/distance_goal_dialog_hint"
         android:inputType="numberDecimal" />
 
     <Button
         android:id="@+id/confirmButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Confirm"
+        android:text="@string/conferma"
         android:background="@drawable/rounded_button"
         android:textColor="@color/white"
         android:layout_gravity="center"
