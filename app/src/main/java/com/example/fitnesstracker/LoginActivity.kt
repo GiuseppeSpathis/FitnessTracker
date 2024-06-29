@@ -1,6 +1,8 @@
 package com.example.fitnesstracker
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +15,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.animation.core.updateTransition
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -36,10 +40,11 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var goToRegistration: TextView
     private lateinit var togglePasswordVisibilityButton: ImageButton
     private val socialModel = SocialModel()
+    private val REQUEST_PERMISSION_REQUEST_CODE = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_registration2)
-
+        notificationRequest()
         auth = FirebaseAuth.getInstance()
 
         val currentUser = auth.currentUser
@@ -159,6 +164,14 @@ class LoginActivity : AppCompatActivity() {
             }, 2000)
         } else {
             showToast(R.string.errore_login)
+        }
+    }
+    private fun notificationRequest() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_PERMISSION_REQUEST_CODE)
         }
     }
 }

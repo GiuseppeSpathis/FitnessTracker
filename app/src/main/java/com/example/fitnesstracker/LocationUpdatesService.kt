@@ -49,6 +49,8 @@ class LocationUpdatesService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        super.onDestroy()
+        saveServiceRunningState(true)
         db = AppDatabase.getDatabase(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         socialModel = SocialModel()
@@ -194,6 +196,19 @@ class LocationUpdatesService : Service() {
 
         notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notification)
     }
+    override fun onDestroy() {
+        super.onDestroy()
+        saveServiceRunningState(false)
+    }
+
+    private fun saveServiceRunningState(isRunning: Boolean) {
+        val sharedPref = getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean("LocationUpdatesServiceRunning", isRunning)
+            apply()
+        }
+    }
+
 }
 
 

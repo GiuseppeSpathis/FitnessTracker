@@ -1,13 +1,17 @@
 package com.example.fitnesstracker
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.ActivityOptions
+import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
@@ -148,14 +152,35 @@ class GeoFenceActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
                 REQUEST_LOCATION_PERMISSION)
+            if(!isServiceRunning(LocationUpdatesService::class.java)){
+                Log.d("GeoFence", "Service not running, started")
+                startLocationService()
+            } else {
+                Log.d("Geofence", "Service already running, not started")
+            }
         } else {
-
+            if(!isServiceRunning(LocationUpdatesService::class.java)){
+                Log.d("GeoFence", "Service not running, started")
+                startLocationService()
+            } else {
+                Log.d("Geofence", "Service already running, not started")
+            }
         }
         findViewById<ImageButton>(R.id.infoButton).setOnClickListener {
             showInfoDialog()
         }
     }
 
+
+    private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {
+        val sharedPref = getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(serviceClass.simpleName + "Running", false)
+    }
+
+    private fun startLocationService() {
+        val intent = Intent(this, LocationUpdatesService::class.java)
+        ContextCompat.startForegroundService(this, intent)
+    }
     private fun showInfoDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_info, null)
 

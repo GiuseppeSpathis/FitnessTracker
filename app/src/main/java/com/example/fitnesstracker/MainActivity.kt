@@ -12,24 +12,44 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
 import android.Manifest
+import android.app.Service
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.work.Configuration
 
 class MainActivity : ComponentActivity() {
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.all { it.value }) {
+            startLocationService()
+            startCheckNearbyUsersWorker()
+        } else {
+            showPermissionDeniedMessage()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        if (checkAndRequestPermissions()) {
+            if(!isServiceRunning(LocationUpdatesService::class.java)){
+                Log.d("MainActivity", "Service not running, started")
+                startLocationService()
+            }
+            Log.d("MainActivity", "Service already running, not started")
+            startCheckNearbyUsersWorker()
+        }
         startActivity(Intent(this, LoginActivity::class.java))
         FirebaseApp.initializeApp(this)
 
-        if (checkAndRequestPermissions()) {
-            startLocationService()
-            startCheckNearbyUsersWorker()
-        }
+
     }
 
     private fun checkAndRequestPermissions(): Boolean {
@@ -51,7 +71,7 @@ class MainActivity : ComponentActivity() {
         }
 
         return if (neededPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, neededPermissions.toTypedArray(), REQUEST_PERMISSIONS)
+            requestPermissionLauncher.launch(neededPermissions.toTypedArray())
             false
         } else {
             true
@@ -73,25 +93,20 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_PERMISSIONS) {
-            val allPermissionsGranted = grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            if (allPermissionsGranted) {
-                startLocationService()
-                startCheckNearbyUsersWorker()
-            } else {
-                showPermissionDeniedMessage()
-            }
-        }
-    }
-
     private fun showPermissionDeniedMessage() {
         Toast.makeText(this, "permesso negato", Toast.LENGTH_LONG).show()
     }
+
+    private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {
+        val sharedPref = getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(serviceClass.simpleName + "Running", false)
+    }
+
+
 
     companion object {
         private const val REQUEST_PERMISSIONS = 1
     }
 }
+
 

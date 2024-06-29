@@ -1337,7 +1337,9 @@ class StatsActivity : AppCompatActivity() {
                 binding.lineChart.axisRight.isEnabled = false
 
                 binding.lineChart.data = lineData
+                binding.lineChart.setDrawGridBackground(false)
                 binding.lineChart.invalidate()
+
             }
         }
     }
