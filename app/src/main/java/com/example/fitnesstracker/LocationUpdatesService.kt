@@ -142,7 +142,8 @@ class LocationUpdatesService : Service() {
                                 enterTime = enterTime,
                                 exitTime = 0L,
                                 date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                                placeName = geofence.placeName
+                                placeName = geofence.placeName,
+                                userId = LoggedUser.id
                             )
                             db.attivitàDao().insertTimeGeofence(timeGeofence)
                         }

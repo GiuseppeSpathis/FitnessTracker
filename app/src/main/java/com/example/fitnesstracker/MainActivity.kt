@@ -81,8 +81,6 @@ class MainActivity : ComponentActivity() {
                 startLocationService()
                 startCheckNearbyUsersWorker()
             } else {
-                // Gestisci il caso in cui i permessi non sono stati concessi
-                // Puoi mostrare un messaggio all'utente o disabilitare funzionalità
                 showPermissionDeniedMessage()
             }
         }

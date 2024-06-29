@@ -145,23 +145,35 @@ class RegistrationActivity : AppCompatActivity() {
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
 
         if (!emailPattern.matcher(email).matches()) {
-            Toast.makeText(this, R.string.email_non_valida, Toast.LENGTH_SHORT).show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.email_non_valida, Toast.LENGTH_SHORT).show()
+            }
             return false
         }
 
         if (!passwordPattern.matches(password)) {
-            Toast.makeText(this, R.string.password_non_valida, Toast.LENGTH_LONG).show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.password_non_valida, Toast.LENGTH_LONG).show()
+            }
             return false
         }
 
         if (socialModel.emailExists(email)) {
-            Toast.makeText(this, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
+            }
             return false
         }
 
-        if(socialModel.usernameExists(username)){
-            Toast.makeText(this, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
+        if (socialModel.usernameExists(username)) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
+            }
             return false
+        }
+
+        withContext(Dispatchers.Main) {
+            Toast.makeText(this@RegistrationActivity, R.string.attendere, Toast.LENGTH_SHORT).show()
         }
 
         return true

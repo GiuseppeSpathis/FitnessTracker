@@ -151,6 +151,20 @@ class GeoFenceActivity : AppCompatActivity() {
         } else {
 
         }
+        findViewById<ImageButton>(R.id.infoButton).setOnClickListener {
+            showInfoDialog()
+        }
+    }
+
+    private fun showInfoDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_info, null)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+
+        dialog.show()
     }
 
     private fun showGeofenceNameDialog(location: GeoPoint) {

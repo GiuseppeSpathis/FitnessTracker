@@ -70,4 +70,12 @@
     <string name="not_valid_user">Utente non valido</string>
     <string name="errore_login">Errore durante il login</string>
     <string name="successo_login">Login avvenuto con successo</string>
+    <string name="attendere">Richiesta inviata, attendere.</string>
+    <string name="aggiungere_geofence">Come aggiungere una nuova geofence?</string>
+    <string name="aggiungere_geofence_istruzioni">Per aggiungere una nuova geofence si può fare un doppio tap sulla posizione nella mappa in cui si vuole posizionare la geofence, oppure si può cercare un luogo tramite la barra di ricerca e,una volta trovato, cliccare sul bottone "aggiungi".</string>
+    <string name="rimuovere_geofence">Come rimuovere una geofence?</string>
+    <string name="rimuovere_geofence_istruzioni">Per rimuovere una geofence bisogna cliccare sul bottone "visualizza"  e poi cliccare sulla geofence che si vuole rimuovere.</string>
+    <string name="data">Data:</string>
+    <string name="ora_inizio">Ora inizio:</string>
+    <string name="ora_fine">Ora fine:</string>
 </resources>

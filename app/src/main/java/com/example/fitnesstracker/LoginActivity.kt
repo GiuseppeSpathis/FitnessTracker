@@ -51,7 +51,7 @@ class LoginActivity : AppCompatActivity() {
                     LoggedUser.username = userData.username ?: ""
                     LoggedUser.gender = userData.gender ?: ""
                     LoggedUser.email = userData.email ?: ""
-                    LoggedUser.id = currentUser.uid
+                    LoggedUser.id = userData.id
 
                     startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                     finish()
@@ -120,7 +120,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSignInError(e: Exception) {
+    private suspend fun handleSignInError(e: Exception) {
         when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
                 when (e.errorCode) {
@@ -143,7 +143,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showToast(message: Int) {
-        Toast.makeText(baseContext, message, Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(baseContext, message, Toast.LENGTH_SHORT).show()
+
+
     }
 
     private fun updateUI(user: FirebaseUser?) {
