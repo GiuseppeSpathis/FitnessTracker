@@ -903,7 +903,8 @@ class StatsActivity : AppCompatActivity() {
     private fun displayGeofencePieChart(geofences: List<timeGeofence>) {
         val activityDurations = mutableMapOf<String, Long>()
         val geofenceColors = mutableMapOf<String, Int>()
-        val geofences_filter = geofences.filter { it.userId == LoggedUser.id }
+        val geofences_filter = geofences.filter { it.userId == LoggedUser.id && it.exitTime != 0L }
+
         for (geofence in geofences_filter) {
             val duration = calculateDuration(geofence.enterTime, geofence.exitTime)
             activityDurations[geofence.placeName] = activityDurations.getOrDefault(geofence.placeName, 0L) + duration
@@ -976,9 +977,9 @@ class StatsActivity : AppCompatActivity() {
                 val lineData = LineData(lineDataSet)
 
                 val xAxis = binding.lineChart.xAxis
-                xAxis.valueFormatter = IndexAxisValueFormatter(chartData.map { it.first.substring(0, 5) }) // Mostra solo giorno e mese
+                xAxis.valueFormatter = IndexAxisValueFormatter(chartData.map { it.first.substring(0, 5) })
                 xAxis.position = XAxis.XAxisPosition.BOTTOM
-                xAxis.granularity = 1f
+                xAxis.granularity = 1F
                 xAxis.setDrawLabels(true)
 
                 val yAxis = binding.lineChart.axisLeft
@@ -987,8 +988,8 @@ class StatsActivity : AppCompatActivity() {
                         return value.toInt().toString()
                     }
                 }
-                yAxis.axisMinimum = 0f
-                yAxis.granularity = 1f
+                yAxis.axisMinimum = 0F
+                yAxis.granularity = 1F
 
                 binding.lineChart.axisRight.isEnabled = false
 

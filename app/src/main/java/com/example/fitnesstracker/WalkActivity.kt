@@ -107,8 +107,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         startTime = System.currentTimeMillis()
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) as Sensor
-
-        // Ottieni il valore dell'obiettivo passato dall'intent
+        
         stepCountTarget = intent.getIntExtra("STEP_GOAL", 8000)
         progressBar.max = stepCountTarget
 
