@@ -1,6 +1,7 @@
 package com.example.fitnesstracker
 
 import Utils.convertToActivities
+import Utils.setupBottomNavigationView
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Context
@@ -57,16 +58,39 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.DayViewDecorator
+import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.format.DayFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 import java.util.Random
 
 
+
+/*
+
+class DayViewContainer(view: View) : ViewContainer(view) {
+    val textView = view.findViewById<TextView>(R.id.calendarDayText)
+    lateinit var day: CalendarDay
+
+    init {
+        view.setOnClickListener {
+            if (day.owner == DayOwner.THIS_MONTH && !day.isDisabled) {
+                // Fai qualcosa quando viene cliccato un giorno abilitato
+            }
+        }
+    }
+}
+ */
 class StatsActivity : AppCompatActivity() {
 
 
@@ -78,6 +102,12 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var periodMessageActivities: TextView
     private lateinit var attivitàDao: ActivityDao
     private val socialModel = SocialModel()
+
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigationView = binding.bottomNavigation
+        setupBottomNavigationView(this, "nav_stats", bottomNavigationView)
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,39 +121,20 @@ class StatsActivity : AppCompatActivity() {
         periodMessageActivities = binding.periodMessageActivities
 
         val calendarView = binding.calendarView
-        val bottomNavigationView = binding.bottomNavigation
-        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(this, year, month + 1, dayOfMonth, db)  // month is zero-based in CalendarView
-        }
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> {
-                    val intent = Intent(this, StatsActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_users -> {
-                    val intent = Intent(this, Social::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.geofence -> {
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                else -> false
+
+
+
+
+        calendarView.setOnDateChangedListener { _, date, selected ->
+            if (selected) {
+                val year = date.year
+                val month = date.month
+                val dayOfMonth = date.day
+
+                showDateDialog(this, year, month, dayOfMonth, db)
             }
         }
+
 
         val activityArray = arrayOf(getString(R.string.nothing)) + resources.getStringArray(R.array.activity_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
@@ -140,13 +151,34 @@ class StatsActivity : AppCompatActivity() {
             ) {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
-
-                if (selectedItem != "niente") {
+                // Nella tua Coroutine o funzione di setup
+                if (selectedItem != getString(R.string.nothing)) {
                     CoroutineScope(Dispatchers.IO).launch {
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
-                        println("stampo i giorni : $giorni")
+                        // Applicazione del decorator al calendario
+                        withContext(Dispatchers.Main) {
+                            calendarView.addDecorator(object : DayViewDecorator {
+                                override fun shouldDecorate(day: CalendarDay): Boolean {
+                                    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    val date = Calendar.getInstance().apply {
+                                        set(day.year, day.month - 1, day.day) //non so perche' i mesi qui li considera in maniera strana quindi ho messo - 1
+                                    }.time
+                                    val formattedDay = dateFormat.format(date).toString()
+                                    return !giorni.contains(formattedDay)
+                                }
+
+                                override fun decorate(view: DayViewFacade) {
+                                    view.setDaysDisabled(true)
+                                }
+                            })
+                        }
                     }
                 }
+                else { //torna al comportamento di default
+                    calendarView.removeDecorators()
+                }
+
+
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {

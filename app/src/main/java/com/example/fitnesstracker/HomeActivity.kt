@@ -1,6 +1,8 @@
 package com.example.fitnesstracker
 
 
+import Utils.navigateTo
+import Utils.setupBottomNavigationView
 import android.Manifest
 import android.app.ActivityOptions
 import android.content.Intent
@@ -45,6 +47,11 @@ class HomeActivity : AppCompatActivity(), MapListener {
     private lateinit var welcomeBack: TextView
     private val socialModel = SocialModel()
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+        setupBottomNavigationView(this, "nav_home", bottomNavigationView)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -59,8 +66,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
         setupActivitySpinner()
 
-        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-        setupBottomNavigationView(bottomNavigationView)
+
 
         map = findViewById(R.id.osmmap)
         map.setTileSource(org.osmdroid.tileprovider.tilesource.TileSourceFactory.MAPNIK)
@@ -106,25 +112,9 @@ class HomeActivity : AppCompatActivity(), MapListener {
         spinnerActivity.adapter = adapter
     }
 
-    private fun setupBottomNavigationView(bottomNavigationView: NavigationBarView) {
-        bottomNavigationView.selectedItemId = R.id.nav_home
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> navigateTo(StatsActivity::class.java)
-                R.id.nav_home -> navigateTo(HomeActivity::class.java)
-                R.id.nav_users -> navigateTo(Social::class.java)
-                R.id.geofence -> navigateTo(GeoFenceActivity::class.java)
-                else -> false
-            }
-        }
-    }
 
-    private fun navigateTo(activityClass: Class<out AppCompatActivity>): Boolean {
-        val intent = Intent(this, activityClass)
-        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-        startActivity(intent, options.toBundle())
-        return true
-    }
+
+
 
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)

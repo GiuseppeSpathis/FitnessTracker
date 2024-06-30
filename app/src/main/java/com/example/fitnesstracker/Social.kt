@@ -1,6 +1,7 @@
 package com.example.fitnesstracker
 
 import MyAdapter
+import Utils.setupBottomNavigationView
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.app.AlertDialog
@@ -116,93 +117,26 @@ class Social : AppCompatActivity(), SocialInterface {
             })
 
 
-            val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
 
-            bottomNavigationView.selectedItemId = R.id.nav_users
-
-            bottomNavigationView.setOnItemSelectedListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.nav_stats -> {
-                        socialController.closeConnections()
-                        val intent = Intent(this, StatsActivity::class.java)
-                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                        startActivity(intent, options.toBundle())
-                        true
-                    }
-                    R.id.nav_home -> {
-                        socialController.closeConnections()
-                        val intent = Intent(this, HomeActivity::class.java)
-                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                        startActivity(intent, options.toBundle())
-                        true
-                    }
-                    R.id.nav_users -> {
-                        socialController.closeConnections()
-                        val intent = Intent(this, Social::class.java)
-                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                        startActivity(intent, options.toBundle())
-                        true
-                    }
-                    R.id.geofence -> {
-                        socialController.closeConnections()
-                        val intent = Intent(this, GeoFenceActivity::class.java)
-                        val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                        startActivity(intent, options.toBundle())
-                        true
-                    }
-                    else -> false
-                }
-            }
 
         }, 1 * 8 * 1000L)  // meno di un minuto
 
     }
 
 
-
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+        setupBottomNavigationView(this, "nav_users", bottomNavigationView)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.bluetooth)
 
-        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
 
-        bottomNavigationView.selectedItemId = R.id.nav_users
 
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> {
-                    socialController.closeConnections()
-                    val intent = Intent(this, StatsActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_home -> {
-                    socialController.closeConnections()
-                    val intent = Intent(this, HomeActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_users -> {
-                    socialController.closeConnections()
-                    val intent = Intent(this, Social::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.geofence -> {
-                    socialController.closeConnections()
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                else -> false
-            }
-        }
 
         val db = AppDatabase.getDatabase(this)
 

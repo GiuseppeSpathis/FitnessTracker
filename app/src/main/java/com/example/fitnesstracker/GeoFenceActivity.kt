@@ -1,5 +1,6 @@
 package com.example.fitnesstracker
 
+import Utils.setupBottomNavigationView
 import android.Manifest
 import android.app.ActivityManager
 import android.app.ActivityOptions
@@ -63,6 +64,11 @@ class GeoFenceActivity : AppCompatActivity() {
     private var searchedLocation: GeoPoint? = null
     private val socialModel = SocialModel()
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+        setupBottomNavigationView(this, "geofence", bottomNavigationView)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this))
@@ -96,35 +102,7 @@ class GeoFenceActivity : AppCompatActivity() {
             }
         })
 
-        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-        bottomNavigationView.selectedItemId = R.id.geofence
 
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> {
-                    val intent = Intent(this, StatsActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_users -> {
-                    val intent = Intent(this, Social::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.geofence -> {
-                    true
-                }
-                else -> false
-            }
-        }
 
         findViewById<Button>(R.id.btnViewGeofences).setOnClickListener {
             viewGeofences()

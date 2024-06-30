@@ -108,6 +108,7 @@ dependencies {
     implementation("androidx.preference:preference:1.2.1")
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation ("com.google.code.gson:gson:2.8.8")
+    implementation ("com.github.prolificinteractive:material-calendarview:2.0.0")
     implementation ("androidx.work:work-runtime-ktx:2.7.1")
     implementation ("androidx.activity:activity-ktx:1.3.1")
 
