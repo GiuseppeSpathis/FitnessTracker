@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -12,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
         android:gravity="center_horizontal|center_vertical"
-        android:text="Registrati"
+        android:text="@string/registrati"
         android:textColor="@color/mainColor"
         android:textSize="40sp"
         android:textStyle="bold"
@@ -35,7 +36,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="48dp"
         android:paddingStart="16dp"
-        android:hint="Scegli una email "
+        android:hint="@string/scegli_email"
         android:background="@drawable/rounded_edittext_border"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -47,7 +48,7 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_marginTop="12dp"
-        android:hint="Scegli uno username "
+        android:hint="@string/scegli_username"
         android:paddingStart="16dp"
         android:background="@drawable/rounded_edittext_border"
         app:layout_constraintEnd_toEndOf="parent"
@@ -60,7 +61,7 @@
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
-        android:hint="Scegli una password"
+        android:hint="@string/scegli_password"
         android:paddingStart="16dp"
         android:background="@drawable/rounded_edittext_border"
         android:inputType="textPassword"
@@ -76,7 +77,7 @@
         android:layout_marginTop="16dp"
         android:background="@null"
         android:src="@drawable/not_visible"
-        android:contentDescription="Toggle password visibility"
+        android:contentDescription="@string/toggle_password_visibility"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/password"
         app:layout_constraintTop_toBottomOf="@id/username" />
@@ -97,7 +98,7 @@
         android:layout_marginTop="76dp"
         android:background="@drawable/rounded_button"
         android:backgroundTint="@color/mainColor"
-        android:text="Registrati"
+        android:text="@string/registrati"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -111,13 +112,12 @@
         android:layout_marginTop="76dp"
         android:background="@drawable/rounded_button"
         android:backgroundTint="@color/mainColor"
-        android:text="torna indietro"
+        android:text="@string/torna_indietro"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/password" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

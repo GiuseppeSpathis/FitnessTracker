@@ -61,6 +61,7 @@ class SitActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sit)
@@ -92,8 +93,8 @@ class SitActivity : AppCompatActivity() {
     }
 
     private fun updateTextViews() {
-        totalTimeTextView.text = "Total Time: ${formatTime(totalTime)}"
-        lastStandTimeTextView.text = "Time since last stand: ${formatTime(lastStandTime)}"
+        totalTimeTextView.text = getString(R.string.total_time, formatTime(totalTime))
+        lastStandTimeTextView.text = getString(R.string.time_since_last_stand, formatTime(lastStandTime))
     }
 
     private fun formatTime(timeInSeconds: Long): String {
@@ -119,6 +120,23 @@ class SitActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("totalTime", totalTime)
+        outState.putLong("lastStandTime", lastStandTime)
+        outState.putLong("startTime", startTime)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        totalTime = savedInstanceState.getLong("totalTime")
+        lastStandTime = savedInstanceState.getLong("lastStandTime")
+        startTime = savedInstanceState.getLong("startTime")
+
+        updateTextViews()
+        handler.post(updateTimeRunnable)
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -129,14 +147,33 @@ class SitActivity : AppCompatActivity() {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 showNotification()
             } else {
-                Toast.makeText(this, "Permesso per le notifiche negato", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.denied), Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showShortActivityPopup() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.attività_breve)
+            .setMessage(R.string.attività_breve_testo)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
+                dialog.dismiss()
+                startActivity(Intent(this, HomeActivity::class.java))
+                finish()
+            }
+            .show()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
         val endTimeMillis = System.currentTimeMillis()
+        val durationMillis = endTimeMillis - startTime
+
+        if (durationMillis < 60000) {
+            showShortActivityPopup()
+            return
+        }
+
         val endTime = Instant.ofEpochMilli(endTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
         val startTime = Instant.ofEpochMilli(this.startTime).atZone(ZoneId.systemDefault()).toLocalDateTime()
 
@@ -167,11 +204,12 @@ class SitActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
-            .setTitle("Successo")
-            .setMessage("Dati salvati con successo!")
-            .setPositiveButton("OK") { dialog, _ ->
+            .setTitle(R.string.successo)
+            .setMessage(R.string.dati_salvati)
+            .setPositiveButton(R.string.ok) { dialog, _ ->
                 dialog.dismiss()
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
@@ -180,10 +218,10 @@ class SitActivity : AppCompatActivity() {
     }
 
     private fun showNotification() {
-        val builder = NotificationCompat.Builder(this, "your_channel_id")
+        val builder = NotificationCompat.Builder(this, "sit_channel")
             .setSmallIcon(R.drawable.notification_icon)
-            .setContentTitle("Ricorda di alzarti")
-            .setContentText("È passato mezz'ora dall'ultima volta che ti sei alzato. Ricorda di fare una pausa e alzarti.")
+            .setContentTitle(getString(R.string.notification_title_stand))
+            .setContentText(getString(R.string.notification_text_stand))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         with(notificationManager) {
@@ -202,7 +240,7 @@ class SitActivity : AppCompatActivity() {
             val name = "Reminder Channel"
             val descriptionText = "Channel for reminder notifications"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel("your_channel_id", name, importance).apply {
+            val channel = NotificationChannel("sit_channel", name, importance).apply {
                 description = descriptionText
             }
             val notificationManager: NotificationManager =
@@ -211,3 +249,4 @@ class SitActivity : AppCompatActivity() {
         }
     }
 }
+

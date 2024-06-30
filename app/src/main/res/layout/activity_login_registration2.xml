@@ -11,13 +11,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
         android:gravity="center_horizontal|center_vertical"
-        android:text="ActivityTracker"
+        android:text="@string/activity_tracker"
         android:textColor="@color/mainColor"
         android:textSize="40sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
 
     <ImageView
         android:id="@+id/image"
@@ -35,7 +34,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="52dp"
         android:background="@drawable/rounded_edittext_border"
-        android:hint="Inserisci l'email"
+        android:hint="@string/enter_email"
         android:paddingStart="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -48,7 +47,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/rounded_edittext_border"
-        android:hint="Inserisci la password"
+        android:hint="@string/enter_password"
         android:inputType="textPassword"
         android:paddingStart="16dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -63,7 +62,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:background="@null"
-        android:contentDescription="Toggle password visibility"
+        android:contentDescription="@string/toggle_password_visibility"
         android:src="@drawable/not_visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -76,7 +75,7 @@
         android:layout_height="40dp"
         android:layout_marginTop="12dp"
         android:background="@drawable/rounded_button"
-        android:text="login"
+        android:text="@string/login"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -89,13 +88,14 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="68dp"
         android:layout_marginTop="12dp"
-        android:text="Non sei ancora registrato? Registrati!"
+        android:text="@string/not_registered"
         android:textColor="@color/black"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/login" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
 
 
 

@@ -34,9 +34,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:targetApi="31">
-        <activity
-            android:name=".PersonProfile"
-            android:exported="false" />
         <activity android:name=".HomeActivity"
             android:exported="false"/>
         <activity
@@ -48,13 +45,24 @@
         <activity
             android:name=".Social"
             android:exported="false" />
-        <activity android:name=".WalkActivity">
+        <activity
+            android:name=".WalkActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
 
-        </activity>
 
-        <activity android:name=".RunActivity"/>
-        <activity android:name=".SpeedActivity"/>
-        <activity android:name=".SitActivity"/>
+
+        <activity
+            android:name=".RunActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <activity
+            android:name=".SpeedActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <activity
+            android:name=".SitActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <activity android:name=".StatsActivity"/>
         <activity android:name=".GeoFenceActivity"/>
         <activity
@@ -72,9 +80,8 @@
             android:value="org.osmdroid.config.Configuration" />
         <service
             android:name=".LocationUpdatesService"
-            android:foregroundServiceType="location"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            />
+            android:foregroundServiceType="location" />
+
 
 
     </application>

@@ -2,6 +2,7 @@
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -186,6 +187,8 @@ object Utils {
     }
 
 
+
+
      fun convertToActivities(othersActivities: List<OthersActivity>): List<Attività> {
         return othersActivities.map {
             Attività(
@@ -203,6 +206,8 @@ object Utils {
             )
         }
     }
+
+
 
 
 

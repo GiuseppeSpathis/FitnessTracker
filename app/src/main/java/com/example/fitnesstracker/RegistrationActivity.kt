@@ -37,6 +37,7 @@ import android.text.InputType
 import android.widget.ImageButton
 import android.widget.Spinner
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 import java.util.UUID
 
 
@@ -51,7 +52,7 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
     private lateinit var togglePasswordVisibilityButton : ImageButton
-
+    private var socialModel = SocialModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,11 +122,8 @@ class RegistrationActivity : AppCompatActivity() {
                     requestWifiPermission()
                     return@withContext
                 }
-                val mac = getMacAddress()
-                Log.d("RegistrationActivity", "Retrieved macAddress: $mac") // Print macAddress for debugging
-                saveUserData(uid, email, username, gender, mac)
+                socialModel.saveUserData(uid, email, username, gender, this@RegistrationActivity)
 
-                // Switch to main thread for Toast
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, R.string.registrazione_successo, Toast.LENGTH_SHORT).show()
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -142,80 +140,45 @@ class RegistrationActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun saveUserData(uid: String, email: String, username: String, gender: String, mac: String): Boolean {
-        try {
-            withContext(Dispatchers.IO) {
-                val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-                val uniqueId = UUID.randomUUID().toString()
-                val user = User(uniqueId, email, username, gender, mac)
-
-                database.child("users").child(uid).setValue(user).await()
-            }
-            return true
-        } catch (e: Exception) {
-            Log.e("RegistrationActivity", "Error saving user data", e)
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@RegistrationActivity, "Errore nel salvataggio dei dati.", Toast.LENGTH_SHORT).show()
-            }
-            return false
-        }
-    }
-
     private suspend fun validateInput(email: String, username: String, password: String): Boolean {
         val emailPattern = android.util.Patterns.EMAIL_ADDRESS
         val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")
 
         if (!emailPattern.matcher(email).matches()) {
-            Toast.makeText(this, R.string.email_non_valida, Toast.LENGTH_SHORT).show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.email_non_valida, Toast.LENGTH_SHORT).show()
+            }
             return false
         }
 
         if (!passwordPattern.matches(password)) {
-            Toast.makeText(this, R.string.password_non_valida, Toast.LENGTH_LONG).show()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.password_non_valida, Toast.LENGTH_LONG).show()
+            }
             return false
         }
 
-        if (emailExists(email)) {
-            Toast.makeText(this, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
+        if (socialModel.emailExists(email)) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
+            }
             return false
         }
 
-        if(usernameExists(username)){
-            Toast.makeText(this, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
+        if (socialModel.usernameExists(username)) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@RegistrationActivity, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
+            }
             return false
+        }
+
+        withContext(Dispatchers.Main) {
+            Toast.makeText(this@RegistrationActivity, R.string.attendere, Toast.LENGTH_SHORT).show()
         }
 
         return true
     }
 
-    private suspend fun emailExists(email: String): Boolean {
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val result = database.child("users").orderByChild("email").equalTo(email).get().await()
-                result.exists()
-            } catch (e: Exception) {
-                Log.e("RegistrationActivity", "Error checking email existence", e)
-                false
-            }
-        }
-    }
-
-    private suspend fun usernameExists(username: String): Boolean {
-        val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val result = database.child("users").orderByChild("username").equalTo(username).get().await()
-                result.exists()
-            } catch (e: Exception) {
-                Log.e("RegistrationActivity", "Error checking username existence", e)
-                false
-            }
-        }
-    }
 
     private fun requestWifiPermission() {
         ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.ACCESS_NETWORK_STATE), REQUEST_WIFI_PERMISSION_CODE)
@@ -224,17 +187,20 @@ class RegistrationActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getMacAddress()
         } else {
             println("No access")
         }
     }
 
-    private fun getMacAddress(): String {
-        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        return wifiManager.connectionInfo.macAddress ?: "02:00:00:00:00:00"
-    }
+    data class User(val id: String?,
+                    val email: String?,
+                    val username: String?,
+                    val gender: String?,
+                    val lastLatitude: Double = 0.0,
+                    val lastLongitude: Double = 0.0,
+                    val lastUpdated: Long = System.currentTimeMillis()){
+            constructor() : this(null, null, null, null, 0.0, 0.0, 0)
 
-    data class User(val id: String, val email: String?, val username: String?, val gender: String?, val macAddress: String?)
+    }
 }
 

@@ -1,4 +1,6 @@
 package com.example.fitnesstracker
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -62,6 +64,7 @@ data class GeoFence(
 @Entity(tableName = "timeGeofences")
 data class timeGeofence(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val userId: String,
     val latitude: Double,
     val longitude: Double,
     val radius: Float,

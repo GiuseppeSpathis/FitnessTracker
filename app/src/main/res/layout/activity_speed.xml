@@ -40,7 +40,7 @@
             android:layout_marginTop="8dp"
             android:textColor="@color/black"
             android:textSize="24sp"
-            android:text="Current Speed: 0 km/h"
+            android:text="@string/speed"
             android:textStyle="bold" />
 
         <TextView
@@ -51,7 +51,7 @@
             android:layout_marginTop="15dp"
             android:textColor="@color/black"
             android:textSize="24sp"
-            android:text="Avg Speed: 0 km/h"
+            android:text="@string/avg_speed"
             android:textStyle="bold" />
 
         <TextView
@@ -62,7 +62,7 @@
             android:layout_marginTop="15dp"
             android:textColor="@color/black"
             android:textSize="24sp"
-            android:text="Max Speed: 50 km/h"
+            android:text="@string/max_speed_recorded"
             android:textStyle="bold" />
 
         <Button

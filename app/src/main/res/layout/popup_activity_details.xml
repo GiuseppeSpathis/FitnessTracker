@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Start Time" />
+            android:text="@string/ora_inizio" />
     </LinearLayout>
 
     <!-- End Time Field -->
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="End Time" />
+            android:text="@string/ora_fine" />
     </LinearLayout>
 
     <!-- Step Count Field -->
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Step Count" />
+            android:text="@string/step_count_format" />
     </LinearLayout>
 
     <!-- Distance Field -->
@@ -87,7 +87,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Distance" />
+            android:text="@string/distanza" />
     </LinearLayout>
 
     <!-- Pace Field -->
@@ -109,7 +109,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Pace" />
+            android:text="@string/passo" />
     </LinearLayout>
 
     <!-- Avg Speed Field -->
@@ -131,7 +131,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Avg speed" />
+            android:text="@string/avg_speed" />
     </LinearLayout>
 
     <!-- Max Speed Field -->
@@ -153,7 +153,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Max speed" />
+            android:text="@string/max_speed_recorded" />
     </LinearLayout>
 
     <!-- Date Field -->
@@ -174,7 +174,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="Date" />
+            android:text="@string/data" />
     </LinearLayout>
 
 </LinearLayout>

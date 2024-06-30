@@ -1,12 +1,17 @@
 package com.example.fitnesstracker
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.ActivityOptions
+import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
+import android.text.InputType
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
@@ -16,9 +21,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.room.Room
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.LocationServices
@@ -28,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -35,6 +47,7 @@ import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polygon
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import java.util.logging.Handler
 
 
@@ -48,6 +61,7 @@ class GeoFenceActivity : AppCompatActivity() {
     private lateinit var searchButton: Button
     private lateinit var addGeofenceButton: Button
     private var searchedLocation: GeoPoint? = null
+    private val socialModel = SocialModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,12 +78,26 @@ class GeoFenceActivity : AppCompatActivity() {
         addGeofenceButton = findViewById(R.id.btnAddGeofence)
         addGeofenceButton.isEnabled = false
 
+        getCurrentLocation { latitude, longitude ->
+            val userLocation = GeoPoint(latitude, longitude)
+            map.controller.setCenter(userLocation)
 
+            val marker = Marker(map)
+            marker.position = userLocation
+            map.overlays.add(marker)
+        }
+
+        map.overlays.add(object : Overlay() {
+            override fun onDoubleTap(e: MotionEvent, mapView: MapView): Boolean {
+                val projection = mapView.projection
+                val geoPoint = projection.fromPixels(e.x.toInt(), e.y.toInt()) as GeoPoint
+                showGeofenceNameDialog(geoPoint)
+                return true
+            }
+        })
 
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-
         bottomNavigationView.selectedItemId = R.id.geofence
-
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -92,15 +120,11 @@ class GeoFenceActivity : AppCompatActivity() {
                     true
                 }
                 R.id.geofence -> {
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
                     true
                 }
                 else -> false
             }
         }
-
 
         findViewById<Button>(R.id.btnViewGeofences).setOnClickListener {
             viewGeofences()
@@ -111,13 +135,13 @@ class GeoFenceActivity : AppCompatActivity() {
             if (query.isNotEmpty()) {
                 searchLocation(query)
             } else {
-                Toast.makeText(this, "Inserisci un luogo da cercare", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.inserisci_luogo_cercare, Toast.LENGTH_SHORT).show()
             }
         }
 
         addGeofenceButton.setOnClickListener {
             searchedLocation?.let {
-                addGeofenceAtLocation(it)
+                showGeofenceNameDialog(it)
             }
         }
 
@@ -128,41 +152,82 @@ class GeoFenceActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
                 REQUEST_LOCATION_PERMISSION)
+            if(!isServiceRunning(LocationUpdatesService::class.java)){
+                Log.d("GeoFence", "Service not running, started")
+                startLocationService()
+            } else {
+                Log.d("Geofence", "Service already running, not started")
+            }
         } else {
-            LocationUpdatesService.enqueueWork(this, Intent(this, LocationUpdatesService::class.java))
+            if(!isServiceRunning(LocationUpdatesService::class.java)){
+                Log.d("GeoFence", "Service not running, started")
+               // startLocationService()
+            } else {
+                Log.d("Geofence", "Service already running, not started")
+            }
         }
-
-        getCurrentLocation { latitude, longitude ->
-            val userLocation = GeoPoint(latitude, longitude)
-            map.controller.setCenter(userLocation)
-
-            val marker = Marker(map)
-            marker.position = userLocation
-            map.overlays.add(marker)
+        findViewById<ImageButton>(R.id.infoButton).setOnClickListener {
+            showInfoDialog()
         }
     }
 
 
+    private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {
+        val sharedPref = getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean(serviceClass.simpleName + "Running", false)
+    }
+
+    private fun startLocationService() {
+        val intent = Intent(this, LocationUpdatesService::class.java)
+        ContextCompat.startForegroundService(this, intent)
+    }
+    private fun showInfoDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_info, null)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun showGeofenceNameDialog(location: GeoPoint) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(R.string.nome_gf)
+
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        builder.setView(input)
+
+        builder.setPositiveButton(R.string.ok) { dialog, _ ->
+            val geofenceName = input.text.toString()
+            if (geofenceName.isNotEmpty()) {
+                addGeofenceAtLocation(location, geofenceName)
+            } else {
+                Toast.makeText(this, R.string.nome_non_vuoto, Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+        }
+        builder.setNegativeButton(R.string.cancel) { dialog, _ ->
+            dialog.cancel()
+        }
+
+        builder.show()
+    }
+
+
+
     private fun searchLocation(query: String) {
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                val url = URL("https://nominatim.openstreetmap.org/search?format=json&q=$query")
-                val connection = url.openConnection() as HttpURLConnection
-                try {
-                    connection.inputStream.bufferedReader().readText()
-                } finally {
-                    connection.disconnect()
-                }
-            }
-            val jsonArray = JSONArray(result)
-            if (jsonArray.length() > 0) {
-                val location = jsonArray.getJSONObject(0)
-                val lat = location.getDouble("lat")
-                val lon = location.getDouble("lon")
+            val result = socialModel.searchLocation(query)
+            if (result != null) {
+                val lat = result.latitude
+                val lon = result.longitude
                 moveToLocation(lat, lon)
                 addGeofenceButton.isEnabled = true
             } else {
-                Toast.makeText(this@GeoFenceActivity, "Nessun risultato trovato", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GeoFenceActivity, R.string.nessun_risultato, Toast.LENGTH_SHORT).show()
                 addGeofenceButton.isEnabled = false
             }
         }
@@ -179,7 +244,7 @@ class GeoFenceActivity : AppCompatActivity() {
         searchedLocation = newLocation
     }
 
-    private fun addGeofenceAtLocation(location: GeoPoint) {
+    private fun addGeofenceAtLocation(location: GeoPoint, placeName: String) {
         val geofenceRadius = 10.0
         val circle = Polygon().apply {
             points = Polygon.pointsAsCircle(location, geofenceRadius)
@@ -195,18 +260,17 @@ class GeoFenceActivity : AppCompatActivity() {
         map.overlays.add(circle)
         map.invalidate()
 
-        val place = findViewById<EditText>(R.id.searchBar).text.toString()
         val geofence = GeoFence(
             latitude = location.latitude,
             longitude = location.longitude,
             radius = geofenceRadius.toFloat(),
-            placeName = place
+            placeName = placeName
         )
 
         lifecycleScope.launch {
-            db.attivitàDao().insertGeofence(geofence)
+            socialModel.insertGeofence(db, geofence)
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@GeoFenceActivity, "Geofencing aggiunta con successo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@GeoFenceActivity, R.string.gf_successo, Toast.LENGTH_SHORT).show()
                 findViewById<EditText>(R.id.searchBar).text.clear()
                 addGeofenceButton.isEnabled = false
                 viewGeofences()
@@ -227,9 +291,7 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun viewGeofences() {
         lifecycleScope.launch {
-            val geofences = withContext(Dispatchers.IO) {
-                db.attivitàDao().getAllGeofences()
-            }
+            val geofences = socialModel.getAllGeofences(db)
 
             map.overlays.clear()
 
@@ -265,17 +327,15 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun showDeleteGeofenceDialog(geofence: GeoFence) {
         AlertDialog.Builder(this)
-            .setTitle("Rimuovere Geofence")
-            .setMessage("Vuoi rimuovere questa geofence?")
-            .setPositiveButton("Sì") { _, _ ->
+            .setTitle(R.string.rimuovere_gf)
+            .setMessage(R.string.rim_domanda)
+            .setPositiveButton(R.string.si) { _, _ ->
                 lifecycleScope.launch {
-                    withContext(Dispatchers.IO) {
-                        db.attivitàDao().deleteGeofence(geofence)
-                    }
-                    viewGeofences() // Refresh the map to remove the deleted geofence
+                    socialModel.deleteGeofence(db, geofence)
+                    viewGeofences()
                 }
             }
-            .setNegativeButton("No", null)
+            .setNegativeButton(R.string.no, null)
             .show()
     }
 
@@ -283,6 +343,9 @@ class GeoFenceActivity : AppCompatActivity() {
         private const val REQUEST_LOCATION_PERMISSION = 1
     }
 }
+
+
+
 
 
 

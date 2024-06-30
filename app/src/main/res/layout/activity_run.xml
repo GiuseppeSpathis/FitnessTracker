@@ -30,7 +30,7 @@
             android:layout_marginTop="8dp"
             android:textColor="@color/black"
             android:textSize="20sp"
-            android:text="Distance Goal: 5 km"
+            android:text="@string/distance_goal_format"
             android:textStyle="bold"/>
 
         <ProgressBar
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="20dp"
-                android:text="Time: 0"
+                android:text="@string/tempo"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"/>
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="20dp"
-                android:text="Steps: 0"
+                android:text="@string/step_count_format"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"/>
@@ -110,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="20dp"
-                android:text="Distance: 0"
+                android:text="@string/distanza"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"/>
@@ -134,7 +134,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:padding="20dp"
-                android:text="Pace: 0"
+                android:text="@string/passo"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"/>
@@ -146,7 +146,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:padding="20dp"
-            android:text="Stop"
+            android:text="@string/stop"
             android:background="@drawable/rounded_button"
             android:textColor="@color/white"
             android:onClick="onStopButtonclicked" />

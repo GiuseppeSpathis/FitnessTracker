@@ -1,6 +1,8 @@
 package com.example.fitnesstracker
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +15,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.animation.core.updateTransition
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -35,24 +39,24 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var password: EditText
     private lateinit var goToRegistration: TextView
     private lateinit var togglePasswordVisibilityButton: ImageButton
-
+    private val socialModel = SocialModel()
+    private val REQUEST_PERMISSION_REQUEST_CODE = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_registration2)
-
+        notificationRequest()
         auth = FirebaseAuth.getInstance()
 
         val currentUser = auth.currentUser
         println("currentUser: $currentUser")
         if (currentUser != null) {
             lifecycleScope.launch {
-                val userData = fetchUserData(currentUser.uid)
+                val userData = socialModel.fetchUserData(currentUser.uid)
                 if (userData != null) {
                     LoggedUser.username = userData.username ?: ""
                     LoggedUser.gender = userData.gender ?: ""
                     LoggedUser.email = userData.email ?: ""
-                    LoggedUser.macAddress = userData.macAddress ?: ""
-                    LoggedUser.id = currentUser.uid
+                    LoggedUser.id = userData.id
 
                     startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                     finish()
@@ -94,18 +98,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun fetchUserData(uid: String): LoggedUser? {
-        return try {
-            val database = FirebaseDatabase.getInstance(resources.getString(R.string.db_connection)).reference
-            val userDataSnapshot = withContext(Dispatchers.IO) {
-                database.child("users").child(uid).get().await()
-            }
-            userDataSnapshot.getValue(LoggedUser::class.java)
-        } catch (e: Exception) {
-            Log.e("LoginActivity", "Error fetching user data", e)
-            null
-        }
-    }
+
 
     private suspend fun signInAndFetchUserData(insertedEmail: String, insertedPassword: String) {
         try {
@@ -116,13 +109,12 @@ class LoginActivity : AppCompatActivity() {
             updateUI(authResult.user)
 
             val uid = FirebaseAuth.getInstance().currentUser!!.uid
-            val userData = fetchUserData(uid)
+            val userData = socialModel.fetchUserData(uid)
 
             if (userData != null) {
                 LoggedUser.username = userData.username ?: ""
                 LoggedUser.gender = userData.gender ?: ""
                 LoggedUser.email = userData.email ?: ""
-                LoggedUser.macAddress = userData.macAddress ?: ""
                 LoggedUser.id = uid
             } else {
                 Log.e("LoginActivity", "Error while saving user data")
@@ -133,7 +125,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSignInError(e: Exception) {
+    private suspend fun handleSignInError(e: Exception) {
         when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
                 when (e.errorCode) {
@@ -156,7 +148,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showToast(message: Int) {
-        Toast.makeText(baseContext, message, Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(baseContext, message, Toast.LENGTH_SHORT).show()
+
+
     }
 
     private fun updateUI(user: FirebaseUser?) {
@@ -169,6 +164,14 @@ class LoginActivity : AppCompatActivity() {
             }, 2000)
         } else {
             showToast(R.string.errore_login)
+        }
+    }
+    private fun notificationRequest() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_PERMISSION_REQUEST_CODE)
         }
     }
 }

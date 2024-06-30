@@ -10,6 +10,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.google.android.gms.location.Geofence
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Dao
 interface ActivityDao {
@@ -27,6 +28,19 @@ interface ActivityDao {
 
     @Query("SELECT * FROM Attività")
     fun getAllActivitites() : List<Attività>
+
+    @Query("SELECT * FROM attività WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getStepCountDataForLastWeek(startDate: String, endDate: String): List<Attività>
+
+    @Query("SELECT distance FROM attività WHERE activityType = 'Corsa' AND date BETWEEN :startDate AND :endDate")
+    suspend fun getDistanceDataForLastWeek(startDate: String, endDate: String): List<Float>
+
+    @Query("SELECT avgSpeed FROM attività WHERE activityType = 'Guidare' AND date BETWEEN :startDate AND :endDate")
+    suspend fun getAvgSpeedDataForLastWeek(startDate: String, endDate: String): List<Double>
+
+    @Query("SELECT (julianday(endTime) - julianday(startTime)) * 24 * 60 FROM attività WHERE activityType = 'Stare fermo' AND date BETWEEN :startDate AND :endDate")
+    suspend fun getTimeStationaryDataForLastWeek(startDate: String, endDate: String): List<Double>
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOthersActivity(attivita: OthersActivity)
@@ -66,6 +80,9 @@ interface ActivityDao {
     @Query("SELECT * FROM timeGeofences WHERE date BETWEEN :startDate AND :endDate")
     fun getGeofencesByDateRange(startDate: String, endDate: String): List<timeGeofence>
 }
+
+
+
 
 
 
