@@ -46,6 +46,12 @@
         <item><![CDATA[<b>Bottone Ricerca Dispositivi</b>]]></item>
         <item><![CDATA[<p>Il bottone centrale, rappresentato dall\'icona del Bluetooth, avvia la ricerca di dispositivi Bluetooth nelle vicinanze. Quando premi questo bottone, il tuo dispositivo inizia a scansionare l\'area circostante alla ricerca di altri dispositivi Bluetooth visibili.</p>]]></item>
     </string-array>
+    <string-array name="navNames">
+        <item>nav_stats</item>
+        <item>nav_home</item>
+        <item>nav_users</item>
+        <item>geofence</item>
+    </string-array>
     <string name="title_activity_stats">StatsActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>

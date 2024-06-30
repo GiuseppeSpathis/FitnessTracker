@@ -1,6 +1,7 @@
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityOptions
 import android.app.Dialog
 import android.app.Service
 import android.content.Context
@@ -18,6 +19,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import com.example.fitnesstracker.HomeActivity
@@ -28,10 +30,13 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.room.Room
 import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.Attività
+import com.example.fitnesstracker.GeoFenceActivity
 import com.example.fitnesstracker.LoggedUser
 import com.example.fitnesstracker.OthersActivity
 import com.example.fitnesstracker.Person
+import com.example.fitnesstracker.Social
 import com.example.fitnesstracker.StatsActivity
+import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.getValue
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
@@ -208,10 +213,47 @@ object Utils {
     }
 
 
+    fun navigateTo(context: Context, activityClass: Class<out AppCompatActivity>): Boolean {
+        val intent = Intent(context, activityClass as Class<*>)
+        val options = ActivityOptions.makeCustomAnimation(context, 0, 0)
+        context.startActivity(intent, options.toBundle())
+        return true
+    }
 
 
+    fun setupBottomNavigationView(context: Context, nameActivity: String, bottomNavigationView: NavigationBarView) {
+        // Ottieni l'array delle stringhe dal file di risorse
+        val navNames = context.resources.getStringArray(R.array.navNames)
 
+        // Mappa per associare i nomi delle attività agli ID delle voci di navigazione
+        val navIds = mapOf(
+            "nav_stats" to R.id.nav_stats,
+            "nav_home" to R.id.nav_home,
+            "nav_users" to R.id.nav_users,
+            "geofence" to R.id.geofence
+        )
 
+        // Imposta il selectedItemId basato sul nameActivity
+        when (nameActivity) {
+            navNames[0] -> bottomNavigationView.selectedItemId = navIds["nav_stats"] ?: R.id.nav_home
+            navNames[1] -> bottomNavigationView.selectedItemId = navIds["nav_home"] ?: R.id.nav_home
+            navNames[2] -> bottomNavigationView.selectedItemId = navIds["nav_users"] ?: R.id.nav_home
+            navNames[3] -> bottomNavigationView.selectedItemId = navIds["geofence"] ?: R.id.nav_home
+            else -> {
+                bottomNavigationView.selectedItemId = R.id.nav_home
+            }
+        }
+
+        bottomNavigationView.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_stats -> navigateTo(context, StatsActivity::class.java)
+                R.id.nav_home -> navigateTo(context,HomeActivity::class.java)
+                R.id.nav_users -> navigateTo(context, Social::class.java)
+                R.id.geofence -> navigateTo(context, GeoFenceActivity::class.java)
+                else -> false
+            }
+        }
+    }
 
 
 

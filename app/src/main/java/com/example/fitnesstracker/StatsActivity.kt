@@ -1,6 +1,7 @@
 package com.example.fitnesstracker
 
 import Utils.convertToActivities
+import Utils.setupBottomNavigationView
 import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Context
@@ -102,6 +103,12 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var attivitàDao: ActivityDao
     private val socialModel = SocialModel()
 
+    override fun onResume() {
+        super.onResume()
+        val bottomNavigationView = binding.bottomNavigation
+        setupBottomNavigationView(this, "nav_stats", bottomNavigationView)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,7 +123,8 @@ class StatsActivity : AppCompatActivity() {
         val calendarView = binding.calendarView
 
 
-        val bottomNavigationView = binding.bottomNavigation
+
+
         calendarView.setOnDateChangedListener { _, date, selected ->
             if (selected) {
                 val year = date.year
@@ -126,35 +134,7 @@ class StatsActivity : AppCompatActivity() {
                 showDateDialog(this, year, month, dayOfMonth, db)
             }
         }
-        bottomNavigationView.setOnItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_stats -> {
-                    val intent = Intent(this, StatsActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_home -> {
-                    val intent = Intent(this, HomeActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.nav_users -> {
-                    val intent = Intent(this, Social::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                R.id.geofence -> {
-                    val intent = Intent(this, GeoFenceActivity::class.java)
-                    val options = ActivityOptions.makeCustomAnimation(this, 0, 0)
-                    startActivity(intent, options.toBundle())
-                    true
-                }
-                else -> false
-            }
-        }
+
 
         val activityArray = arrayOf(getString(R.string.nothing)) + resources.getStringArray(R.array.activity_array)
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, activityArray)
