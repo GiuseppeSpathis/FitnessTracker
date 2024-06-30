@@ -99,7 +99,7 @@ object Utils {
                         dialog.dismiss()
                         val db = AppDatabase.getDatabase(context)
                         val year = date.year
-                        val month = date.month + 1 // month è zero-based, quindi aggiungiamo 1
+                        val month = date.month
                         val dayOfMonth = date.day
 
                         StatsActivity.showDateDialog(context, year, month, dayOfMonth, db, true)

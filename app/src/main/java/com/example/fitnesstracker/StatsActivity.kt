@@ -63,11 +63,14 @@ import com.prolificinteractive.materialcalendarview.DayViewFacade
 import com.prolificinteractive.materialcalendarview.format.DayFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 import java.util.Random
 
 
@@ -117,7 +120,7 @@ class StatsActivity : AppCompatActivity() {
         calendarView.setOnDateChangedListener { _, date, selected ->
             if (selected) {
                 val year = date.year
-                val month = date.month + 1 // month è zero-based, quindi aggiungiamo 1
+                val month = date.month
                 val dayOfMonth = date.day
 
                 showDateDialog(this, year, month, dayOfMonth, db)
@@ -169,26 +172,30 @@ class StatsActivity : AppCompatActivity() {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
                 // Nella tua Coroutine o funzione di setup
-                if (selectedItem != "niente") {
+                if (selectedItem != getString(R.string.nothing)) {
                     CoroutineScope(Dispatchers.IO).launch {
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
-                        println("stampo i giorni : $giorni")
-
                         // Applicazione del decorator al calendario
                         withContext(Dispatchers.Main) {
                             calendarView.addDecorator(object : DayViewDecorator {
                                 override fun shouldDecorate(day: CalendarDay): Boolean {
-                                    val formattedDay = "${day.year}-${(day.month + 1).toString().padStart(2, '0')}-${day.day.toString().padStart(2, '0')}"
+                                    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                    val date = Calendar.getInstance().apply {
+                                        set(day.year, day.month - 1, day.day) //non so perche' i mesi qui li considera in maniera strana quindi ho messo - 1
+                                    }.time
+                                    val formattedDay = dateFormat.format(date).toString()
                                     return !giorni.contains(formattedDay)
                                 }
 
                                 override fun decorate(view: DayViewFacade) {
                                     view.setDaysDisabled(true)
-                                    println("questo tasto e' disabilitato")
                                 }
                             })
                         }
                     }
+                }
+                else { //torna al comportamento di default
+                    calendarView.removeDecorators()
                 }
 
 
