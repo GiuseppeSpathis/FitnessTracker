@@ -8,14 +8,19 @@
     tools:context=".StatsActivity">
 
 
-    <CalendarView
+
+
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+
         android:id="@+id/calendarView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title" />
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        app:mcv_showOtherDates="none"
+        app:mcv_selectionColor="@color/mainColor" />
 
 
     <TextView

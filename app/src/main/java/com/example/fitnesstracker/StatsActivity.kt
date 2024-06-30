@@ -56,6 +56,10 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.DayViewDecorator
+import com.prolificinteractive.materialcalendarview.DayViewFacade
+import com.prolificinteractive.materialcalendarview.format.DayFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import java.time.Duration
@@ -66,6 +70,22 @@ import java.time.format.DateTimeFormatter
 import java.util.Random
 
 
+
+/*
+
+class DayViewContainer(view: View) : ViewContainer(view) {
+    val textView = view.findViewById<TextView>(R.id.calendarDayText)
+    lateinit var day: CalendarDay
+
+    init {
+        view.setOnClickListener {
+            if (day.owner == DayOwner.THIS_MONTH && !day.isDisabled) {
+                // Fai qualcosa quando viene cliccato un giorno abilitato
+            }
+        }
+    }
+}
+ */
 class StatsActivity : AppCompatActivity() {
 
 
@@ -89,9 +109,17 @@ class StatsActivity : AppCompatActivity() {
         periodMessageActivities = binding.periodMessageActivities
 
         val calendarView = binding.calendarView
+
+
         val bottomNavigationView = binding.bottomNavigation
-        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            showDateDialog(this, year, month + 1, dayOfMonth, db)  // month is zero-based in CalendarView
+        calendarView.setOnDateChangedListener { _, date, selected ->
+            if (selected) {
+                val year = date.year
+                val month = date.month + 1 // month è zero-based, quindi aggiungiamo 1
+                val dayOfMonth = date.day
+
+                showDateDialog(this, year, month, dayOfMonth, db)
+            }
         }
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -137,13 +165,30 @@ class StatsActivity : AppCompatActivity() {
             ) {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
-                // Fai qualcosa con l'elemento selezionato
-                if(selectedItem != "niente"){
+                // Nella tua Coroutine o funzione di setup
+                if (selectedItem != "niente") {
                     CoroutineScope(Dispatchers.IO).launch {
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
                         println("stampo i giorni : $giorni")
+
+                        // Applicazione del decorator al calendario
+                        withContext(Dispatchers.Main) {
+                            calendarView.addDecorator(object : DayViewDecorator {
+                                override fun shouldDecorate(day: CalendarDay): Boolean {
+                                    val formattedDay = "${day.year}-${(day.month + 1).toString().padStart(2, '0')}-${day.day.toString().padStart(2, '0')}"
+                                    return !giorni.contains(formattedDay)
+                                }
+
+                                override fun decorate(view: DayViewFacade) {
+                                    view.setDaysDisabled(true)
+                                    println("questo tasto e' disabilitato")
+                                }
+                            })
+                        }
                     }
                 }
+
+
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {

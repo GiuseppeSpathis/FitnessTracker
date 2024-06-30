@@ -33,6 +33,7 @@ import com.example.fitnesstracker.Person
 import com.example.fitnesstracker.StatsActivity
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.getValue
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -86,14 +87,22 @@ object Utils {
             okButton.setOnClickListener {
                 dialog.setContentView(R.layout.dialog_stats)
                 dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
+                val calendarView = dialog.findViewById<MaterialCalendarView>(R.id.calendarView)
                 val textView = dialog.findViewById<TextView>(R.id.title)
                 textView.text = "Attività di $name"
 
-                calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
-                    dialog.dismiss()
-                    val db = AppDatabase.getDatabase(context)
-                    StatsActivity.showDateDialog(context, year, month + 1, dayOfMonth,db, true)
+
+
+                calendarView?.setOnDateChangedListener { _, date, selected ->
+                    if (selected) {
+                        dialog.dismiss()
+                        val db = AppDatabase.getDatabase(context)
+                        val year = date.year
+                        val month = date.month + 1 // month è zero-based, quindi aggiungiamo 1
+                        val dayOfMonth = date.day
+
+                        StatsActivity.showDateDialog(context, year, month, dayOfMonth, db, true)
+                    }
                 }
 
             }

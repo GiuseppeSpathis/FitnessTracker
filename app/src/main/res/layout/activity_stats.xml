@@ -45,13 +45,18 @@
                 app:layout_constraintTop_toBottomOf="@id/filtraTesto"
                 style="@style/MySpinnerStyle" />
 
-            <CalendarView
+
+
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+
                 android:id="@+id/calendarView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toBottomOf="@id/filtro"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:mcv_showOtherDates="none"
+                app:mcv_selectionColor="@color/mainColor" />
 
             <TextView
                 android:id="@+id/statisticaAttivita"
