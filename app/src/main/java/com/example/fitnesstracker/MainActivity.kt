@@ -39,17 +39,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         if (checkAndRequestPermissions()) {
-            if(!isServiceRunning(LocationUpdatesService::class.java)){
-                Log.d("MainActivity", "Service not running, started")
-                startLocationService()
-            }
-            Log.d("MainActivity", "Service already running, not started")
+            startLocationService()
             startCheckNearbyUsersWorker()
         }
         startActivity(Intent(this, LoginActivity::class.java))
         FirebaseApp.initializeApp(this)
-
-
     }
 
     private fun checkAndRequestPermissions(): Boolean {
@@ -96,14 +90,6 @@ class MainActivity : ComponentActivity() {
     private fun showPermissionDeniedMessage() {
         Toast.makeText(this, R.string.denied, Toast.LENGTH_LONG).show()
     }
-
-    private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {
-        val sharedPref = getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
-        return sharedPref.getBoolean(serviceClass.simpleName + "Running", false)
-    }
-
-
-
 
 }
 

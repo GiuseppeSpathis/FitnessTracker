@@ -161,7 +161,7 @@ class GeoFenceActivity : AppCompatActivity() {
         } else {
             if(!isServiceRunning(LocationUpdatesService::class.java)){
                 Log.d("GeoFence", "Service not running, started")
-                startLocationService()
+               // startLocationService()
             } else {
                 Log.d("Geofence", "Service already running, not started")
             }

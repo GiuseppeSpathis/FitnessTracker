@@ -110,8 +110,8 @@ class LocationUpdatesService : Service() {
             }
         }
     }
-    fun handleLocationUpdate(location: Location, db: AppDatabase, inside: Boolean, callback: (Boolean) -> Unit) {
-        println("tracking")
+
+    private fun handleLocationUpdate(location: Location, db: AppDatabase, inside: Boolean, callback: (Boolean) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val geofences = db.attivitàDao().getAllGeofences()
@@ -133,7 +133,7 @@ class LocationUpdatesService : Service() {
                             isInside = true
                             val enterTime = System.currentTimeMillis()
                             withContext(Dispatchers.Main) {
-                                sendNotification(getString(R.string.entered_geofence_title),  getString(R.string.geofence_entered_message, geofence.placeName))
+                                sendNotification(getString(R.string.entered_geofence_title), getString(R.string.geofence_entered_message, geofence.placeName))
                             }
                             val timeGeofence = timeGeofence(
                                 latitude = geofence.latitude,
@@ -194,10 +194,12 @@ class LocationUpdatesService : Service() {
 
         notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notification)
     }
+
     override fun onDestroy() {
         super.onDestroy()
         println("Destroyed")
         saveServiceRunningState(false)
+        fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
     private fun saveServiceRunningState(isRunning: Boolean) {
@@ -207,7 +209,7 @@ class LocationUpdatesService : Service() {
             apply()
         }
     }
-
 }
+
 
 
