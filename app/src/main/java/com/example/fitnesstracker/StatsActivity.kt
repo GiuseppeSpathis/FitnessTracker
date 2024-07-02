@@ -154,9 +154,11 @@ class StatsActivity : AppCompatActivity() {
                 // Nella tua Coroutine o funzione di setup
                 if (selectedItem != getString(R.string.nothing)) {
                     CoroutineScope(Dispatchers.IO).launch {
+
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
                         // Applicazione del decorator al calendario
                         withContext(Dispatchers.Main) {
+                            calendarView.removeDecorators()
                             calendarView.addDecorator(object : DayViewDecorator {
                                 override fun shouldDecorate(day: CalendarDay): Boolean {
                                     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
