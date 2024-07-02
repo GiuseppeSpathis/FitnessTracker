@@ -141,6 +141,13 @@ class HomeActivity : AppCompatActivity(), MapListener {
     }
 
     private fun handleLogout() {
+        LoggedUser.id = ""
+        LoggedUser.username = ""
+        LoggedUser.lastUpdated = 0L
+        LoggedUser.lastLongitude = 0.0
+        LoggedUser.lastLatitude = 0.0
+        LoggedUser.email = ""
+        LoggedUser.gender = ""
         FirebaseAuth.getInstance().signOut()
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

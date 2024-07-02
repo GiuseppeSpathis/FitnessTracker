@@ -367,7 +367,7 @@ class StatsActivity : AppCompatActivity() {
                     }
 
                     startHour++
-                    startMinute = 0  // Reset startMinute for the next hour
+                    startMinute = 0
                 }
             }
 
@@ -797,11 +797,10 @@ class StatsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-
     private fun updatePieChartForPeriod(period: String, chartType: String) {
         lifecycleScope.launch {
             try {
-                if(chartType == "activities"){
+                if (chartType == "activities") {
                     val activities: List<Attività> = when (period) {
                         "day" -> {
                             periodMessageActivities.text = getString(R.string.dati_ultimo_giorno)
@@ -824,12 +823,13 @@ class StatsActivity : AppCompatActivity() {
 
                     if (activities.isEmpty()) {
                         pieChart.clear()
-                        Snackbar.make(binding.root, R.string.no_data, Snackbar.LENGTH_SHORT).show()
+                        findViewById<TextView>(R.id.no_data_message).visibility = View.VISIBLE
                     } else {
+                        findViewById<TextView>(R.id.no_data_message).visibility = View.GONE
                         displayPieChart(activities)
                     }
                 } else {
-                    val geofences : List<timeGeofence> = when (period) {
+                    val geofences: List<timeGeofence> = when (period) {
                         "day" -> {
                             periodMessage.text = getString(R.string.dati_ultimo_giorno)
                             socialModel.getGeofencesForPeriod(db, period)
@@ -843,20 +843,20 @@ class StatsActivity : AppCompatActivity() {
                             socialModel.getGeofencesForPeriod(db, period)
                         }
                         "year" -> {
-                            periodMessage.text =getString(R.string.dati_ultimo_anno)
+                            periodMessage.text = getString(R.string.dati_ultimo_anno)
                             socialModel.getGeofencesForPeriod(db, period)
                         }
                         else -> emptyList()
-
                     }
+
                     if (geofences.isEmpty()) {
                         geofencePieChart.clear()
-                        Snackbar.make(binding.root, R.string.no_data, Snackbar.LENGTH_SHORT).show()
+                        findViewById<TextView>(R.id.no_data_geofence_message).visibility = View.VISIBLE
                     } else {
+                        findViewById<TextView>(R.id.no_data_geofence_message).visibility = View.GONE
                         displayGeofencePieChart(geofences)
                     }
                 }
-
             } catch (e: Exception) {
                 Snackbar.make(binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
             }
@@ -1020,8 +1020,6 @@ class StatsActivity : AppCompatActivity() {
             dailySteps.putIfAbsent(date, 0)
         }
 
-        println("dailySteps: $dailySteps")
-
         return dailySteps.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
 
@@ -1125,7 +1123,6 @@ class StatsActivity : AppCompatActivity() {
                 maxSpeed = null
             )
 
-            // Inserisci l'attività nel database
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
                     attivitàDao.insertActivity(attività)
