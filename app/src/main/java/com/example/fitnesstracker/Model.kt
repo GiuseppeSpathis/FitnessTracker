@@ -291,24 +291,25 @@ class Model {
 
 
 
-    suspend fun getGeofencesForPeriod(db: AppDatabase, period: String) : List<timeGeofence>{
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getGeofencesForPeriod(db: AppDatabase, period: String): List<timeGeofence> {
-        val now = LocalDateTime.now()
-        val attivitàDao: ActivityDao = db.attivitàDao()
-        val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val startDate = when (period) {
-            "day" -> now.minusDays(1)
-            "week" -> now.minusWeeks(1)
-            "month" -> now.minusMonths(1)
-            "year" -> now.minusYears(1)
-            else -> now
+        suspend fun getGeofencesForPeriod(db: AppDatabase, period: String): List<timeGeofence> {
+            val now = LocalDateTime.now()
+            val attivitàDao: ActivityDao = db.attivitàDao()
+            val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val startDate = when (period) {
+                "day" -> now.minusDays(1)
+                "week" -> now.minusWeeks(1)
+                "month" -> now.minusMonths(1)
+                "year" -> now.minusYears(1)
+                else -> now
+            }
+            return withContext(Dispatchers.IO) {
+                db.attivitàDao().getGeofencesByDateRange(
+                    startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                )
+            }
         }
-        println("For period: $period, startDate: $startDate")
-        return withContext(Dispatchers.IO){
-            db.attivitàDao().getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-        }
-    }
+
 
      suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
