@@ -55,7 +55,6 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speed)
@@ -181,7 +180,6 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
             }
             .show()
     }
-    @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime

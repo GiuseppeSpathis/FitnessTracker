@@ -1,6 +1,5 @@
 package com.example.fitnesstracker
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -8,19 +7,16 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.getString
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.tasks.await
 
 class CheckNearbyUsersWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val socialModel = SocialModel()
+    private val model = Model()
 
     override suspend fun doWork(): Result {
         Log.d("CheckNearbyUsersWorker", "doWork called")
@@ -32,7 +28,7 @@ class CheckNearbyUsersWorker(
         }
         Log.d("CheckNearbyUsersWorker", "Current user UID: $currentUserUid")
 
-        val currentUserLocation = socialModel.getCurrentUserLocation(currentUserUid)
+        val currentUserLocation = model.getCurrentUserLocation(currentUserUid)
         if (currentUserLocation == null) {
             Log.e("CheckNearbyUsersWorker", "Current user location is null")
             return Result.failure()
@@ -42,7 +38,7 @@ class CheckNearbyUsersWorker(
         val tenMinutesAgo = (System.currentTimeMillis() - 10 * 60 * 1000).toDouble()
         Log.d("CheckNearbyUsersWorker", "Timestamp for 10 minutes ago: $tenMinutesAgo")
 
-        val nearbyUsers = socialModel.getNearbyUsers(tenMinutesAgo)
+        val nearbyUsers = model.getNearbyUsers(tenMinutesAgo)
         if (nearbyUsers == null) {
             Log.e("CheckNearbyUsersWorker", "Nearby users snapshot is null")
             return Result.failure()

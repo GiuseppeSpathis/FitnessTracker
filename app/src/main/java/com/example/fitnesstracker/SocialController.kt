@@ -18,7 +18,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,9 +34,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDateTime
 
@@ -55,7 +52,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
 
 
-    private val socialModel = SocialModel()
+    private val model = Model()
 
     private val bluetoothAdapter: BluetoothAdapter? by lazy(LazyThreadSafetyMode.NONE) {
         val bluetoothManager = SocialInterface.getActivity().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -95,7 +92,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
                     if(device?.name != null){
                         CoroutineScope(Dispatchers.IO).launch {
-                            val found = socialModel.updateList(device, SocialInterface.getActivity())
+                            val found = model.updateList(device, SocialInterface.getActivity())
                             println(found)
                             if(found){
                                 withContext(Dispatchers.Main) {
@@ -111,22 +108,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
 
 
-    private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        /*
-        if (result.resultCode == Activity.RESULT_OK) {
-            if(hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity())){
-                startDiscovery()
-            }
-            else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
-                }
-                else {
-                    startDiscovery()
-                }
-            }
-        }*/
-    }
+    private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ -> }
 
 
     private fun requestBluetoothConnectAndScanPermission() {
@@ -154,6 +136,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
 
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun handleBluetoothPermissionResult(requestCode: Int, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_BLUETOOTH_CONNECT -> {
@@ -192,7 +175,6 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
                 ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_ADMIN), REQUEST_BLUETOOTH_ADMIN)
 
         }
-        /**/
 
 
         if (bluetoothAdapter?.isEnabled == false && hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity())) {
@@ -250,7 +232,6 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
                 try {
                     closeConnections()
-                    println("connessione persa disconnect")
 
                 } catch (e: UninitializedPropertyAccessException) {
                     //non fare niente se le variaibli non sono state inizializzate
@@ -278,11 +259,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
                 }
             }
             catch (e: IOException) {
-
-
                     socketError(e, activity)
-
-
             }
         }.start()
     }
@@ -363,7 +340,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
         }.start()
     }
 
-    fun sendMessage(message: String, activity: Activity) {
+    fun sendMessage(message: String) {
         Thread {
             try {
                 outputStream?.write(message.toByteArray())
@@ -376,7 +353,6 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun receiveFromSocket(activity: Activity, username: String) {
         Thread {
             try {
@@ -416,12 +392,10 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
             } catch (e: IOException) {
                 if (e.message != "bt socket closed, read return: -1")
                     socketError(e, activity)
-                println("Connessione chiusa per eccezione")
             }
         }.start()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleReceivedJSON(jsonString: String) {
         try {
             // Esegui il parsing del JSON
@@ -434,11 +408,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
                 // Inserisci prima tutte le attività nel database
 
                 activities.forEach { attivita ->
-                    withContext(Dispatchers.IO) {
-                        database.attivitàDao().insertOthersActivity(attivita)
-
-
-                    }
+                    model.insertOthActivities(database, attivita)
                 }
                 // Poi ottieni l'utente e chiama receiveMessage
                 val user = Utils.getUser(activities[0].username, SocialInterface.getActivity())
@@ -482,18 +452,15 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
             socket?.close()
             inputStream?.close()
             outputStream?.close()
-            println("connessione chiusa")
         } catch (e: IOException) {
             println("Errore durante la chiusura delle connessioni: ${e.message}")
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun shareData() {
         Thread {
             val attivitaDao = database.attivitàDao()
             val activities = attivitaDao.getAllActivitites()
-            println("stampo activities ${activities}")
             // Converti le Attività in OthersActivity con username di LoggedUser
             val username = LoggedUser.username
             val otherActivities = activities.map { attività ->
@@ -504,9 +471,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
             val gson = GsonBuilder()
                 .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
                 .create()
-            println("stampo otherActivities: ${otherActivities}")
             val activitiesJson = gson.toJson(otherActivities)
-            println("stampo activityJson di otherActivities: ${activitiesJson}")
             // Passa all'UI thread per mostrare il toast se non ci sono attività
             if (activitiesJson == "[]") {
                 SocialInterface.getActivity().runOnUiThread {
@@ -526,7 +491,7 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
             } else {
                 // Invia il JSON delle attività tramite Bluetooth
                 SocialInterface.getActivity().runOnUiThread {
-                    sendMessage("#$activitiesJson", SocialInterface.getActivity())
+                    sendMessage("#$activitiesJson")
                 }
             }
         }.start()
@@ -538,11 +503,11 @@ class SocialController (private val SocialInterface: SocialInterface,  private v
 
 
     fun getPersonlist(): List<Person>{
-        return socialModel.getPersonsList()
+        return model.getPersonsList()
     }
 
     fun filterList(filter: String): List<Person> {
-        return socialModel.filterList(filter)
+        return model.filterList(filter)
     }
 
     fun getfoundDevices(personlist: List<Person>): String{

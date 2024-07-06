@@ -87,7 +87,6 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_walk)
@@ -194,7 +193,6 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             .show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     public fun onStopButtonclicked(view: View) {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime

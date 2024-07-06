@@ -90,7 +90,7 @@
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    />
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_week"
@@ -99,7 +99,8 @@
                     android:text="@string/week"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_month"
@@ -108,7 +109,8 @@
                     android:text="@string/month"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_year"
@@ -117,7 +119,8 @@
                     android:text="@string/year"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp" />
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.PieChart
@@ -219,7 +222,8 @@
                     android:text="@string/day"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_geofence_week"
@@ -228,7 +232,8 @@
                     android:text="@string/week"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_geofence_month"
@@ -237,7 +242,8 @@
                     android:text="@string/month"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
                     android:id="@+id/btn_geofence_year"
@@ -246,7 +252,8 @@
                     android:text="@string/year"
                     android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
-                    android:padding="0dp"/>
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.PieChart

@@ -69,7 +69,8 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/info_icon"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/info" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

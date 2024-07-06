@@ -28,12 +28,19 @@ import com.example.fitnesstracker.RegistrationActivity
 import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
 import androidx.room.Room
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.Attività
+import com.example.fitnesstracker.CheckNearbyUsersWorker
 import com.example.fitnesstracker.GeoFenceActivity
 import com.example.fitnesstracker.LoggedUser
+import com.example.fitnesstracker.NotificationWorker
 import com.example.fitnesstracker.OthersActivity
 import com.example.fitnesstracker.Person
+import com.example.fitnesstracker.ReminderWorker
 import com.example.fitnesstracker.Social
 import com.example.fitnesstracker.StatsActivity
 import com.google.android.material.navigation.NavigationBarView
@@ -46,6 +53,8 @@ import kotlinx.coroutines.withContext
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 object Utils {
 
@@ -67,7 +76,6 @@ object Utils {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("InflateParams", "SetTextI18n")
     fun receiveMessage(context: Context, name: String, message: String, gender: String, fileShared: Boolean = false) {
 
@@ -255,7 +263,44 @@ object Utils {
         }
     }
 
+    fun scheduleDailyNotification(context: Context) {
+        val currentDate = Calendar.getInstance()
 
+        val dueDate = Calendar.getInstance()
+        dueDate.set(Calendar.HOUR_OF_DAY, 22)
+        dueDate.set(Calendar.MINUTE, 0)
+        dueDate.set(Calendar.SECOND, 0)
+        if (dueDate.before(currentDate)) {
+            dueDate.add(Calendar.DAY_OF_MONTH, 1)
+        }
+
+        val timeDiff = dueDate.timeInMillis - currentDate.timeInMillis
+
+        // Usa solo il PeriodicWorkRequest
+        val dailyWorkRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
+            .setInitialDelay(timeDiff, TimeUnit.MILLISECONDS)
+            .addTag("daily_notification")
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "daily_notification",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            dailyWorkRequest
+        )
+    }
+
+
+    fun scheduleReminder(context: Context) {
+        val reminderWorkRequest = PeriodicWorkRequestBuilder<ReminderWorker>(4, TimeUnit.HOURS)
+            .addTag("reminder_notification")
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "reminder_notification",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            reminderWorkRequest
+        )
+    }
 
 
 

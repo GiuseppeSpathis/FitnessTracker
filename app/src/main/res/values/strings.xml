@@ -182,4 +182,27 @@
     <string name="scegli_password">Scegli una password</string>
     <string name="torna_indietro">Torna indietro</string>
     <string name="no_pace_data">N/A</string>
+    <string name="ReminderNotifyTitle">Ricordati di tracciare attività</string>
+    <string name="ReminderNotifyContent">È da un po\' di tempo che non usi l\'app, vuoi tracciare attività?</string>
+    <string name="StatsNotifyTitle">Revisione Attività</string>
+    <string name="StatsNotifyContent">Rivedi le attività tracciate oggi</string>
+    <string name="successDiscoverable">sei rilevabile da altri dispositivi</string>
+    <string name="logout">logout</string>
+    <string name="logo">logo</string>
+    <string name="run_activity">Run Activity</string>
+    <string name="clock">clock</string>
+    <string name="steps">steps</string>
+    <string name="corri">corri</string>
+    <string name="sit_activity">Attività da seduti</string>
+    <string name="sit">sit</string>
+    <string name="speed_activity">Guidare</string>
+    <string name="macchina">macchina</string>
+    <string name="step_counter">Step Counter</string>
+    <string name="chiudi_dialog">Chiudi dialog</string>
+    <string name="attivit">Attività</string>
+    <string name="stats">Stats</string>
+    <string name="home">Home</string>
+    <string name="users">Users</string>
+    <string name="geofence">geoFence</string>
+
 </resources>

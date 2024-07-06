@@ -14,7 +14,6 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.compose.animation.core.updateTransition
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -22,10 +21,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -39,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var password: EditText
     private lateinit var goToRegistration: TextView
     private lateinit var togglePasswordVisibilityButton: ImageButton
-    private val socialModel = SocialModel()
+    private val model = Model()
     private val REQUEST_PERMISSION_REQUEST_CODE = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
         println("currentUser: $currentUser")
         if (currentUser != null) {
             lifecycleScope.launch {
-                val userData = socialModel.fetchUserData(currentUser.uid)
+                val userData = model.fetchUserData(currentUser.uid)
                 if (userData != null) {
                     LoggedUser.username = userData.username ?: ""
                     LoggedUser.gender = userData.gender ?: ""
@@ -109,7 +104,7 @@ class LoginActivity : AppCompatActivity() {
             updateUI(authResult.user)
 
             val uid = FirebaseAuth.getInstance().currentUser!!.uid
-            val userData = socialModel.fetchUserData(uid)
+            val userData = model.fetchUserData(uid)
 
             if (userData != null) {
                 LoggedUser.username = userData.username ?: ""

@@ -16,13 +16,11 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
-import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.AppDatabase
@@ -55,7 +53,6 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
     }
 
     @SuppressLint("SetTextI18n")
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         if(socialController.alreadyConnected(personList[position].device)){
             holder.connect.visibility = View.GONE
@@ -183,7 +180,7 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString()
-                socialController.sendMessage(toastMessage, context as Activity)
+                socialController.sendMessage(toastMessage)
 
 
                 dialog.dismiss()

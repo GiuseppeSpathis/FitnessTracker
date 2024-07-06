@@ -2,8 +2,6 @@ package com.example.fitnesstracker
 
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.location.Location
@@ -11,28 +9,21 @@ import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.getSystemService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.osmdroid.util.GeoPoint
 import java.net.HttpURLConnection
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
-class SocialModel {
+class Model {
 
     private var personList: MutableList<Person> = mutableListOf()
     private val firebase_db = FirebaseDatabase.getInstance("https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app").reference
@@ -42,10 +33,7 @@ class SocialModel {
 
     @SuppressLint("MissingPermission")
     suspend fun updateList(device: BluetoothDevice, context: Context): Boolean {
-        val deviceName = device.name
-        println("device name: $deviceName")
         val user = Utils.getUser(device.name, context)
-        println("user retrieved: $user")
         if (user != null) {
             personList.add(Person(user.name, user.gender, device))
             return true
@@ -264,7 +252,6 @@ class SocialModel {
         return db.attivitàDao().getGeofencesForDate(date)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getActivitiesForPeriod(db: AppDatabase, period: String): List<Attività> {
         val now = LocalDateTime.now()
         val startDate = when (period) {
@@ -280,7 +267,6 @@ class SocialModel {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getGeofencesForPeriod(db: AppDatabase, period: String) : List<timeGeofence>{
         val now = LocalDateTime.now()
         val startDate = when (period) {
@@ -296,24 +282,30 @@ class SocialModel {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
      suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
-        var attivitàDao : ActivityDao = db.attivitàDao()
+        val attivitàDao : ActivityDao = db.attivitàDao()
         Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
             attivitàDao.getOtherActivitiesByDate(date)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<Attività> {
         val date = String.format("%02d/%02d/%04d", day, month, year)
-        var attivitàDao : ActivityDao = db.attivitàDao()
+        val attivitàDao : ActivityDao = db.attivitàDao()
         Log.d("StatsActivity", "Getting activities for date: $date")
         return withContext(Dispatchers.IO) {
             attivitàDao.getAttivitàByDate(date)
         }
     }
+
+    suspend fun insertOthActivities(db: AppDatabase, othersActivity: OthersActivity) {
+        withContext(Dispatchers.IO) {
+            db.attivitàDao().insertOthersActivity(othersActivity)
+        }
+    }
+
+
 
 }

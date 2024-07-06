@@ -28,7 +28,8 @@
         android:layout_marginTop="16dp"
         android:src="@drawable/logoactivity"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:layout_constraintTop_toBottomOf="@id/title"
+        android:contentDescription="@string/logo" />
 
     <EditText
         android:id="@+id/email"
@@ -41,7 +42,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image" />
+        app:layout_constraintTop_toBottomOf="@id/image"
+        tools:ignore="RtlSymmetry" />
 
     <EditText
         android:id="@+id/username"
@@ -54,7 +56,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/email" />
+        app:layout_constraintTop_toBottomOf="@id/email"
+        tools:ignore="RtlSymmetry" />
 
     <EditText
         android:id="@+id/password"
@@ -68,7 +71,8 @@
         app:layout_constraintEnd_toStartOf="@+id/togglePasswordVisibilityButton"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/username" />
+        app:layout_constraintTop_toBottomOf="@id/username"
+        tools:ignore="RtlSymmetry" />
 
     <ImageButton
         android:id="@+id/togglePasswordVisibilityButton"
@@ -89,7 +93,8 @@
         android:paddingStart="16dp"
         android:background="@drawable/rounded_edittext_border"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/password" />
+        app:layout_constraintTop_toBottomOf="@id/password"
+        tools:ignore="RtlSymmetry" />
 
     <Button
         android:id="@+id/register"

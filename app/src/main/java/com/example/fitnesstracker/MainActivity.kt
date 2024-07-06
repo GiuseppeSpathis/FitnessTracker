@@ -1,5 +1,7 @@
 package com.example.fitnesstracker
 
+import Utils.scheduleDailyNotification
+import Utils.scheduleReminder
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -41,7 +43,17 @@ class MainActivity : ComponentActivity() {
         if (checkAndRequestPermissions()) {
             startLocationService()
             startCheckNearbyUsersWorker()
+
+
         }
+        val sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putLong("last_opened", System.currentTimeMillis())
+        editor.apply()
+
+        scheduleDailyNotification(this)
+        scheduleReminder(this)
+
         startActivity(Intent(this, LoginActivity::class.java))
         FirebaseApp.initializeApp(this)
     }

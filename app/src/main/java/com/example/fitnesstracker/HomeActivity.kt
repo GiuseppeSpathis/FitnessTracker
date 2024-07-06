@@ -1,13 +1,10 @@
 package com.example.fitnesstracker
 
 
-import Utils.navigateTo
 import Utils.setupBottomNavigationView
 import android.Manifest
-import android.app.ActivityOptions
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Bundle
 
 import android.util.Log
@@ -36,7 +33,6 @@ import org.osmdroid.events.ZoomEvent
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.w3c.dom.Text
 
 
 class HomeActivity : AppCompatActivity(), MapListener {
@@ -45,7 +41,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val REQUEST_PERMISSION_REQUEST_CODE = 1
     private lateinit var welcomeBack: TextView
-    private val socialModel = SocialModel()
+    private val model = Model()
 
     override fun onResume() {
         super.onResume()
@@ -229,7 +225,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
     }
 
     private fun getLastKnownLocation() {
-        socialModel.getLastKnownLocation(fusedLocationClient) { location ->
+        model.getLastKnownLocation(fusedLocationClient) { location ->
             location?.let {
                 val startPoint = GeoPoint(it.latitude, it.longitude)
                 val mapController: IMapController = map.controller

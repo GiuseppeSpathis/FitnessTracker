@@ -1,5 +1,6 @@
 <!-- res/layout/dialog_activity_info.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -19,12 +20,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        tools:ignore="UseCompoundDrawables">
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/time" />
+            android:src="@drawable/time"
+            android:contentDescription="@string/tempo" />
 
         <TextView
             android:id="@+id/start_time"
@@ -32,19 +35,22 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="@string/ora_inizio" />
+            android:text="@string/ora_inizio"
+            tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        tools:ignore="UseCompoundDrawables">
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/time" />
+            android:src="@drawable/time"
+            android:contentDescription="@string/tempo" />
 
         <TextView
             android:id="@+id/end_time"
@@ -52,7 +58,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="@string/ora_fine" />
+            android:text="@string/ora_fine"
+            tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
 
@@ -60,12 +67,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        tools:ignore="UseCompoundDrawables">
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/date" />
+            android:src="@drawable/date"
+            android:contentDescription="@string/date" />
 
         <TextView
             android:id="@+id/date"
@@ -73,7 +82,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
-            android:text="@string/data" />
+            android:text="@string/data"
+            tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
 </LinearLayout>

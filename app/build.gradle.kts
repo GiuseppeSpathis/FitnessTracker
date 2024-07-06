@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.fitnesstracker"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -111,6 +111,7 @@ dependencies {
     implementation ("com.github.prolificinteractive:material-calendarview:2.0.0")
     implementation ("androidx.work:work-runtime-ktx:2.7.1")
     implementation ("androidx.activity:activity-ktx:1.3.1")
+
 
 
 }

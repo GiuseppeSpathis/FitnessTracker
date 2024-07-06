@@ -2,8 +2,6 @@ package com.example.fitnesstracker
 
 import Utils.setupBottomNavigationView
 import android.Manifest
-import android.app.ActivityManager
-import android.app.ActivityOptions
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -14,7 +12,6 @@ import android.os.Bundle
 import android.text.InputType
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -25,33 +22,18 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.room.Room
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.navigation.NavigationBarView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polygon
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.concurrent.TimeUnit
-import java.util.logging.Handler
-
-
 
 
 class GeoFenceActivity : AppCompatActivity() {
@@ -62,7 +44,7 @@ class GeoFenceActivity : AppCompatActivity() {
     private lateinit var searchButton: Button
     private lateinit var addGeofenceButton: Button
     private var searchedLocation: GeoPoint? = null
-    private val socialModel = SocialModel()
+    private val model = Model()
 
     override fun onResume() {
         super.onResume()
@@ -198,7 +180,7 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun searchLocation(query: String) {
         lifecycleScope.launch {
-            val result = socialModel.searchLocation(query)
+            val result = model.searchLocation(query)
             if (result != null) {
                 val lat = result.latitude
                 val lon = result.longitude
@@ -246,7 +228,7 @@ class GeoFenceActivity : AppCompatActivity() {
         )
 
         lifecycleScope.launch {
-            socialModel.insertGeofence(db, geofence)
+            model.insertGeofence(db, geofence)
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@GeoFenceActivity, R.string.gf_successo, Toast.LENGTH_SHORT).show()
                 findViewById<EditText>(R.id.searchBar).text.clear()
@@ -269,7 +251,7 @@ class GeoFenceActivity : AppCompatActivity() {
 
     private fun viewGeofences() {
         lifecycleScope.launch {
-            val geofences = socialModel.getAllGeofences(db)
+            val geofences = model.getAllGeofences(db)
 
             map.overlays.clear()
 
@@ -309,7 +291,7 @@ class GeoFenceActivity : AppCompatActivity() {
             .setMessage(R.string.rim_domanda)
             .setPositiveButton(R.string.si) { _, _ ->
                 lifecycleScope.launch {
-                    socialModel.deleteGeofence(db, geofence)
+                    model.deleteGeofence(db, geofence)
                     viewGeofences()
                 }
             }

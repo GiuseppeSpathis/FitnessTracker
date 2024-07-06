@@ -2,10 +2,8 @@ package com.example.fitnesstracker
 
 import Utils.convertToActivities
 import Utils.setupBottomNavigationView
-import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -20,17 +18,12 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.room.Room
 import com.example.fitnesstracker.databinding.ActivityStatsBinding
-import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.HorizontalBarChart
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -38,36 +31,27 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.KeyStore
 import java.time.LocalDateTime
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
-import com.prolificinteractive.materialcalendarview.format.DayFormatter
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -76,21 +60,6 @@ import java.util.Random
 
 
 
-/*
-
-class DayViewContainer(view: View) : ViewContainer(view) {
-    val textView = view.findViewById<TextView>(R.id.calendarDayText)
-    lateinit var day: CalendarDay
-
-    init {
-        view.setOnClickListener {
-            if (day.owner == DayOwner.THIS_MONTH && !day.isDisabled) {
-                // Fai qualcosa quando viene cliccato un giorno abilitato
-            }
-        }
-    }
-}
- */
 class StatsActivity : AppCompatActivity() {
 
 
@@ -101,7 +70,7 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var geofencePieChart: PieChart
     private lateinit var periodMessageActivities: TextView
     private lateinit var attivitàDao: ActivityDao
-    private val socialModel = SocialModel()
+    private val model = Model()
 
     override fun onResume() {
         super.onResume()
@@ -109,7 +78,6 @@ class StatsActivity : AppCompatActivity() {
         setupBottomNavigationView(this, "nav_stats", bottomNavigationView)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStatsBinding.inflate(layoutInflater)
@@ -231,38 +199,11 @@ class StatsActivity : AppCompatActivity() {
         binding.btnGeofenceMonth.performClick()
     }
 
-    suspend fun insertFakeGeofences() {
-        withContext(Dispatchers.IO) {
-            val random = Random()
 
-            for (i in 1..10) {
-                val latitude = 37.7749 + random.nextDouble() / 100
-                val longitude = -122.4194 + random.nextDouble() / 100
-                val radius = (100..500).random().toFloat()
-                val enterTime = System.currentTimeMillis() - (random.nextInt(10000) * 1000).toLong()
-                val exitTime = enterTime + (random.nextInt(10000) * 1000).toLong()
-                val date = "2024-06-29"
-                val placeName = "Fake Place $i"
-
-                val geofence = timeGeofence(
-                    latitude = latitude,
-                    longitude = longitude,
-                    radius = radius,
-                    enterTime = enterTime,
-                    exitTime = exitTime,
-                    date = date,
-                    placeName = placeName,
-                    userId = LoggedUser.id
-                )
-                db.attivitàDao().insertTimeGeofence(geofence)
-                println("geofence inserita: $geofence")
-            }
-        }
-    }
 
     companion object {
-        private val socialModel = SocialModel()
-        @RequiresApi(Build.VERSION_CODES.O)
+        private val model = Model()
+
         fun showActivityPopup(activityType: String, activity: Attività, context: Context) {
 
             val inflater = LayoutInflater.from(context)
@@ -332,8 +273,7 @@ class StatsActivity : AppCompatActivity() {
             }
             return "Not tracked"
         }
-        @RequiresApi(Build.VERSION_CODES.O)
-         fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>) {
+         private fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>) {
             val filteredActivities = activities.filter { it.userId == LoggedUser.id }
             val activityColors = mapOf(
                 "Passeggiata" to ContextCompat.getColor(context, R.color.passeggiata),
@@ -359,7 +299,7 @@ class StatsActivity : AppCompatActivity() {
                     val duration = when {
                         startHour == endHour -> endMinute - startMinute
                         startHour == activity.startTime.hour -> 60 - startMinute
-                        startHour < endHour && startHour != activity.endTime.hour -> 60
+                        startHour != activity.endTime.hour -> 60
                         startHour == activity.endTime.hour -> endMinute
                         else -> 0
                     }
@@ -456,7 +396,6 @@ class StatsActivity : AppCompatActivity() {
                     override fun onValueSelected(e: Entry?, h: Highlight?) {
                         if (e is BarEntry) {
                             val activityType = getActivityTypeByColor(colors, activityColors, h?.stackIndex)
-                            Log.d("ActivityDebug:", "Clicked activity: $activityType")
 
                             val startMinute = (hour * 60) + ((h?.stackIndex ?: 0) * 60 / durations.size)
                             val endMinute = startMinute + (60 / durations.size)
@@ -468,7 +407,6 @@ class StatsActivity : AppCompatActivity() {
                             }
 
                             clickedActivities.forEach { activity ->
-                                Log.d("ActivityDebug", "Activity Clicked: $activity")
                                 showActivityPopup(activityType, activity, context)
                             }
                         }
@@ -521,7 +459,6 @@ class StatsActivity : AppCompatActivity() {
             container.addView(legendLayout)
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         fun showDateDialog(context: Context, year: Int, month: Int, day: Int,  db: AppDatabase, isDialog: Boolean = false) {
             val dialogView = if(isDialog) {
                 LayoutInflater.from(context).inflate(R.layout.custom_dialog2, null)
@@ -548,22 +485,19 @@ class StatsActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val activities: List<Attività> = if (isDialog) {
-                            val othersActivities = socialModel.getOtherActivitiesForDate(year, month, day, db)
+                            val othersActivities = model.getOtherActivitiesForDate(year, month, day, db)
                             convertToActivities(othersActivities)
                         } else {
-                            socialModel.getActivitiesForDate(year, month, day, db)
+                            model.getActivitiesForDate(year, month, day, db)
                         }
-                        println("stampo activity")
-                        println(activities)
                         if (!isDialog) {
                             val geofenceChartContainer = dialogView.findViewById<LinearLayout>(R.id.geofenceCchartContainer)
-                            val geofences = socialModel.getGeofencesForDate(db, year, month, day)
+                            val geofences = model.getGeofencesForDate(db, year, month, day)
                             withContext(Dispatchers.Main) {
                                 activity!!.displayGeofencesForDate(geofenceChartContainer, geofences)
                             }
                         }
                         withContext(Dispatchers.Main){
-                            Log.d("StatsActivity", "Number of activities retrieved: ${activities.size}")
                             displayActivitiesForDate(context, activityChartContainer, activities)
                         }
                 } catch (e: Exception) {
@@ -573,7 +507,6 @@ class StatsActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun displayGeofencesForDate(container: LinearLayout, geofences: List<timeGeofence>) {
         val geofenceColors = mutableMapOf<String, Int>()
         val random = Random()
@@ -601,7 +534,7 @@ class StatsActivity : AppCompatActivity() {
                 val duration = when {
                     startHour == endHour -> endMinute - startMinute
                     startHour == Instant.ofEpochMilli(geofence.enterTime ?: 0).atZone(ZoneId.systemDefault()).hour -> 60 - startMinute
-                    startHour < endHour && startHour != Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour -> 60
+                    startHour != Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour -> 60
                     startHour == Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).hour -> endMinute
                     else -> 0
                 }
@@ -755,7 +688,6 @@ class StatsActivity : AppCompatActivity() {
         container.addView(legendLayout)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun showGeofenceInfoDialog(geofence: timeGeofence) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_geofences_info, null)
         val placeNameTextView = dialogView.findViewById<TextView>(R.id.textViewPlaceName)
@@ -789,16 +721,8 @@ class StatsActivity : AppCompatActivity() {
         return "Not tracked"
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun resetDatabase() {
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.deleteAll()
-            }
-        }
-    }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     private fun updatePieChartForPeriod(period: String, chartType: String) {
         lifecycleScope.launch {
             try {
@@ -806,19 +730,19 @@ class StatsActivity : AppCompatActivity() {
                     val activities: List<Attività> = when (period) {
                         "day" -> {
                             periodMessageActivities.text = getString(R.string.dati_ultimo_giorno)
-                            socialModel.getActivitiesForPeriod(db, period)
+                            model.getActivitiesForPeriod(db, period)
                         }
                         "week" -> {
                             periodMessageActivities.text = getString(R.string.dati_ultima_settimana)
-                            socialModel.getActivitiesForPeriod(db, period)
+                            model.getActivitiesForPeriod(db, period)
                         }
                         "month" -> {
                             periodMessageActivities.text = getString(R.string.dati_ultimo_mese)
-                            socialModel.getActivitiesForPeriod(db, period)
+                            model.getActivitiesForPeriod(db, period)
                         }
                         "year" -> {
                             periodMessageActivities.text = getString(R.string.dati_ultimo_anno)
-                            socialModel.getActivitiesForPeriod(db, period)
+                            model.getActivitiesForPeriod(db, period)
                         }
                         else -> emptyList()
                     }
@@ -834,19 +758,19 @@ class StatsActivity : AppCompatActivity() {
                     val geofences: List<timeGeofence> = when (period) {
                         "day" -> {
                             periodMessage.text = getString(R.string.dati_ultimo_giorno)
-                            socialModel.getGeofencesForPeriod(db, period)
+                            model.getGeofencesForPeriod(db, period)
                         }
                         "week" -> {
                             periodMessage.text = getString(R.string.dati_ultima_settimana)
-                            socialModel.getGeofencesForPeriod(db, period)
+                            model.getGeofencesForPeriod(db, period)
                         }
                         "month" -> {
                             periodMessage.text = getString(R.string.dati_ultimo_mese)
-                            socialModel.getGeofencesForPeriod(db, period)
+                            model.getGeofencesForPeriod(db, period)
                         }
                         "year" -> {
                             periodMessage.text = getString(R.string.dati_ultimo_anno)
-                            socialModel.getGeofencesForPeriod(db, period)
+                            model.getGeofencesForPeriod(db, period)
                         }
                         else -> emptyList()
                     }
@@ -866,7 +790,6 @@ class StatsActivity : AppCompatActivity() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun displayPieChart(activities: List<Attività>) {
 
         val activityDurations = mutableMapOf<String, Long>()
@@ -899,7 +822,6 @@ class StatsActivity : AppCompatActivity() {
         pieChart.invalidate()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun displayGeofencePieChart(geofences: List<timeGeofence>) {
         val activityDurations = mutableMapOf<String, Long>()
         val geofenceColors = mutableMapOf<String, Int>()
@@ -913,7 +835,6 @@ class StatsActivity : AppCompatActivity() {
             }
         }
 
-        println("geofence colors: $geofenceColors")
         val entries = activityDurations.map { PieEntry(it.value.toFloat(), it.key) }
         val dataSet = PieDataSet(entries, "Geofence Activities")
         dataSet.colors = geofenceColors.values.toList()
@@ -939,12 +860,10 @@ class StatsActivity : AppCompatActivity() {
         return Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateDuration(startTime: LocalDateTime, endTime: LocalDateTime): Long {
         return Duration.between(startTime, endTime).toMinutes()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateDuration(startTimeMillis: Long?, endTimeMillis: Long?): Long {
         if (startTimeMillis == null || endTimeMillis == null) return 0L
         val startTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTimeMillis), ZoneId.systemDefault())
@@ -954,10 +873,9 @@ class StatsActivity : AppCompatActivity() {
 
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateLineChart(activityType: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            val data = socialModel.getActivitiesForPeriod(db, "week")
+            val data = model.getActivitiesForPeriod(db, "week")
 
             val filteredData = data.filter { it.activityType == activityType && it.userId == LoggedUser.id }
 
@@ -1002,7 +920,6 @@ class StatsActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun prepareStepCountData(data: List<Attività>): List<Pair<String, Int>> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailySteps = mutableMapOf<String, Int>()
@@ -1025,7 +942,6 @@ class StatsActivity : AppCompatActivity() {
         return dailySteps.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun prepareDistanceData(data: List<Attività>): List<Pair<String, Float>> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailyDistances = mutableMapOf<String, Float>()
@@ -1044,7 +960,6 @@ class StatsActivity : AppCompatActivity() {
         return dailyDistances.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun prepareAvgSpeedData(data: List<Attività>): List<Pair<String, Double>> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailySpeeds = mutableMapOf<String, Double>()
@@ -1072,7 +987,6 @@ class StatsActivity : AppCompatActivity() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun prepareStationaryTimeData(data: List<Attività>): List<Pair<String, Long>> {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailyStationaryTime = mutableMapOf<String, Long>()
@@ -1093,48 +1007,7 @@ class StatsActivity : AppCompatActivity() {
         return dailyStationaryTime.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun insertFakeWalkActivities() {
-        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val today = LocalDate.now()
-        val userId = LoggedUser.id
 
-        val random = Random()
-
-
-        for (i in 0..6) {
-            val date = today.minusDays(i.toLong())
-            val formattedDate = date.format(dateFormat)
-            val startTime = date.atStartOfDay()
-            val endTime = startTime.plusHours(random.nextInt( 5).toLong())
-
-            val stepCount = random.nextInt(10000)
-            val stepLengthInMeters = 0.8f
-            val distanceInKm = stepCount * stepLengthInMeters / 1000
-
-            val attività = Attività(
-                userId = LoggedUser.id,
-                startTime = startTime,
-                endTime = endTime,
-                stepCount = stepCount,
-                distance = distanceInKm,
-                date = formattedDate,
-                pace = null,
-                activityType = "Passeggiata",
-                avgSpeed = null,
-                maxSpeed = null
-            )
-
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    attivitàDao.insertActivity(attività)
-                    Log.d("FakeData", "Attività fittizia salvata: $attività")
-                }
-                withContext(Dispatchers.Main) {
-                }
-            }
-        }
-    }
 
 
 

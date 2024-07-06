@@ -18,7 +18,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:inputType="numberDecimal"
-        android:hint="@string/inserisci_limite_velocità" />
+        android:hint="@string/inserisci_limite_velocità"
+        android:autofillHints="limite velocità" />
 
     <Button
         android:id="@+id/confirmButton"

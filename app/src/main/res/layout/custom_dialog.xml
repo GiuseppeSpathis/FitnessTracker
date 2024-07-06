@@ -18,7 +18,7 @@
             android:layout_marginTop="1dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            android:contentDescription="Chiudi dialog"
+            android:contentDescription="@string/chiudi_dialog"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

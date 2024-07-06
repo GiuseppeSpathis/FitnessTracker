@@ -1,8 +1,6 @@
 package com.example.fitnesstracker
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -10,32 +8,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.net.http.NetworkException
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresExtension
 import androidx.core.app.ActivityCompat
-import androidx.core.app.JobIntentService
 import androidx.core.app.NotificationCompat
-import androidx.room.Room
 import com.google.android.gms.location.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.osmdroid.views.MapView
-import androidx.lifecycle.lifecycleScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseException
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,19 +29,18 @@ class LocationUpdatesService : Service() {
     private lateinit var locationRequest: LocationRequest
     private lateinit var db: AppDatabase
     private var inside: Boolean = false
-    private lateinit var socialModel: SocialModel
+    private lateinit var model: Model
 
     override fun onCreate() {
         super.onCreate()
         saveServiceRunningState(true)
         db = AppDatabase.getDatabase(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        socialModel = SocialModel()
+        model = Model()
         createLocationRequest()
         startLocationUpdates()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundService()
         return START_STICKY
@@ -106,7 +89,7 @@ class LocationUpdatesService : Service() {
                 handleLocationUpdate(location, db, inside) { updatedInside ->
                     inside = updatedInside
                 }
-                socialModel.updateLocationInFirebase(location)
+                model.updateLocationInFirebase(location)
             }
         }
     }

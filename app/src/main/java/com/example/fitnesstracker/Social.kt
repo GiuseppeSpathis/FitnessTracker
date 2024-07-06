@@ -8,6 +8,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
+import android.os.Build
 
 import android.os.Bundle
 import android.text.Editable
@@ -24,6 +25,7 @@ import android.os.Looper
 import android.text.Html
 import android.widget.Button
 import android.widget.ImageButton
+import androidx.annotation.RequiresApi
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationBarView
@@ -60,6 +62,7 @@ class Social : AppCompatActivity(), SocialInterface {
     private lateinit var gifDrawable: GifDrawable
 
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         socialController.handleBluetoothPermissionResult(requestCode, grantResults)
@@ -164,7 +167,7 @@ class Social : AppCompatActivity(), SocialInterface {
 
             // Mostra il dialogo con il messaggio HTML
             AlertDialog.Builder(this)
-                .setTitle("Info")
+                .setTitle(getString(R.string.info))
                 .setMessage(Html.fromHtml(infoMessage, Html.FROM_HTML_MODE_LEGACY))
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
@@ -187,7 +190,7 @@ class Social : AppCompatActivity(), SocialInterface {
             MotionToast.createColorToast(
                 this,
                 this.resources.getString(R.string.successo),
-                "sei discoverabile da altri dispositivi",
+                getString(R.string.successDiscoverable),
                 MotionToastStyle.SUCCESS,
                 MotionToast.GRAVITY_BOTTOM,
                 MotionToast.LONG_DURATION,

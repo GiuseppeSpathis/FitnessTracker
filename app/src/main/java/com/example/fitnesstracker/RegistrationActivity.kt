@@ -1,44 +1,29 @@
 package com.example.fitnesstracker
 
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.telephony.TelephonyManager
 import android.util.Log
-import android.util.Patterns
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.room.util.newStringBuilder
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.safetynet.SafetyNetAppCheckProviderFactory
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.net.InetAddress
-import java.net.NetworkInterface
-import android.Manifest.permission.ACCESS_WIFI_STATE
 import android.text.InputType
 import android.widget.ImageButton
 import android.widget.Spinner
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.LocationServices
-import java.util.UUID
 
 
 class RegistrationActivity : AppCompatActivity() {
@@ -52,7 +37,7 @@ class RegistrationActivity : AppCompatActivity() {
     private lateinit var goBack: Button
     private val REQUEST_WIFI_PERMISSION_CODE = 101
     private lateinit var togglePasswordVisibilityButton : ImageButton
-    private var socialModel = SocialModel()
+    private var model = Model()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +107,7 @@ class RegistrationActivity : AppCompatActivity() {
                     requestWifiPermission()
                     return@withContext
                 }
-                socialModel.saveUserData(uid, email, username, gender, this@RegistrationActivity)
+                model.saveUserData(uid, email, username, gender, this@RegistrationActivity)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@RegistrationActivity, R.string.registrazione_successo, Toast.LENGTH_SHORT).show()
@@ -158,14 +143,14 @@ class RegistrationActivity : AppCompatActivity() {
             return false
         }
 
-        if (socialModel.emailExists(email)) {
+        if (model.emailExists(email)) {
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@RegistrationActivity, R.string.email_utilizzata, Toast.LENGTH_SHORT).show()
             }
             return false
         }
 
-        if (socialModel.usernameExists(username)) {
+        if (model.usernameExists(username)) {
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@RegistrationActivity, R.string.username_utilizzato, Toast.LENGTH_SHORT).show()
             }

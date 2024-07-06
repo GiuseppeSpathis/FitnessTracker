@@ -11,7 +11,7 @@
         android:text="@string/geofences"
         android:layout_gravity="center_horizontal"
         android:textStyle="bold"
-        android:textSize="30dp"
+        android:textSize="30sp"
         android:textAppearance="?attr/textAppearanceHeadline6" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:text="@string/aggiungere_geofence"
         android:layout_marginTop="8dp"
         android:textStyle="bold"
-        android:textSize="18dp"
+        android:textSize="18sp"
         />
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:text="@string/aggiungere_geofence_istruzioni"
         android:layout_marginTop="8dp"
-        android:textSize="15dp"
+        android:textSize="15sp"
         />
 
     <TextView
@@ -37,7 +37,7 @@
         android:text="@string/rimuovere_geofence"
         android:layout_marginTop="20dp"
         android:textStyle="bold"
-        android:textSize="18dp"
+        android:textSize="18sp"
         />
 
     <TextView
@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:text="@string/rimuovere_geofence_istruzioni"
         android:layout_marginTop="8dp"
-        android:textSize="15dp"
+        android:textSize="15sp"
         />
 
 
