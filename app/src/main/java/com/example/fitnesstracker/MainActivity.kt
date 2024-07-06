@@ -26,21 +26,10 @@ import androidx.work.Configuration
 
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        if (permissions.all { it.value }) {
-            startLocationService()
-            startCheckNearbyUsersWorker()
-        } else {
-            showPermissionDeniedMessage()
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (checkAndRequestPermissions()) {
+        if (checkPermissions()) {
             startLocationService()
             startCheckNearbyUsersWorker()
 
@@ -58,7 +47,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
     }
 
-    private fun checkAndRequestPermissions(): Boolean {
+    private fun checkPermissions(): Boolean {
         val neededPermissions = mutableListOf<String>()
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -77,7 +66,6 @@ class MainActivity : ComponentActivity() {
         }
 
         return if (neededPermissions.isNotEmpty()) {
-            requestPermissionLauncher.launch(neededPermissions.toTypedArray())
             false
         } else {
             true
@@ -99,9 +87,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun showPermissionDeniedMessage() {
-        Toast.makeText(this, R.string.denied, Toast.LENGTH_LONG).show()
-    }
 
 }
 

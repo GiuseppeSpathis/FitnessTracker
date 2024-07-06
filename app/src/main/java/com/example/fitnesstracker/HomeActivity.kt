@@ -78,6 +78,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
 
         val logoutButton = findViewById<ImageView>(R.id.logout)
         logoutButton.setOnClickListener {
+            LocationUpdatesService.stopLocationService(this@HomeActivity)
             handleLogout()
         }
     }
@@ -164,6 +165,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
             val stepGoal = stepsEditText.text.toString().toIntOrNull()
             if (stepGoal != null) {
                 val intent = Intent(this, WalkActivity::class.java)
+
                 intent.putExtra(getString(R.string.step_goal), stepGoal)
                 startActivity(intent)
                 alertDialog.dismiss()

@@ -192,6 +192,14 @@ class LocationUpdatesService : Service() {
             apply()
         }
     }
+
+
+    companion object {
+        fun stopLocationService(context: Context) {
+            val stopIntent = Intent(context, LocationUpdatesService::class.java)
+            context.stopService(stopIntent)
+        }
+    }
 }
 
 

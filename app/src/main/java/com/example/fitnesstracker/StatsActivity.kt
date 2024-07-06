@@ -80,6 +80,7 @@ class StatsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         db = AppDatabase.getDatabase(this)
@@ -724,6 +725,8 @@ class StatsActivity : AppCompatActivity() {
 
 
     private fun updatePieChartForPeriod(period: String, chartType: String) {
+
+
         lifecycleScope.launch {
             try {
                 if (chartType == "activities") {
@@ -746,7 +749,7 @@ class StatsActivity : AppCompatActivity() {
                         }
                         else -> emptyList()
                     }
-
+                    println("activitiesRetrivied: $activities")
                     if (activities.isEmpty()) {
                         pieChart.clear()
                         findViewById<TextView>(R.id.no_data_message).visibility = View.VISIBLE
@@ -791,7 +794,6 @@ class StatsActivity : AppCompatActivity() {
 
 
     private fun displayPieChart(activities: List<Attività>) {
-
         val activityDurations = mutableMapOf<String, Long>()
         val filtered_activities = activities.filter { it.userId == LoggedUser.id }
         for (activity in filtered_activities) {
@@ -874,6 +876,7 @@ class StatsActivity : AppCompatActivity() {
 
 
     private fun updateLineChart(activityType: String) {
+
         CoroutineScope(Dispatchers.IO).launch {
             val data = model.getActivitiesForPeriod(db, "week")
 
@@ -924,7 +927,7 @@ class StatsActivity : AppCompatActivity() {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailySteps = mutableMapOf<String, Int>()
 
-
+        println("data: $data")
         data.forEach { attività ->
             val date = LocalDate.parse(attività.date, formatter).format(formatter)
             dailySteps[date] = dailySteps.getOrDefault(date, 0) + (attività.stepCount ?: 0)

@@ -57,7 +57,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
     private var pace = 0.0f
-
+    private val socialModel : SocialModel = SocialModel()
     private var timerHandler: Handler = Handler()
 
     private var timerRunnable: Runnable = object : Runnable {
@@ -76,7 +76,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
                 paceText.text = String.format(Locale.getDefault(), getString(R.string.passo), pace)
             } else {
                 Log.d("RunActivity", "Distance is zero, cannot calculate pace.")
-                paceText.text = getString(R.string.no_pace_data) // Imposta un testo di default se la distanza è zero
+                paceText.text = getString(R.string.no_pace_data)
             }
         }
     }
@@ -120,7 +120,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
         distanceGoal = intent.getFloatExtra(getString(R.string.distance_goal), 5.0f)
         Log.d("RunActivity", "Ricevuto distanza obiettivo: $distanceGoal")
-        progressBar.max = (distanceGoal * 1000).toInt() // Convertire in metri
+        progressBar.max = (distanceGoal * 1000).toInt()
 
         distanceGoalTextView.text = getString(R.string.distance_goal_format, distanceGoal)
 
@@ -183,9 +183,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        //dskf
-    }
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     private fun showShortActivityPopup() {
         AlertDialog.Builder(this)
@@ -217,26 +215,26 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
         val distanceInKm = stepCount * 0.762f / 1000
 
-        val attività = Attività(
-            userId = userId,
-            startTime = startTime,
-            endTime = endTime,
-            stepCount = stepCount,
-            distance = distanceInKm,
-            date = date,
-            pace = pace,
-            activityType = "Corsa",
-            avgSpeed = null,
-            maxSpeed = null
-        )
-
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.insertActivity(attività)
-
-            }
+            val success = socialModel.saveActivity(
+                userId,
+                startTime,
+                endTime,
+                stepCount,
+                distanceInKm,
+                date,
+                pace,
+                "Corsa",
+                null,
+                null,
+                db
+            )
             withContext(Dispatchers.Main) {
-                showSuccessPopup()
+                if (success) {
+                    showSuccessPopup()
+                } else {
+                    println("error while trying to save the activity")
+                }
             }
         }
     }

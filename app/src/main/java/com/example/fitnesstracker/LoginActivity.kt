@@ -43,7 +43,6 @@ class LoginActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         val currentUser = auth.currentUser
-        println("currentUser: $currentUser")
         if (currentUser != null) {
             lifecycleScope.launch {
                 val userData = model.fetchUserData(currentUser.uid)
