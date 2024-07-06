@@ -45,6 +45,7 @@ class SitActivity : AppCompatActivity() {
     private var maxSitTime = 10
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
+    private  val socialModel : SocialModel = SocialModel()
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -181,26 +182,26 @@ class SitActivity : AppCompatActivity() {
         val date = dateFormat.format(Date(endTimeMillis))
         val userId = LoggedUser.id
 
-        val attività = Attività(
-            userId = userId,
-            startTime = startTime,
-            endTime = endTime,
-            stepCount = null,
-            distance = null,
-            date = date,
-            pace = null,
-            activityType = "Stare fermo",
-            avgSpeed = null,
-            maxSpeed = null
-        )
-
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.insertActivity(attività)
-                Log.d("RunActivity", "Attività salvata: $attività")
-            }
+            val success = socialModel.saveActivity(
+                userId,
+                startTime,
+                endTime,
+                null,
+                null,
+                date,
+                null,
+                "Stare fermo",
+                null,
+                null,
+                db
+            )
             withContext(Dispatchers.Main) {
-                showSuccessPopup()
+                if (success) {
+                    showSuccessPopup()
+                } else {
+                    println("error while trying to save the activity")
+                }
             }
         }
     }

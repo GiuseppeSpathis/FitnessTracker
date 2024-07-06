@@ -112,6 +112,7 @@ class StatsActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         db = AppDatabase.getDatabase(this)
@@ -231,34 +232,6 @@ class StatsActivity : AppCompatActivity() {
         binding.btnGeofenceMonth.performClick()
     }
 
-    suspend fun insertFakeGeofences() {
-        withContext(Dispatchers.IO) {
-            val random = Random()
-
-            for (i in 1..10) {
-                val latitude = 37.7749 + random.nextDouble() / 100
-                val longitude = -122.4194 + random.nextDouble() / 100
-                val radius = (100..500).random().toFloat()
-                val enterTime = System.currentTimeMillis() - (random.nextInt(10000) * 1000).toLong()
-                val exitTime = enterTime + (random.nextInt(10000) * 1000).toLong()
-                val date = "2024-06-29"
-                val placeName = "Fake Place $i"
-
-                val geofence = timeGeofence(
-                    latitude = latitude,
-                    longitude = longitude,
-                    radius = radius,
-                    enterTime = enterTime,
-                    exitTime = exitTime,
-                    date = date,
-                    placeName = placeName,
-                    userId = LoggedUser.id
-                )
-                db.attivitàDao().insertTimeGeofence(geofence)
-                println("geofence inserita: $geofence")
-            }
-        }
-    }
 
     companion object {
         private val socialModel = SocialModel()
@@ -790,16 +763,9 @@ class StatsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun resetDatabase() {
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.deleteAll()
-            }
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun updatePieChartForPeriod(period: String, chartType: String) {
+
+
         lifecycleScope.launch {
             try {
                 if (chartType == "activities") {
@@ -822,7 +788,7 @@ class StatsActivity : AppCompatActivity() {
                         }
                         else -> emptyList()
                     }
-
+                    println("activitiesRetrivied: $activities")
                     if (activities.isEmpty()) {
                         pieChart.clear()
                         findViewById<TextView>(R.id.no_data_message).visibility = View.VISIBLE
@@ -868,7 +834,6 @@ class StatsActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun displayPieChart(activities: List<Attività>) {
-
         val activityDurations = mutableMapOf<String, Long>()
         val filtered_activities = activities.filter { it.userId == LoggedUser.id }
         for (activity in filtered_activities) {
@@ -956,6 +921,7 @@ class StatsActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun updateLineChart(activityType: String) {
+
         CoroutineScope(Dispatchers.IO).launch {
             val data = socialModel.getActivitiesForPeriod(db, "week")
 
@@ -1007,7 +973,7 @@ class StatsActivity : AppCompatActivity() {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailySteps = mutableMapOf<String, Int>()
 
-
+        println("data: $data")
         data.forEach { attività ->
             val date = LocalDate.parse(attività.date, formatter).format(formatter)
             dailySteps[date] = dailySteps.getOrDefault(date, 0) + (attività.stepCount ?: 0)
@@ -1092,58 +1058,4 @@ class StatsActivity : AppCompatActivity() {
 
         return dailyStationaryTime.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun insertFakeWalkActivities() {
-        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val today = LocalDate.now()
-        val userId = LoggedUser.id
-
-        val random = Random()
-
-
-        for (i in 0..6) {
-            val date = today.minusDays(i.toLong())
-            val formattedDate = date.format(dateFormat)
-            val startTime = date.atStartOfDay()
-            val endTime = startTime.plusHours(random.nextInt( 5).toLong())
-
-            val stepCount = random.nextInt(10000)
-            val stepLengthInMeters = 0.8f
-            val distanceInKm = stepCount * stepLengthInMeters / 1000
-
-            val attività = Attività(
-                userId = LoggedUser.id,
-                startTime = startTime,
-                endTime = endTime,
-                stepCount = stepCount,
-                distance = distanceInKm,
-                date = formattedDate,
-                pace = null,
-                activityType = "Passeggiata",
-                avgSpeed = null,
-                maxSpeed = null
-            )
-
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    attivitàDao.insertActivity(attività)
-                    Log.d("FakeData", "Attività fittizia salvata: $attività")
-                }
-                withContext(Dispatchers.Main) {
-                }
-            }
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
 }

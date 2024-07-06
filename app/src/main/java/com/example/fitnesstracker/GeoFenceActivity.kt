@@ -136,13 +136,6 @@ class GeoFenceActivity : AppCompatActivity() {
             } else {
                 Log.d("Geofence", "Service already running, not started")
             }
-        } else {
-            if(!isServiceRunning(LocationUpdatesService::class.java)){
-                Log.d("GeoFence", "Service not running, started")
-               // startLocationService()
-            } else {
-                Log.d("Geofence", "Service already running, not started")
-            }
         }
         findViewById<ImageButton>(R.id.infoButton).setOnClickListener {
             showInfoDialog()

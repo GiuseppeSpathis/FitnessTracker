@@ -47,14 +47,11 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
     private var stepCount = 0
 
     private lateinit var progressBar: ProgressBar
-    private var isStopped = false
-
-    private var timeStopped = 0
     private var stepLenghtInMeters = 0.762f
     private var startTime = System.currentTimeMillis()
     private var stepCountTarget = 8000
     private lateinit var stepCounterTargetTextView : TextView
-
+    private val socialModel: SocialModel = SocialModel()
     private var timerHandler : Handler = Handler()
 
     private var timerRunnable : Runnable = object : Runnable {
@@ -108,7 +105,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) as Sensor
         
-        stepCountTarget = intent.getIntExtra("STEP_GOAL", 8000)
+        stepCountTarget = intent.getIntExtra(getString(R.string.step_goal), 8000)
         progressBar.max = stepCountTarget
 
         if(stepCounterSensor == null) {
@@ -166,9 +163,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Handle accuracy changes if needed
-    }
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     private fun showSuccessPopup() {
         AlertDialog.Builder(this)
@@ -213,31 +208,29 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
 
         val distanceInKm = stepCount * stepLenghtInMeters / 1000
 
-        val attività = Attività(
-            userId = userId,
-            startTime = startTime,
-            endTime = endTime,
-            stepCount = stepCount,
-            distance = distanceInKm,
-            date = date,
-            pace = null,
-            activityType = "Passeggiata",
-            avgSpeed = null,
-            maxSpeed = null
-        )
-
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.insertActivity(attività)
-                Log.d("WalkActivity", "Attività salvata: $attività")
-
-            }
+            val success = socialModel.saveActivity(
+                userId,
+                startTime,
+                endTime,
+                stepCount,
+                distanceInKm,
+                date,
+                null,
+                "Passeggiata",
+                null,
+                null,
+                db
+            )
             withContext(Dispatchers.Main) {
-                showSuccessPopup()
+                if (success) {
+                    showSuccessPopup()
+                } else {
+                    println("error while trying to save the activity")
+                }
             }
         }
     }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {

@@ -54,13 +54,13 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var notificationManager: NotificationManagerCompat
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
-
+    private val socialModel = SocialModel()
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speed)
 
-        maxSpeed = intent.getDoubleExtra("SPEED_LIMIT", 50.0)
+        maxSpeed = intent.getDoubleExtra(getString(R.string.speed_limit), 50.0)
 
         speedTextView = findViewById(R.id.speedTextView)
         avgSpeedTextView = findViewById(R.id.avgSpeedTextView)
@@ -166,9 +166,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Handle accuracy changes if needed
-    }
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     private fun showShortActivityPopup() {
         AlertDialog.Builder(this)
@@ -198,26 +196,26 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         val date = dateFormat.format(Date(endTimeMillis))
         val userId = LoggedUser.id
 
-        val attività = Attività(
-            userId = userId,
-            startTime = startTime,  // Assicurati che startTime sia già stato inizializzato in precedenza
-            endTime = endTime,
-            stepCount = null,
-            distance = null,
-            date = date,
-            pace = null,
-            activityType = "Guidare",
-            avgSpeed = avgSpeed,
-            maxSpeed = maxSpeedRecorded
-        )
-
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                attivitàDao.insertActivity(attività)
-                Log.d("RunActivity", "Attività salvata: $attività")
-            }
+            val success = socialModel.saveActivity(
+                userId,
+                startTime,
+                endTime,
+                null,
+                null,
+                date,
+                null,
+                "Guidare",
+                avgSpeed,
+                maxSpeedRecorded,
+                db
+            )
             withContext(Dispatchers.Main) {
-                showSuccessPopup()
+                if (success) {
+                    showSuccessPopup()
+                } else {
+                    println("error while trying to save the activity")
+                }
             }
         }
     }

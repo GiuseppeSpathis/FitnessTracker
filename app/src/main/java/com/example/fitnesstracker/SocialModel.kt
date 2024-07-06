@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -26,6 +27,7 @@ import org.osmdroid.util.GeoPoint
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -267,6 +269,8 @@ class SocialModel {
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getActivitiesForPeriod(db: AppDatabase, period: String): List<Attività> {
         val now = LocalDateTime.now()
+        val attivitàDao: ActivityDao = db.attivitàDao()
+        val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val startDate = when (period) {
             "day" -> now.minusDays(1)
             "week" -> now.minusWeeks(1)
@@ -274,15 +278,37 @@ class SocialModel {
             "year" -> now.minusYears(1)
             else -> now
         }
+
+        // Log di debug
+        println("Period: $period")
+        println("StartDate (calculated): ${startDate.format(dateFormat)}")
+        println("EndDate (now): ${now.format(dateFormat)}")
+
         return withContext(Dispatchers.IO) {
-            db.attivitàDao().getAttivitàByDateRange(startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), now.format(
-                DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            val allActivities = attivitàDao.getAllActivitites()
+
+
+            val formattedStartDate = startDate.toLocalDate()
+            val formattedEndDate = now.toLocalDate()
+
+            val filteredActivities = allActivities.filter {
+                val activityDate = LocalDate.parse(it.date, dateFormat)
+                activityDate.isAfter(formattedStartDate) || activityDate.isEqual(formattedStartDate) &&
+                        activityDate.isBefore(formattedEndDate) || activityDate.isEqual(formattedEndDate)
+            }
+
+            println("Filtered activities: $filteredActivities")
+            filteredActivities
         }
     }
 
+
+
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getGeofencesForPeriod(db: AppDatabase, period: String) : List<timeGeofence>{
+    suspend fun getGeofencesForPeriod(db: AppDatabase, period: String): List<timeGeofence> {
         val now = LocalDateTime.now()
+        val attivitàDao: ActivityDao = db.attivitàDao()
+        val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val startDate = when (period) {
             "day" -> now.minusDays(1)
             "week" -> now.minusWeeks(1)
@@ -290,11 +316,28 @@ class SocialModel {
             "year" -> now.minusYears(1)
             else -> now
         }
-        println("For period: $period, startDate: $startDate")
-        return withContext(Dispatchers.IO){
-            db.attivitàDao().getGeofencesByDateRange(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+
+        // Log di debug
+        println("Period: $period")
+        println("StartDate (calculated): ${startDate.format(dateFormat)}")
+        println("EndDate (now): ${now.format(dateFormat)}")
+
+        return withContext(Dispatchers.IO) {
+            val allGeofences = attivitàDao.getAllTimeGeofences()
+            val formattedStartDate = startDate.toLocalDate()
+            val formattedEndDate = now.toLocalDate()
+
+            val filteredGeofences = allGeofences.filter {
+                val geofenceDate = LocalDate.parse(it.date, dateFormat)
+                (geofenceDate.isAfter(formattedStartDate) || geofenceDate.isEqual(formattedStartDate)) &&
+                        (geofenceDate.isBefore(formattedEndDate) || geofenceDate.isEqual(formattedEndDate))
+            }
+
+            println("Filtered geofences: $filteredGeofences")
+            filteredGeofences
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
      suspend fun getOtherActivitiesForDate(year: Int, month: Int, day: Int, db: AppDatabase): List<OthersActivity> {
@@ -316,4 +359,43 @@ class SocialModel {
         }
     }
 
-}
+    suspend fun saveActivity(
+        userId: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime,
+        stepCount: Int?,
+        distance: Float?,
+        date: String,
+        pace: Float?,
+        activityType: String,
+        avgSpeed: Double?,
+        maxSpeed: Double?,
+        db: AppDatabase
+    ): Boolean {
+        return try {
+            val attività = Attività(
+                userId = userId,
+                startTime = startTime,
+                endTime = endTime,
+                stepCount = stepCount,
+                distance = distance,
+                date = date,
+                pace = pace,
+                activityType = activityType,
+                avgSpeed = avgSpeed,
+                maxSpeed = maxSpeed
+            )
+            withContext(Dispatchers.IO) {
+                db.attivitàDao().insertActivity(attività)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e("SocialModel", "Error saving activity data", e)
+            false
+        }
+    }
+
+
+    }
+
+
