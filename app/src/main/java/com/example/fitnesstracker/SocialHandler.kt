@@ -92,8 +92,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
                     if(device?.name != null){
                         CoroutineScope(Dispatchers.IO).launch {
-                            val found = model.updateList(device, SocialInterface.getActivity())
-                            println(found)
+                            val found = model.updateList(device)
                             if(found){
                                 withContext(Dispatchers.Main) {
                                     SocialInterface.listUpdated(getPersonlist())
@@ -109,24 +108,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
 
     private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ -> }
-
-
-    private fun requestBluetoothConnectAndScanPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity()))
-            {
-                ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
-            } else {
-                // Il permesso è già stato concesso, puoi procedere con l'abilitazione del Bluetooth
-                enableBluetooth()
-                startDiscovery()
-            }
-        } else {
-            // Per versioni di Android inferiori alla 31, procedi direttamente con l'abilitazione del Bluetooth
-            enableBluetooth()
-            startDiscovery()
-        }
-    }
 
 
     private fun enableBluetooth() {
@@ -190,7 +171,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 1000000)
             SocialInterface.getActivity().startActivity(discoverableIntent)
         }
-        bluetoothAdapter?.setName(LoggedUser.username);
+        bluetoothAdapter?.setName(LoggedUser.username)
         startServer()
     }
 
@@ -265,7 +246,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
     @SuppressLint("MissingPermission")
-    fun connect2device(device: BluetoothDevice?, activity: Activity, holder: MyAdapter.MyViewHolder, person: Person, you_are_connected: MyAdapter.Ref<Boolean>){
+    fun connect2device(device: BluetoothDevice?, activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>){
         if (device == null) return
 
         // Verifica se il dispositivo è già accoppiato
@@ -284,7 +265,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         if (state == BluetoothDevice.BOND_BONDED) {
                             // Il dispositivo è ora accoppiato, procedi con la connessione
                             context.unregisterReceiver(this)
-                            connectSocket(device, activity, holder, person, you_are_connected)
+                            connectSocket(device, activity, holder, you_are_connected)
                         } else if (state == BluetoothDevice.BOND_NONE && prevState == BluetoothDevice.BOND_BONDING) {
                             // L'accoppiamento è fallito
                             context.unregisterReceiver(this)
@@ -301,12 +282,12 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             activity.registerReceiver(bondReceiver, filter)
         } else {
             // Se già accoppiato, procedi con la connessione
-            connectSocket(device, activity, holder, person, you_are_connected)
+            connectSocket(device, activity, holder, you_are_connected)
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun connectSocket(device: BluetoothDevice, activity: Activity, holder: MyAdapter.MyViewHolder, person: Person, you_are_connected: MyAdapter.Ref<Boolean>){
+    private fun connectSocket(device: BluetoothDevice, activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>){
         Thread {
             try {
                 socket = device.createRfcommSocketToServiceRecord(uuid)
@@ -382,7 +363,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         val message = jsonString
                         jsonString= ""
                         CoroutineScope(Dispatchers.IO).launch {
-                            val user = Utils.getUser(username, SocialInterface.getActivity())
+                            val user = Utils.getUser(username)
                             withContext(Dispatchers.Main) {
                                 receiveMessage(activity, user?.name ?: " ", message, user?.gender ?: "Maschio")
                             }
@@ -411,7 +392,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     model.insertOthActivities(database, attivita)
                 }
                 // Poi ottieni l'utente e chiama receiveMessage
-                val user = Utils.getUser(activities[0].username, SocialInterface.getActivity())
+                val user = Utils.getUser(activities[0].username)
                 SocialInterface.getActivity().runOnUiThread {
                     receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true)
                 }

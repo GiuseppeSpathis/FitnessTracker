@@ -1,7 +1,5 @@
 package com.example.fitnesstracker
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.google.gson.*
 import java.lang.reflect.Type
 import java.time.LocalDateTime

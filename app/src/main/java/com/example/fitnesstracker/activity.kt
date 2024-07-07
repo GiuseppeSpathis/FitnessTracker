@@ -1,6 +1,4 @@
 package com.example.fitnesstracker
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey

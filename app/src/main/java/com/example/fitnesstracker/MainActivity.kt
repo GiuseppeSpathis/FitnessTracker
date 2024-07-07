@@ -4,25 +4,17 @@ import Utils.scheduleDailyNotification
 import Utils.scheduleReminder
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
 import android.Manifest
-import android.app.Service
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.work.Configuration
 
 class MainActivity : ComponentActivity() {
 
@@ -65,11 +57,7 @@ class MainActivity : ComponentActivity() {
             neededPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        return if (neededPermissions.isNotEmpty()) {
-            false
-        } else {
-            true
-        }
+        return neededPermissions.isEmpty()
     }
 
     private fun startLocationService() {

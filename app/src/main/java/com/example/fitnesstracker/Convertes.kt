@@ -1,7 +1,5 @@
 package com.example.fitnesstracker
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.room.TypeConverter
 import java.time.LocalDateTime
 import java.time.ZoneOffset

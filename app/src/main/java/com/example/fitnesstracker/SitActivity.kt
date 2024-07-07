@@ -9,12 +9,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -82,7 +79,7 @@ class SitActivity : AppCompatActivity() {
 
         stopButton.setOnClickListener {
             handler.removeCallbacks(updateTimeRunnable)
-            onStopButtonclicked(it)
+            onStopButtonclicked()
         }
 
         db = AppDatabase.getDatabase(this)
@@ -164,7 +161,7 @@ class SitActivity : AppCompatActivity() {
             .show()
     }
 
-    public fun onStopButtonclicked(view: View) {
+     private fun onStopButtonclicked() {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime
 
@@ -235,17 +232,15 @@ class SitActivity : AppCompatActivity() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Reminder Channel"
-            val descriptionText = "Channel for reminder notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel("sit_channel", name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val name = "Reminder Channel"
+        val descriptionText = "Channel for reminder notifications"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel("sit_channel", name, importance).apply {
+            description = descriptionText
         }
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 }
 

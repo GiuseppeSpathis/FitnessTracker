@@ -7,18 +7,15 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
-import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import java.util.Locale
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -56,10 +53,10 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
 
     private var timerRunnable : Runnable = object : Runnable {
         override fun run() {
-            var milis = System.currentTimeMillis() - startTime
+            val milis = System.currentTimeMillis() - startTime
             var seconds = milis / 1000
-            var min = seconds / 60
-            seconds = seconds % 60
+            val min = seconds / 60
+            seconds %= 60
             timeCounterText.text = getString(R.string.tempo, min, seconds)
             timerHandler.postDelayed(this, 1000)
         }
@@ -70,20 +67,17 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        if(stepCounterSensor != null){
-            sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
-            timerHandler.postDelayed(timerRunnable, 0)
-        }
+        sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        timerHandler.postDelayed(timerRunnable, 0)
     }
 
     override fun onStop() {
         super.onStop()
-        if(stepCounterSensor != null){
-            sensorManager.unregisterListener(this)
-            timerHandler.removeCallbacks(timerRunnable)
-        }
+        sensorManager.unregisterListener(this)
+        timerHandler.removeCallbacks(timerRunnable)
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_walk)
@@ -107,17 +101,13 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         stepCountTarget = intent.getIntExtra(getString(R.string.step_goal), 8000)
         progressBar.max = stepCountTarget
 
-        if(stepCounterSensor == null) {
-            stepCounterText.text = getString(R.string.step_counter_not_av)
-        } else {
-            stepCounterTargetTextView.text = getString(R.string.gol_passi, stepCountTarget)
-        }
+        stepCounterTargetTextView.text = getString(R.string.gol_passi, stepCountTarget)
 
         db = AppDatabase.getDatabase(this)
         attivitàDao = db.attivitàDao()
 
         stopButton.setOnClickListener{
-            onStopButtonclicked(it)
+            onStopButtonclicked()
         }
     }
 
@@ -188,7 +178,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
             .show()
     }
 
-    public fun onStopButtonclicked(view: View) {
+     fun onStopButtonclicked() {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime
 

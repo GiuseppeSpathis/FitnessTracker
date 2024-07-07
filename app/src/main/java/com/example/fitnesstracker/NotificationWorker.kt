@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.work.Worker
@@ -26,12 +25,10 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         val intent = Intent(applicationContext, StatsActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel("stats_channel", "Stats Channel", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "Channel for stats notifications"
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel("stats_channel", "Stats Channel", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "Channel for stats notifications"
         }
+        notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(applicationContext, "stats_channel")
             .setContentTitle(applicationContext.getString(R.string.StatsNotifyTitle))

@@ -1,16 +1,11 @@
 package com.example.fitnesstracker
 
-import android.app.Activity
 import androidx.room.Dao
-import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.google.android.gms.location.Geofence
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Dao
 interface ActivityDao {
@@ -44,8 +39,6 @@ interface ActivityDao {
     @Query("SELECT * FROM geofences_new")
     suspend fun getAllGeofences(): List<GeoFence>
 
-    @Query("SELECT * FROM timeGeofences")
-    suspend fun getAllTimeGeofences(): List<timeGeofence>
 
     @Delete
     suspend fun deleteGeofence(geofence: GeoFence)

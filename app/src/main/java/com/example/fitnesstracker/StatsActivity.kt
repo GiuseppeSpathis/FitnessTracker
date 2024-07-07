@@ -11,14 +11,12 @@ import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import android.graphics.Color
 import android.graphics.Typeface
-import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.fitnesstracker.databinding.ActivityStatsBinding
@@ -268,7 +266,7 @@ class StatsActivity : AppCompatActivity() {
 
 
         fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
-            stackIndex?.let {
+            stackIndex?.let { it ->
                 val colorIndex = it % colors.size
                 return activityColors.entries.firstOrNull { it.value == colors[colorIndex] }?.key ?: "Not tracked"
             }
@@ -529,7 +527,6 @@ class StatsActivity : AppCompatActivity() {
             val endMinute = Instant.ofEpochMilli(geofence.exitTime ?: 0).atZone(ZoneId.systemDefault()).minute
 
             while (startHour <= endHour) {
-                val placeName = geofence.placeName
                 val currentHourList = totalMinutesPerHour[startHour]
 
                 val duration = when {
@@ -714,15 +711,6 @@ class StatsActivity : AppCompatActivity() {
 
 
 
-    private fun getActivityTypeByColor(colors: List<Int>, activityColors: Map<String, Int>, stackIndex: Int?): String {
-        stackIndex?.let {
-            val colorIndex = it % colors.size
-            return activityColors.entries.firstOrNull { it.value == colors[colorIndex] }?.key ?: "Not tracked"
-        }
-        return "Not tracked"
-    }
-
-
 
     private fun updatePieChartForPeriod(period: String, chartType: String) {
 
@@ -749,7 +737,6 @@ class StatsActivity : AppCompatActivity() {
                         }
                         else -> emptyList()
                     }
-                    println("activitiesRetrivied: $activities")
                     if (activities.isEmpty()) {
                         pieChart.clear()
                         findViewById<TextView>(R.id.no_data_message).visibility = View.VISIBLE
@@ -915,8 +902,8 @@ class StatsActivity : AppCompatActivity() {
                 binding.lineChart.axisRight.isEnabled = false
 
                 binding.lineChart.data = lineData
-                binding.lineChart.getAxisLeft().setDrawGridLines(false);
-                binding.lineChart.getXAxis().setDrawGridLines(false);
+                binding.lineChart.getAxisLeft().setDrawGridLines(false)
+                binding.lineChart.getXAxis().setDrawGridLines(false)
                 binding.lineChart.invalidate()
 
             }
@@ -927,7 +914,6 @@ class StatsActivity : AppCompatActivity() {
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
         val dailySteps = mutableMapOf<String, Int>()
 
-        println("data: $data")
         data.forEach { attività ->
             val date = LocalDate.parse(attività.date, formatter).format(formatter)
             dailySteps[date] = dailySteps.getOrDefault(date, 0) + (attività.stepCount ?: 0)

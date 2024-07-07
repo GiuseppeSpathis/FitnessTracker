@@ -57,32 +57,6 @@ abstract class AppDatabase : RoomDatabase() {
                         "`maxSpeed` REAL)")
             }
         }
-        private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                // Create new table with the updated schema
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `geofences_new` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `latitude` REAL NOT NULL,
-                        `longitude` REAL NOT NULL,
-                        `radius` REAL NOT NULL
-                    )
-                """)
-
-                // Copy the data from the old table to the new table
-                db.execSQL("""
-                    INSERT INTO `geofences_new` (id, latitude, longitude, radius)
-                    SELECT id, latitude, longitude, radius
-                    FROM geofences
-                """)
-
-                // Remove the old table
-                db.execSQL("DROP TABLE geofences")
-
-                // Rename the new table to the old table name
-                db.execSQL("ALTER TABLE geofences_new RENAME TO geofences")
-            }
-        }
     }
 }
 

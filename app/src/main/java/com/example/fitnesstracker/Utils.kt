@@ -3,40 +3,27 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityOptions
 import android.app.Dialog
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.CalendarView
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import com.example.fitnesstracker.HomeActivity
 import com.example.fitnesstracker.R
-import com.example.fitnesstracker.RegistrationActivity
-import com.google.firebase.database.DataSnapshot
 import androidx.core.content.res.ResourcesCompat
-import androidx.room.Room
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.Attività
-import com.example.fitnesstracker.CheckNearbyUsersWorker
 import com.example.fitnesstracker.GeoFenceActivity
-import com.example.fitnesstracker.LoggedUser
 import com.example.fitnesstracker.NotificationWorker
 import com.example.fitnesstracker.OthersActivity
 import com.example.fitnesstracker.Person
@@ -158,15 +145,9 @@ object Utils {
         return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun isJSONComplete(jsonString: String): Boolean {
-        // Implementa la logica per verificare se hai ricevuto l'intero JSON
-        // Ad esempio, potresti verificare se il JSON inizia con "{" e termina con "}"
-        return jsonString.startsWith("{") && jsonString.endsWith("}")
-    }
 
 
-
-    suspend fun getUser(username: String, context: Context): Person? {
+    suspend fun getUser(username: String): Person? {
         val database = FirebaseDatabase.getInstance("https://fitnesstracker-637f9-default-rtdb.europe-west1.firebasedatabase.app").reference
         return withContext(Dispatchers.IO) {
             try {
@@ -176,10 +157,7 @@ object Utils {
                 if (snapshot.exists()) {
                     val userSnapshot = snapshot.children.firstOrNull()
                     if (userSnapshot != null) {
-                        val email = userSnapshot.child("email").getValue<String>()
                         val gender = userSnapshot.child("gender").getValue<String>()
-                        val id = userSnapshot.child("id").getValue<String>()
-                        val macAddress = userSnapshot.child("macAddress").getValue<String>()
                         val name = userSnapshot.child("username").getValue<String>()  // Qui mappiamo username a name
 
                         if (name != null && gender != null) {
@@ -221,7 +199,7 @@ object Utils {
     }
 
 
-    fun navigateTo(context: Context, activityClass: Class<out AppCompatActivity>): Boolean {
+    private fun navigateTo(context: Context, activityClass: Class<out AppCompatActivity>): Boolean {
         val intent = Intent(context, activityClass as Class<*>)
         val options = ActivityOptions.makeCustomAnimation(context, 0, 0)
         context.startActivity(intent, options.toBundle())

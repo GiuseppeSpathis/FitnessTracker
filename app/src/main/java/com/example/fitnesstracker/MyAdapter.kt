@@ -1,3 +1,4 @@
+
 import Utils.checkGender
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
@@ -127,7 +128,7 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
                     MotionToast.GRAVITY_BOTTOM,
                     MotionToast.LONG_DURATION,
                     ResourcesCompat.getFont(it.context, www.sanju.motiontoast.R.font.helvetica_regular))
-                socialHandler.connect2device(person.device, it.context as Activity, holder, person, you_are_connected)
+                socialHandler.connect2device(person.device, it.context as Activity, holder, you_are_connected)
             }
         }
         holder.disconnect.setOnClickListener {

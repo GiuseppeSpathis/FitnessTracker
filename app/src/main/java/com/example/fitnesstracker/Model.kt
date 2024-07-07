@@ -5,11 +5,8 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.location.Location
-import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -34,8 +31,8 @@ class Model {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun updateList(device: BluetoothDevice, context: Context): Boolean {
-        val user = Utils.getUser(device.name, context)
+    suspend fun updateList(device: BluetoothDevice): Boolean {
+        val user = Utils.getUser(device.name)
         if (user != null) {
             personList.add(Person(user.name, user.gender, device))
             return true
@@ -66,7 +63,7 @@ class Model {
      * @param timestamp The timestamp from which to start the search.
      * @return A list of nearby users or null if an error occurs.
      */
-    suspend fun getNearbyUsers(timestamp: Double): List<RegistrationActivity.User>? {
+    suspend fun getNearbyUsers(timestamp: Double): List<RegistrationActivity.User> {
         val nearbyUsersSnapshot = firebase_db.child("users")
             .orderByChild("lastUpdated")
             .startAt(timestamp)
@@ -266,10 +263,7 @@ class Model {
             else -> now
         }
 
-        // Log di debug
-        println("Period: $period")
-        println("StartDate (calculated): ${startDate.format(dateFormat)}")
-        println("EndDate (now): ${now.format(dateFormat)}")
+
 
         return withContext(Dispatchers.IO) {
             val allActivities = attivitàDao.getAllActivitites()
@@ -284,7 +278,6 @@ class Model {
                         activityDate.isBefore(formattedEndDate) || activityDate.isEqual(formattedEndDate)
             }
 
-            println("Filtered activities: $filteredActivities")
             filteredActivities
         }
     }
@@ -293,8 +286,7 @@ class Model {
 
         suspend fun getGeofencesForPeriod(db: AppDatabase, period: String): List<timeGeofence> {
             val now = LocalDateTime.now()
-            val attivitàDao: ActivityDao = db.attivitàDao()
-            val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
             val startDate = when (period) {
                 "day" -> now.minusDays(1)
                 "week" -> now.minusWeeks(1)

@@ -84,8 +84,7 @@ class HomeActivity : AppCompatActivity(), MapListener {
     }
 
     private fun setProfileImage(imageProfile: ImageView) {
-        val gender = LoggedUser.gender
-        val imageRes = when (gender) {
+        val imageRes = when (LoggedUser.gender) {
             "Maschio" -> R.drawable.male
             "Femmina" -> R.drawable.female
             else -> R.drawable.other

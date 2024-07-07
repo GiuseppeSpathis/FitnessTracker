@@ -12,9 +12,6 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -32,6 +29,7 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.util.*
+import kotlin.math.sqrt
 
 class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
@@ -55,6 +53,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
     private val Model = Model()
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speed)
@@ -82,7 +81,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         attivitàDao = db.attivitàDao()
 
         stopButton.setOnClickListener {
-            onStopButtonclicked(it)
+            onStopButtonclicked()
         }
 
         createNotificationChannel()
@@ -90,21 +89,17 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        if (speedSensor != null) {
-            sensorManager.registerListener(this, speedSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        }
+        sensorManager.registerListener(this, speedSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
         super.onPause()
-        if (speedSensor != null) {
-            sensorManager.unregisterListener(this)
-        }
+        sensorManager.unregisterListener(this)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
-            val linearAcceleration = Math.sqrt(
+            val linearAcceleration = sqrt(
                 (event.values[0] * event.values[0]
                         + event.values[1] * event.values[1]
                         + event.values[2] * event.values[2]).toDouble()
@@ -152,17 +147,15 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.speed_channel_name)
-            val descriptionText = getString(R.string.speed_channel_description)
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel("speed_channel", name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val name = getString(R.string.speed_channel_name)
+        val descriptionText = getString(R.string.speed_channel_description)
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel("speed_channel", name, importance).apply {
+            description = descriptionText
         }
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -178,7 +171,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
             }
             .show()
     }
-    public fun onStopButtonclicked(view: View) {
+     private fun onStopButtonclicked() {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime
 

@@ -7,7 +7,6 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
-import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -47,9 +46,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
     private var stepCount = 0
 
     private lateinit var progressBar: ProgressBar
-    private var isStopped = false
 
-    private var timeStopped = 0
     private var stepLengthInMeters = 0.762f
     private var startTime = System.currentTimeMillis()
     private var distanceGoal = 5.0f // esempio di distanza in km
@@ -72,10 +69,8 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             val distanceInKm = stepCount * stepLengthInMeters / 1000
             if (distanceInKm > 0) {
                 pace = minutes / distanceInKm
-                Log.d("RunActivity", "Pace: $pace")
                 paceText.text = String.format(Locale.getDefault(), getString(R.string.passo), pace)
             } else {
-                Log.d("RunActivity", "Distance is zero, cannot calculate pace.")
                 paceText.text = getString(R.string.no_pace_data)
             }
         }
@@ -83,20 +78,18 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        if (stepCounterSensor != null) {
-            sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
-            timerHandler.postDelayed(timerRunnable, 0)
-        }
+        sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        timerHandler.postDelayed(timerRunnable, 0)
     }
 
     override fun onStop() {
         super.onStop()
-        if (stepCounterSensor != null) {
-            sensorManager.unregisterListener(this)
-            timerHandler.removeCallbacks(timerRunnable)
-        }
+
+        sensorManager.unregisterListener(this)
+        timerHandler.removeCallbacks(timerRunnable)
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_run)
@@ -124,15 +117,11 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
         distanceGoalTextView.text = getString(R.string.distance_goal_format, distanceGoal)
 
-        if (stepCounterSensor == null) {
-            stepCounterText.text = getString(R.string.step_counter_not_av)
-        }
-
         db = AppDatabase.getDatabase(this)
         attivitàDao = db.attivitàDao()
 
         stopButton.setOnClickListener {
-            onStopButtonclicked(it)
+            onStopButtonclicked()
         }
     }
 
@@ -197,7 +186,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             .show()
     }
 
-    public fun onStopButtonclicked(view: View) {
+     private fun onStopButtonclicked() {
         val endTimeMillis = System.currentTimeMillis()
         val durationMillis = endTimeMillis - startTime
 

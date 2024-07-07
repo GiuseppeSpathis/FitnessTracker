@@ -8,11 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
@@ -50,10 +48,8 @@ class LocationUpdatesService : Service() {
         val channelId = "location_updates"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Location Updates", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(channelId, "Location Updates", NotificationManager.IMPORTANCE_HIGH)
+        notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(getString(R.string.location_service))
@@ -145,7 +141,7 @@ class LocationUpdatesService : Service() {
                         val timeGeofence = db.attivitàDao().getLastTimeGeofenceByCoordinates(
                             geofence.latitude, geofence.longitude, geofence.radius
                         )
-                        timeGeofence?.let {
+                        timeGeofence.let {
                             it.exitTime = exitTime
                             db.attivitàDao().updateTimeGeofence(it)
                         }
@@ -162,10 +158,8 @@ class LocationUpdatesService : Service() {
         val channelId = "location_updates"
         val notificationManager = getSystemService(NotificationManager::class.java)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Location Updates", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(channelId, "Location Updates", NotificationManager.IMPORTANCE_HIGH)
+        notificationManager.createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
@@ -180,7 +174,6 @@ class LocationUpdatesService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        println("Destroyed")
         saveServiceRunningState(false)
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }

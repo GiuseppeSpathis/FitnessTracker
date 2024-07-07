@@ -6,9 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import android.util.Log
-import androidx.compose.ui.res.stringResource
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.work.Worker
@@ -23,11 +20,9 @@ class ReminderWorker(context: Context, params: WorkerParameters) : Worker(contex
         val currentTime = System.currentTimeMillis()
 
 
-
-        if (currentTime - lastOpened >= 3 * 60 * 60 * 1000) { // 3 ore
+        if (currentTime - lastOpened >= ((3 * 60 * 60 * 1000) + (40 * 60 * 1000))) { // 3 ore e 40 minuti
             sendNotification()
         }
-
 
         return Result.success()
 

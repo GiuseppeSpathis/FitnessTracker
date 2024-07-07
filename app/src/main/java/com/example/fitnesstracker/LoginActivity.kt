@@ -3,6 +3,7 @@ package com.example.fitnesstracker
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -14,6 +15,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +38,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var togglePasswordVisibilityButton: ImageButton
     private val model = Model()
     private val REQUEST_PERMISSION_REQUEST_CODE = 1
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login_registration2)
@@ -47,9 +50,9 @@ class LoginActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val userData = model.fetchUserData(currentUser.uid)
                 if (userData != null) {
-                    LoggedUser.username = userData.username ?: ""
-                    LoggedUser.gender = userData.gender ?: ""
-                    LoggedUser.email = userData.email ?: ""
+                    LoggedUser.username = userData.username
+                    LoggedUser.gender = userData.gender
+                    LoggedUser.email = userData.email
                     LoggedUser.id = userData.id
 
                     startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
@@ -106,9 +109,9 @@ class LoginActivity : AppCompatActivity() {
             val userData = model.fetchUserData(uid)
 
             if (userData != null) {
-                LoggedUser.username = userData.username ?: ""
-                LoggedUser.gender = userData.gender ?: ""
-                LoggedUser.email = userData.email ?: ""
+                LoggedUser.username = userData.username
+                LoggedUser.gender = userData.gender
+                LoggedUser.email = userData.email
                 LoggedUser.id = uid
             } else {
                 Log.e("LoginActivity", "Error while saving user data")
@@ -119,7 +122,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun handleSignInError(e: Exception) {
+    private fun handleSignInError(e: Exception) {
         when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
                 when (e.errorCode) {
@@ -160,6 +163,7 @@ class LoginActivity : AppCompatActivity() {
             showToast(R.string.errore_login)
         }
     }
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun notificationRequest() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED) {
