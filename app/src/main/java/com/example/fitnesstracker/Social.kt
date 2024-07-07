@@ -2,10 +2,7 @@ package com.example.fitnesstracker
 
 import MyAdapter
 import Utils.setupBottomNavigationView
-import android.annotation.SuppressLint
-import android.app.ActivityOptions
 import android.app.AlertDialog
-import android.content.Intent
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.os.Build
@@ -56,7 +53,7 @@ class Social : AppCompatActivity(), SocialInterface {
     private lateinit var myRecyclerView: RecyclerView
 
 
-    private lateinit var socialController: SocialController
+    private lateinit var socialHandler: SocialHandler
 
 
     private lateinit var gifDrawable: GifDrawable
@@ -65,18 +62,18 @@ class Social : AppCompatActivity(), SocialInterface {
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        socialController.handleBluetoothPermissionResult(requestCode, grantResults)
+        socialHandler.handleBluetoothPermissionResult(requestCode, grantResults)
     }
 
     private lateinit var nDevices: TextView
 
 
     override fun listUpdated(personList: List<Person>) {
-        nDevices.text = socialController.getfoundDevices(personList)
+        nDevices.text = socialHandler.getfoundDevices(personList)
         myAdapter.updateList(personList)
 
 
-        if(this::noPeople.isInitialized && search.visibility != View.VISIBLE && socialController.getPersonlist().isNotEmpty()) {
+        if(this::noPeople.isInitialized && search.visibility != View.VISIBLE && socialHandler.getPersonlist().isNotEmpty()) {
             noPeople.visibility = View.GONE
             search.visibility = View.VISIBLE
         }
@@ -98,7 +95,7 @@ class Social : AppCompatActivity(), SocialInterface {
             noPeople = findViewById(R.id.noPeople)
             search = findViewById(R.id.search)
 
-            if(socialController.getPersonlist().isNotEmpty() && search.visibility != View.VISIBLE){
+            if(socialHandler.getPersonlist().isNotEmpty() && search.visibility != View.VISIBLE){
                 noPeople.visibility = View.GONE
                 search.visibility = View.VISIBLE
             }
@@ -115,7 +112,7 @@ class Social : AppCompatActivity(), SocialInterface {
                     //niente
                 }
                 override fun afterTextChanged(s: Editable) {
-                    myAdapter.updateList(socialController.filterList(s.toString()))
+                    myAdapter.updateList(socialHandler.filterList(s.toString()))
                 }
             })
 
@@ -143,8 +140,8 @@ class Social : AppCompatActivity(), SocialInterface {
 
         val db = AppDatabase.getDatabase(this)
 
-        socialController = SocialController(this, db)
-        socialController.setupBluetooth()
+        socialHandler = SocialHandler(this, db)
+        socialHandler.setupBluetooth()
 
 
 
@@ -181,7 +178,7 @@ class Social : AppCompatActivity(), SocialInterface {
         gifDrawable.stop()
 
         gifImageView.setOnClickListener {
-            socialController.startBluetooth()
+            socialHandler.startBluetooth()
         }
 
 
@@ -197,7 +194,7 @@ class Social : AppCompatActivity(), SocialInterface {
                 ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular))
 
 
-            socialController.beDiscoverable()
+            socialHandler.beDiscoverable()
             gifImageView.isEnabled = false
 
             // Cambia il colore della GifImageView a grigio
@@ -216,7 +213,7 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
 
-        myAdapter = MyAdapter(socialController.getPersonlist(), socialController )
+        myAdapter = MyAdapter(socialHandler.getPersonlist(), socialHandler )
 
 
     }
@@ -225,7 +222,7 @@ class Social : AppCompatActivity(), SocialInterface {
 
     override fun onDestroy() {
         super.onDestroy()
-        socialController.closeConnections()
+        socialHandler.closeConnections()
     }
 
 

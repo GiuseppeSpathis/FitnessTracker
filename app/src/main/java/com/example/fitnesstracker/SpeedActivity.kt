@@ -54,7 +54,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var notificationManager: NotificationManagerCompat
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
-    private val socialModel = SocialModel()
+    private val Model = Model()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speed)
@@ -195,7 +195,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
         val userId = LoggedUser.id
 
         lifecycleScope.launch {
-            val success = socialModel.saveActivity(
+            val success = Model.saveActivity(
                 userId,
                 startTime,
                 endTime,

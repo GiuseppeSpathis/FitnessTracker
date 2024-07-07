@@ -51,7 +51,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
     private var startTime = System.currentTimeMillis()
     private var stepCountTarget = 8000
     private lateinit var stepCounterTargetTextView : TextView
-    private val socialModel: SocialModel = SocialModel()
+    private val Model: Model = Model()
     private var timerHandler : Handler = Handler()
 
     private var timerRunnable : Runnable = object : Runnable {
@@ -207,7 +207,7 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
         val distanceInKm = stepCount * stepLenghtInMeters / 1000
 
         lifecycleScope.launch {
-            val success = socialModel.saveActivity(
+            val success = Model.saveActivity(
                 userId,
                 startTime,
                 endTime,

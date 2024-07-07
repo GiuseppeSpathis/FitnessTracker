@@ -57,7 +57,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
     private var pace = 0.0f
-    private val socialModel : SocialModel = SocialModel()
+    private val Model : Model = Model()
     private var timerHandler: Handler = Handler()
 
     private var timerRunnable: Runnable = object : Runnable {
@@ -216,7 +216,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         val distanceInKm = stepCount * 0.762f / 1000
 
         lifecycleScope.launch {
-            val success = socialModel.saveActivity(
+            val success = Model.saveActivity(
                 userId,
                 startTime,
                 endTime,

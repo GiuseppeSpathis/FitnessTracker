@@ -24,13 +24,13 @@ import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.AppDatabase
-import com.example.fitnesstracker.SocialController
+import com.example.fitnesstracker.SocialHandler
 import com.example.fitnesstracker.StatsActivity
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 
 
-class MyAdapter(private var personList: List<Person>, private var socialController: SocialController) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+class MyAdapter(private var personList: List<Person>, private var socialHandler: SocialHandler) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
     class Ref<T>(var value: T)
 
     private var you_are_connected = Ref(false)
@@ -54,7 +54,7 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        if(socialController.alreadyConnected(personList[position].device)){
+        if(socialHandler.alreadyConnected(personList[position].device)){
             holder.connect.visibility = View.GONE
             holder.message.visibility = View.VISIBLE
             holder.share.visibility = View.VISIBLE
@@ -94,7 +94,7 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
             // Aggiungi pulsanti al dialog
             builder.setPositiveButton("Ok") { dialog, _ ->
                 dialog.dismiss()  // Chiudi il dialog prima di chiamare shareData
-                socialController.shareData()
+                socialHandler.shareData()
             }
 
             builder.setNegativeButton("Annulla") { dialog, _ ->
@@ -127,11 +127,11 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
                     MotionToast.GRAVITY_BOTTOM,
                     MotionToast.LONG_DURATION,
                     ResourcesCompat.getFont(it.context, www.sanju.motiontoast.R.font.helvetica_regular))
-                socialController.connect2device(person.device, it.context as Activity, holder, person, you_are_connected)
+                socialHandler.connect2device(person.device, it.context as Activity, holder, person, you_are_connected)
             }
         }
         holder.disconnect.setOnClickListener {
-            socialController.disconnectDevice(it.context as Activity, holder, you_are_connected, personList[position].device)
+            socialHandler.disconnectDevice(it.context as Activity, holder, you_are_connected, personList[position].device)
         }
     }
 
@@ -180,11 +180,12 @@ class MyAdapter(private var personList: List<Person>, private var socialControll
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString()
-                socialController.sendMessage(toastMessage)
+                socialHandler.sendMessage(toastMessage)
 
 
                 dialog.dismiss()
-                    MotionToast.createColorToast(context,
+                    MotionToast.createColorToast(
+                        context as Activity,
                         context.resources.getString(R.string.successo),
                         context.resources.getString(R.string.messaggio_inviato),
                         MotionToastStyle.SUCCESS,

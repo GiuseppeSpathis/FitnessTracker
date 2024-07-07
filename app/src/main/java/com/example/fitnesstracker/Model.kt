@@ -368,7 +368,7 @@ class Model {
             }
             true
         } catch (e: Exception) {
-            Log.e("SocialModel", "Error saving activity data", e)
+            Log.e("Model", "Error saving activity data", e)
             false
         }
     }

@@ -45,7 +45,7 @@ class SitActivity : AppCompatActivity() {
     private var maxSitTime = 10
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
-    private  val socialModel : SocialModel = SocialModel()
+    private  val Model : Model = Model()
 
     private val updateTimeRunnable = object : Runnable {
         override fun run() {
@@ -181,7 +181,7 @@ class SitActivity : AppCompatActivity() {
         val userId = LoggedUser.id
 
         lifecycleScope.launch {
-            val success = socialModel.saveActivity(
+            val success = Model.saveActivity(
                 userId,
                 startTime,
                 endTime,

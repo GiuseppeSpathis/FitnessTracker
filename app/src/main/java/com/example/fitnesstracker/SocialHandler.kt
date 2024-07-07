@@ -41,7 +41,7 @@ import java.time.LocalDateTime
 //import pl.droidsonroids.gif.GifDrawable
 
 
-class SocialController (private val SocialInterface: SocialInterface,  private val database: AppDatabase) {
+class SocialHandler (private val SocialInterface: SocialInterface, private val database: AppDatabase) {
 
     companion object {
         private const val REQUEST_BLUETOOTH_CONNECT  = 1
