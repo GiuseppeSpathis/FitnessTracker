@@ -2,7 +2,13 @@ package com.example.fitnesstracker
 
 import MyAdapter
 import Utils.setupBottomNavigationView
+import android.Manifest
 import android.app.AlertDialog
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
+import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.os.Build
@@ -23,11 +29,13 @@ import android.text.Html
 import android.widget.Button
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationBarView
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
+import java.util.UUID
 
 
 interface SocialInterface {
@@ -54,9 +62,12 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
     private lateinit var socialHandler: SocialHandler
+    private val uuid =  UUID.fromString("79c16f25-a50b-450e-9d10-fc267964b3aa")
 
 
     private lateinit var gifDrawable: GifDrawable
+
+
 
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -104,6 +115,9 @@ class Social : AppCompatActivity(), SocialInterface {
             myRecyclerView.adapter = myAdapter
             myRecyclerView.layoutManager = LinearLayoutManager(this)
 
+            val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+            setupBottomNavigationView(this, "nav_users", bottomNavigationView)
+
             search.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                     //niente
@@ -117,33 +131,55 @@ class Social : AppCompatActivity(), SocialInterface {
             })
 
 
-
-
         }, 1 * 8 * 1000L)  // meno di un minuto
 
     }
 
 
-    override fun onResume() {
-        super.onResume()
-        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
-        setupBottomNavigationView(this, "nav_users", bottomNavigationView)
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Salva lo stato delle variabili nel SocialHandler
+        socialHandler.socket?.let { outState.putBluetoothSocket("socket", it) }
+        socialHandler.pairedDevice?.let { outState.putParcelable("pairedDevice", it) }
+
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        // Ripristina lo stato delle variabili nel SocialHandler
+        socialHandler.socket = savedInstanceState.getBluetoothSocket("socketInfo", uuid, this)
+        socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
+
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.bluetooth)
 
-
-
-
         val db = AppDatabase.getDatabase(this)
 
-        socialHandler = SocialHandler(this, db)
+
+        socialHandler = if (savedInstanceState != null) {
+            // Ripristina lo stato
+            val socket = savedInstanceState.getParcelable("socket", BluetoothSocket::class.java)
+            val pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
+            SocialHandler(this, db, uuid, socket, pairedDevice)
+        } else {
+            SocialHandler(this, db, uuid)
+        }
+
+
+
         socialHandler.setupBluetooth()
 
-
+        val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
+        setupBottomNavigationView(this, "nav_users", bottomNavigationView)
 
         val infoButton: ImageButton = findViewById(R.id.infoButton)
         infoButton.setOnClickListener {
@@ -225,7 +261,29 @@ class Social : AppCompatActivity(), SocialInterface {
         socialHandler.closeConnections()
     }
 
+    private fun Bundle.putBluetoothSocket(key: String, socket: BluetoothSocket) {
+        val deviceAddress = socket.remoteDevice.address
+        putString("$key-deviceAddress", deviceAddress)
+    }
 
+
+
+    private fun Bundle.getBluetoothSocket(key: String, uuid: UUID, context: Context): BluetoothSocket? {
+        val deviceAddress = getString("$key-deviceAddress") ?: return null
+        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter ?: return null
+        val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+
+        return if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            device.createRfcommSocketToServiceRecord(uuid)
+        } else {
+            null
+        }
+    }
 
 
 }

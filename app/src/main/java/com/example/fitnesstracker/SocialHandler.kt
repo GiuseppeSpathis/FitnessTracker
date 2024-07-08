@@ -2,6 +2,7 @@ package com.example.fitnesstracker
 
 import Utils
 import Utils.hasPermission
+import Utils.navigateTo
 import Utils.receiveMessage
 import Utils.socketError
 import android.Manifest
@@ -10,7 +11,6 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -31,17 +31,19 @@ import kotlinx.coroutines.withContext
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.UUID
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDateTime
 
-//import pl.droidsonroids.gif.GifDrawable
 
 
-class SocialHandler (private val SocialInterface: SocialInterface, private val database: AppDatabase) {
+
+class SocialHandler (private val SocialInterface: SocialInterface, private val database: AppDatabase,
+                     private var uuid: UUID,
+                     var socket: BluetoothSocket? = null,
+                     var pairedDevice: BluetoothDevice? = null,
+) {
 
     companion object {
         private const val REQUEST_BLUETOOTH_CONNECT  = 1
@@ -60,12 +62,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
 
-    private val uuid =  UUID.fromString("79c16f25-a50b-450e-9d10-fc267964b3aa")//UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    private var socket: BluetoothSocket? = null
-    private var outputStream: OutputStream? = null
-    private var inputStream: InputStream? = null
-    private var serverSocket: BluetoothServerSocket? = null
-    private var pairedDevice: BluetoothDevice? = null
 
 
 
@@ -107,8 +103,14 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
 
 
-    private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ -> }
+    private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        // L'utente ha rifiutato l'abilitazione del Bluetooth
+        // Esegui la navigazione alla HomeActivity
+        if (result.resultCode != Activity.RESULT_OK) {
+            navigateTo(SocialInterface.getActivity(), HomeActivity::class.java)
 
+        }
+    }
 
     private fun enableBluetooth() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -141,6 +143,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.S)
     fun setupBluetooth() {
 
         if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity()))
@@ -155,6 +158,10 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         {
                 ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_ADMIN), REQUEST_BLUETOOTH_ADMIN)
 
+        }
+        if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity()))
+        {
+            ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
         }
 
 
@@ -188,7 +195,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     fun startServer() {
         val thread = Thread {
             try {
-                serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
+                val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
                 val tmpSocket = serverSocket?.accept()
 
                 if(tmpSocket!= null){
@@ -310,8 +317,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
                     you_are_connected.value = true
 
-                    outputStream = socket?.outputStream
-                    inputStream = socket?.inputStream
+
                 }
             } catch (e: IOException) {
 
@@ -324,6 +330,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     fun sendMessage(message: String) {
         Thread {
             try {
+                val outputStream = socket?.outputStream
                 outputStream?.write(message.toByteArray())
                 outputStream?.flush()
             } catch (e: IOException) {
@@ -337,7 +344,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     private fun receiveFromSocket(activity: Activity, username: String) {
         Thread {
             try {
-                inputStream = socket?.inputStream
+                val inputStream = socket?.inputStream
                 val buffer = ByteArray(1024)  // buffer store for the stream
                 var bytes: Int // bytes returned from read()
                 var jsonString = ""
@@ -429,10 +436,14 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     }
                 }
             }
-            serverSocket?.close()
-            socket?.close()
+
+            val inputStream = socket?.inputStream
+            val outputStream = socket?.outputStream
             inputStream?.close()
             outputStream?.close()
+            val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
+            serverSocket?.close()
+            socket?.close()
         } catch (e: IOException) {
             println("Errore durante la chiusura delle connessioni: ${e.message}")
         }

@@ -199,7 +199,7 @@ object Utils {
     }
 
 
-    private fun navigateTo(context: Context, activityClass: Class<out AppCompatActivity>): Boolean {
+    fun navigateTo(context: Context, activityClass: Class<out AppCompatActivity>): Boolean {
         val intent = Intent(context, activityClass as Class<*>)
         val options = ActivityOptions.makeCustomAnimation(context, 0, 0)
         context.startActivity(intent, options.toBundle())
