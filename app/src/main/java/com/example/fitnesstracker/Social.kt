@@ -70,10 +70,11 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
 
-    @RequiresApi(Build.VERSION_CODES.S)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        socialHandler.handleBluetoothPermissionResult(requestCode, grantResults)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            socialHandler.handleBluetoothPermissionResult(requestCode, grantResults)
+        }
     }
 
     private lateinit var nDevices: TextView
@@ -146,17 +147,21 @@ class Social : AppCompatActivity(), SocialInterface {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         // Ripristina lo stato delle variabili nel SocialHandler
         socialHandler.socket = savedInstanceState.getBluetoothSocket("socketInfo", uuid, this)
-        socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
+        }
+        else {
+            socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice")
+        }
+
 
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -167,16 +172,24 @@ class Social : AppCompatActivity(), SocialInterface {
 
         socialHandler = if (savedInstanceState != null) {
             // Ripristina lo stato
-            val socket = savedInstanceState.getParcelable("socket", BluetoothSocket::class.java)
-            val pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
-            SocialHandler(this, db, uuid, socket, pairedDevice)
+            val socket = savedInstanceState.getBluetoothSocket("socket", uuid, this)
+
+                val pairedDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+                    savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
+                }
+            else {
+                    savedInstanceState.getParcelable("pairedDevice") as BluetoothDevice?
+                }
+
+                SocialHandler(this, db, uuid, socket, pairedDevice)
+
         } else {
             SocialHandler(this, db, uuid)
         }
 
-
-
-        socialHandler.setupBluetooth()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            socialHandler.setupBluetooth()
+        }
 
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
         setupBottomNavigationView(this, "nav_users", bottomNavigationView)
@@ -253,6 +266,8 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
     }
+
+
 
 
 

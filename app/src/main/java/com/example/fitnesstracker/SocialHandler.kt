@@ -119,7 +119,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
 
 
-    @RequiresApi(Build.VERSION_CODES.S)
     fun handleBluetoothPermissionResult(requestCode: Int, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_BLUETOOTH_CONNECT -> {
@@ -128,7 +127,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     if (permissionGranted) {
                         if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity()))
                         {
-                            ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+                            }
                         }
                         enableBluetooth()
                     } else {
@@ -143,7 +144,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.S)
     fun setupBluetooth() {
 
         if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity()))
@@ -161,7 +161,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
         if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity()))
         {
-            ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_SCAN), REQUEST_BLUETOOTH_SCAN)
+            }
         }
 
 
