@@ -27,6 +27,9 @@ import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.SocialHandler
 import com.example.fitnesstracker.StatsActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 
@@ -92,17 +95,17 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
             builder.setTitle("Condividi attività")
             builder.setMessage("Vuoi condividere le tue attività con ${person.name}?")
 
-            // Aggiungi pulsanti al dialog
             builder.setPositiveButton("Ok") { dialog, _ ->
-                dialog.dismiss()  // Chiudi il dialog prima di chiamare shareData
-                socialHandler.shareData()
+                dialog.dismiss()
+                CoroutineScope(Dispatchers.IO).launch {
+                    socialHandler.shareData()
+                }
             }
 
             builder.setNegativeButton("Annulla") { dialog, _ ->
-                dialog.dismiss()  // Chiudi il dialog senza fare nulla
+                dialog.dismiss()
             }
 
-            // Mostra il dialog
             builder.create().show()
 
         }
@@ -132,7 +135,14 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
             }
         }
         holder.disconnect.setOnClickListener {
-            socialHandler.disconnectDevice(it.context as Activity, holder, you_are_connected, personList[position].device)
+            CoroutineScope(Dispatchers.IO).launch {
+                socialHandler.disconnectDevice(
+                    it.context as Activity,
+                    holder,
+                    you_are_connected,
+                    personList[position].device
+                )
+            }
         }
     }
 
@@ -181,7 +191,9 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
             // Imposta il vero OnClickListener sul pulsante positivo
             positiveButton.setOnClickListener {
                 val toastMessage = input.text.toString()
-                socialHandler.sendMessage(toastMessage)
+                CoroutineScope(Dispatchers.IO).launch {
+                    socialHandler.sendMessage(toastMessage)
+                }
 
 
                 dialog.dismiss()

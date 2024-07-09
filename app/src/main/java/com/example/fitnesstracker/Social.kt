@@ -28,7 +28,6 @@ import android.os.Looper
 import android.text.Html
 import android.widget.Button
 import android.widget.ImageButton
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager

@@ -902,8 +902,8 @@ class StatsActivity : AppCompatActivity() {
                 binding.lineChart.axisRight.isEnabled = false
 
                 binding.lineChart.data = lineData
-                binding.lineChart.getAxisLeft().setDrawGridLines(false)
-                binding.lineChart.getXAxis().setDrawGridLines(false)
+                binding.lineChart.axisLeft.setDrawGridLines(false)
+                binding.lineChart.xAxis.setDrawGridLines(false)
                 binding.lineChart.invalidate()
 
             }

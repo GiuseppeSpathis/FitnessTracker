@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.fitnesstracker.HomeActivity
@@ -31,10 +30,13 @@ import com.example.fitnesstracker.ReminderWorker
 import com.example.fitnesstracker.Social
 import com.example.fitnesstracker.StatsActivity
 import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.getValue
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import www.sanju.motiontoast.MotionToast
@@ -63,7 +65,7 @@ object Utils {
         }
     }
 
-    @SuppressLint("InflateParams", "SetTextI18n")
+    @SuppressLint("InflateParams", "SetTextI18n", "RestrictedApi")
     fun receiveMessage(context: Context, name: String, message: String, gender: String, fileShared: Boolean = false) {
 
         val layoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -116,18 +118,32 @@ object Utils {
             // nascondi l'OK button e mostra un toast
             okButton.visibility = View.GONE
             layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
+
+            val parentView = (context as Activity).findViewById<View>(android.R.id.content)
+
+            val snackbar = Snackbar.make(parentView, "", Snackbar.LENGTH_LONG)
+
+            val snackbarLayout = snackbar.view as Snackbar.SnackbarLayout
+
+            val textView = snackbarLayout.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
+            textView.visibility = View.INVISIBLE
+
+            snackbarLayout.addView(layout, 0)
+
+            snackbar.show()
+
+/*
             val toast = Toast(context)
             toast.duration = Toast.LENGTH_LONG
             toast.view = layout
-            toast.show()
+            toast.show()*/
         }
     }
 
 
 
     fun socketError(e: IOException, activity: Activity){
-        activity.runOnUiThread {
-            println("sono in socket error")
+        CoroutineScope(Dispatchers.Main).launch {
             e.message?.let {
                 MotionToast.createColorToast(
                     activity,

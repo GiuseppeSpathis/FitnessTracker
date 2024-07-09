@@ -196,7 +196,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             SocialInterface.getActivity().startActivity(discoverableIntent)
         }
         bluetoothAdapter?.setName(LoggedUser.username)
-        startServer()
+        CoroutineScope(Dispatchers.IO).launch {
+            startServer()
+        }
     }
 
     //viene registrato il broadcast receiver definito prima con un intentFilter che rileva solo gli intent per dispositivi bluetooth trovati e alla fine fa la startDiscovery
@@ -210,38 +212,36 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     //viene creato un BluetoothServerSocket usando il protocollo RFCOMM che poi si mette in ascolto per connessioni socket in ingresso usando .accept()
     //una volta trovata una connessione viene gestita la comunicazione con outputStream e inputStream
     @SuppressLint("MissingPermission")
-    fun startServer() {
-        val thread = Thread {
+    suspend fun startServer() {
+        withContext(Dispatchers.IO) {
             try {
                 val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
                 val tmpSocket = serverSocket?.accept()
 
-                if(tmpSocket!= null){
-
+                if (tmpSocket != null) {
                     socket = tmpSocket
                     val remoteDeviceName = socket?.remoteDevice!!.name
-
-                    receiveFromSocket(SocialInterface.getActivity(), remoteDeviceName)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        receiveFromSocket(SocialInterface.getActivity(), remoteDeviceName)
+                    }
                 }
-
             } catch (e: IOException) {
                 e.printStackTrace()
-
             }
         }
-        thread.start()
     }
 
-     fun disconnectDevice(activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>, device: BluetoothDevice?){
-        Thread {
+    suspend fun disconnectDevice(activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>, device: BluetoothDevice?) {
+        withContext(Dispatchers.IO) {
             try {
                 try {
                     closeConnections()
                 } catch (e: UninitializedPropertyAccessException) {
-                    //non fare niente se le variaibli non sono state inizializzate
+                    // non fare niente se le variabili non sono state inizializzate
                 }
                 unBondBluetoothDevice(device)
-                activity.runOnUiThread {
+
+                withContext(Dispatchers.Main) {
                     MotionToast.createColorToast(
                         activity,
                         activity.resources.getString(R.string.successo),
@@ -249,7 +249,8 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         MotionToastStyle.SUCCESS,
                         MotionToast.GRAVITY_BOTTOM,
                         MotionToast.LONG_DURATION,
-                        ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
+                        ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular)
+                    )
 
                     holder.connect.visibility = View.VISIBLE
                     holder.message.visibility = View.GONE
@@ -257,11 +258,12 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     holder.disconnect.visibility = View.GONE
                     you_are_connected.value = false
                 }
-            }
-            catch (e: IOException) {
+            } catch (e: IOException) {
+                withContext(Dispatchers.Main) {
                     socketError(e, activity)
+                }
             }
-        }.start()
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -284,11 +286,13 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         if (state == BluetoothDevice.BOND_BONDED) {
                             // Il dispositivo è ora accoppiato, procedi con la connessione
                             context.unregisterReceiver(this)
-                            connectSocket(device, activity, holder, you_are_connected)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                connectSocket(device, activity, holder, you_are_connected)
+                            }
                         } else if (state == BluetoothDevice.BOND_NONE && prevState == BluetoothDevice.BOND_BONDING) {
                             // L'accoppiamento è fallito
                             context.unregisterReceiver(this)
-                            activity.runOnUiThread {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(context, "Accoppiamento fallito", Toast.LENGTH_SHORT).show()
                             }
                         }
@@ -301,18 +305,20 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             activity.registerReceiver(bondReceiver, filter)
         } else {
             // Se già accoppiato, procedi con la connessione
-            connectSocket(device, activity, holder, you_are_connected)
+            CoroutineScope(Dispatchers.IO).launch {
+                connectSocket(device, activity, holder, you_are_connected)
+            }
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun connectSocket(device: BluetoothDevice, activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>){
-        Thread {
+    suspend fun connectSocket(device: BluetoothDevice, activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>) {
+        withContext(Dispatchers.IO) {
             try {
                 socket = device.createRfcommSocketToServiceRecord(uuid)
                 socket?.connect()
 
-                activity.runOnUiThread {
+                withContext(Dispatchers.Main) {
                     MotionToast.createColorToast(
                         activity,
                         activity.resources.getString(R.string.successo),
@@ -320,7 +326,8 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         MotionToastStyle.SUCCESS,
                         MotionToast.GRAVITY_BOTTOM,
                         MotionToast.LONG_DURATION,
-                        ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular))
+                        ResourcesCompat.getFont(activity, www.sanju.motiontoast.R.font.helvetica_regular)
+                    )
 
                     holder.connect.visibility = View.GONE
                     holder.message.visibility = View.VISIBLE
@@ -328,72 +335,68 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     holder.disconnect.visibility = View.VISIBLE
 
                     you_are_connected.value = true
-
-
                 }
             } catch (e: IOException) {
-
+                withContext(Dispatchers.Main) {
                     socketError(e, activity)
-
+                }
             }
-        }.start()
+        }
     }
 
-    fun sendMessage(message: String) {
-        Thread {
+
+    suspend fun sendMessage(message: String) {
+        withContext(Dispatchers.IO) {
             try {
                 val outputStream = socket?.outputStream
                 outputStream?.write(message.toByteArray())
                 outputStream?.flush()
             } catch (e: IOException) {
                 e.printStackTrace()
-
             }
-        }.start()
-
+        }
     }
 
-    private fun receiveFromSocket(activity: Activity, username: String) {
-        Thread {
+
+    private suspend fun receiveFromSocket(activity: Activity, username: String) {
+        withContext(Dispatchers.IO) {
             try {
                 val inputStream = socket?.inputStream
                 val buffer = ByteArray(1024)
                 var bytes: Int
                 var jsonString = ""
 
-                // ascolta dall'inputStream
+                // Ascolta dall'inputStream
                 while (true) {
-                    // leggi dall' InputStream
+                    // Leggi dall'InputStream
                     bytes = inputStream!!.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
 
                     // Concatena i dati ricevuti per formare il JSON completo
                     jsonString += incomingMessage
 
-
                     // Verifica se hai ricevuto l'intero JSON
                     if (jsonString.startsWith("#[{\"activityType\"")) {
-                        if(jsonString.endsWith(("}]"))){
+                        if (jsonString.endsWith("}]")) {
                             handleReceivedJSON(jsonString.removePrefix("#"))
                             jsonString = ""
                         }
-                    }
-                    else { //mi sta inviando una semplice stringa
+                    } else { // Mi sta inviando una semplice stringa
                         val message = jsonString
-                        jsonString= ""
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val user = Utils.getUser(username)
-                            withContext(Dispatchers.Main) {
-                                receiveMessage(activity, user?.name ?: " ", message, user?.gender ?: "Maschio")
-                            }
+                        jsonString = ""
+                        val user = withContext(Dispatchers.IO) { Utils.getUser(username) }
+                        withContext(Dispatchers.Main) {
+                            receiveMessage(activity, user?.name ?: " ", message, user?.gender ?: "Maschio")
                         }
                     }
                 }
             } catch (e: IOException) {
                 if (e.message != "bt socket closed, read return: -1")
-                    socketError(e, activity)
+                    withContext(Dispatchers.Main) {
+                        socketError(e, activity)
+                    }
             }
-        }.start()
+        }
     }
 
     private fun handleReceivedJSON(jsonString: String) {
@@ -412,9 +415,10 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 }
                 // Poi ottieni l'utente e chiama receiveMessage
                 val user = Utils.getUser(activities[0].username)
-                SocialInterface.getActivity().runOnUiThread {
+                CoroutineScope(Dispatchers.Main).launch {
                     receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true)
                 }
+
             }
         } catch (e: Exception) {
             // Gestisci l'eccezione
@@ -461,8 +465,8 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
     }
 
-    fun shareData() {
-        Thread {
+    suspend fun shareData() {
+        withContext(Dispatchers.IO) {
             val attivitaDao = database.attivitàDao()
             val activities = attivitaDao.getAllActivitites()
             // Converti le Attività in OthersActivity con username di LoggedUser
@@ -477,9 +481,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 .create()
             val activitiesJson = gson.toJson(otherActivities)
 
-            // Passa all'UI thread per mostrare il toast se non ci sono attività
-            if (activitiesJson == "[]") {
-                SocialInterface.getActivity().runOnUiThread {
+            withContext(Dispatchers.Main) {
+                // Passa all'UI thread per mostrare il toast se non ci sono attività
+                if (activitiesJson == "[]") {
                     MotionToast.createColorToast(
                         SocialInterface.getActivity(),
                         SocialInterface.getActivity().resources.getString(R.string.error),
@@ -492,14 +496,12 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                             www.sanju.motiontoast.R.font.helvetica_regular
                         )
                     )
-                }
-            } else {
-                // Invia il JSON delle attività tramite Bluetooth
-                SocialInterface.getActivity().runOnUiThread {
+                } else {
+                    // Invia il JSON delle attività tramite Bluetooth
                     sendMessage("#$activitiesJson")
                 }
             }
-        }.start()
+        }
     }
 
 
