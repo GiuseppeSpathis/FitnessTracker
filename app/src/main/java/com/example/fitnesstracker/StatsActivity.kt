@@ -79,6 +79,9 @@ class StatsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        //creo un'istanza della classe di binding associata al layout activity_stats.xml
+        //il nome del layout diventa in CamelCase e quindi ActivityStats
+        //il view Binding è utile per rimuovere tutti i findViewById
         binding = ActivityStatsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         db = AppDatabase.getDatabase(this)
@@ -88,8 +91,6 @@ class StatsActivity : AppCompatActivity() {
         periodMessageActivities = binding.periodMessageActivities
 
         val calendarView = binding.calendarView
-
-
 
 
         calendarView.setOnDateChangedListener { _, date, selected ->
@@ -118,12 +119,11 @@ class StatsActivity : AppCompatActivity() {
             ) {
                 // Azioni da intraprendere quando viene selezionato un elemento
                 val selectedItem = parent.getItemAtPosition(position).toString()
-                // Nella tua Coroutine o funzione di setup
                 if (selectedItem != getString(R.string.nothing)) {
                     CoroutineScope(Dispatchers.IO).launch {
 
                         val giorni = attivitàDao.getDatesByActivityType(selectedItem)
-                        // Applicazione del decorator al calendario
+                        // Applicazione del decorator al calendario, sostanzialmente il filtro al calendario in base al giorno
                         withContext(Dispatchers.Main) {
                             calendarView.removeDecorators()
                             calendarView.addDecorator(object : DayViewDecorator {

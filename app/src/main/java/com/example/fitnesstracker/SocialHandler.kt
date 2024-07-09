@@ -21,7 +21,6 @@ import android.os.Build
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import kotlinx.coroutines.CoroutineScope
@@ -55,7 +54,13 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
 
     private val model = Model()
-
+/*
+    *   viene inizializzato un bluetooth Adapter che serve per tutte le operazioni che coinvolgono questa tecnologia
+    *   ad esempio abilitare il bluetooth o trovare i dispositivi che sono in pair
+    *   questo adapter viene inizializzato lazy quindi verrà creato solo la prima volta in cui verrà acceduto e viene creato
+    *   senza la protezione thread LazyThreadSafetyMode.NONE poiché così é più veloce
+    *   il bluetooth Manager che poi contiene l'adapter viene richiesto al sistema operativo tramite il servizio BLUETOOTH_SERVICE
+*/
     private val bluetoothAdapter: BluetoothAdapter? by lazy(LazyThreadSafetyMode.NONE) {
         val bluetoothManager = SocialInterface.getActivity().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
@@ -71,6 +76,8 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         bluetoothAdapter?.startDiscovery()
     }
 
+    //broadcast receiver che si mette in ascolto se e' stato trovato un BluetoothDevice, vede solo questi intent grazie all'intent filter creato in fase di registrazione
+    //questo broadcast receiver viene registrato nella funzione startBluetooth
     private val receiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -102,6 +109,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
 
+    //Questo codice registra un ActivityResultLauncher che utilizza il contratto ActivityResultContracts.StartActivityForResult()
 
     private val enableBtResultLauncher = SocialInterface.getActivity().registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         // L'utente ha rifiutato l'abilitazione del Bluetooth
@@ -112,17 +120,19 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
     }
 
+    //viene creato un Intent esplicito per abilitare il bluetooth e poi viene lanciato con enableBtResultLauncher
     private fun enableBluetooth() {
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         enableBtResultLauncher.launch(enableBtIntent)
     }
 
 
-
+    //questa funzione gestisce il caso quando l'utente ha accettato bluetooth connect
+    //questa funzione viene lanciata da onRequestPermissionsResult che e' presente in Social Activity
     fun handleBluetoothPermissionResult(requestCode: Int, grantResults: IntArray) {
         when (requestCode) {
             REQUEST_BLUETOOTH_CONNECT -> {
-                if (grantResults.isNotEmpty()) { // Check if there are any results at all
+                if (grantResults.isNotEmpty()) { // controllo se ci sono dei risultati
                     val permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
                     if (permissionGranted) {
                         if(!hasPermission(Manifest.permission.BLUETOOTH_SCAN, SocialInterface.getActivity()))
@@ -133,7 +143,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         }
                         enableBluetooth()
                     } else {
-                        // Permission denied, handle the case where the user denies permission
+                        // permesso negato
                         Toast.makeText(SocialInterface.getActivity(), "Permesso BLUETOOTH_CONNECT negato", Toast.LENGTH_LONG).show()
                     }
                 }
@@ -143,7 +153,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
     }
 
-
+    //questa funzione serve a richiedere tutti i permessi necessari per il bluetooth e se il bluetooh è disabilitato allora lo abilita
     fun setupBluetooth() {
 
         if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity()))
@@ -173,6 +183,11 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
     }
 
+    /*
+     *  La funzione beDiscoverable ha lo scopo di rendere il dispositivo Bluetooth visibile agli altri dispositivi per un determinato periodo di tempo
+     *  e di cambiare il nome del dispositivo Bluetooth, quest'ultima cosa ci serve così nella lista degli utenti abbiamo effettivamente il nome dell'utente
+     *  e non il nome del dispositivo
+     */
     @SuppressLint("MissingPermission")
     fun beDiscoverable(){
        if (bluetoothAdapter?.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
@@ -184,15 +199,16 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         startServer()
     }
 
+    //viene registrato il broadcast receiver definito prima con un intentFilter che rileva solo gli intent per dispositivi bluetooth trovati e alla fine fa la startDiscovery
     fun startBluetooth (){
-        // Registra il BroadcastReceiver per ricevere i dispositivi trovati
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         SocialInterface.getActivity().registerReceiver(receiver, filter)
         startDiscovery()
     }
 
 
-
+    //viene creato un BluetoothServerSocket usando il protocollo RFCOMM che poi si mette in ascolto per connessioni socket in ingresso usando .accept()
+    //una volta trovata una connessione viene gestita la comunicazione con outputStream e inputStream
     @SuppressLint("MissingPermission")
     fun startServer() {
         val thread = Thread {
@@ -219,17 +235,13 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
      fun disconnectDevice(activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>, device: BluetoothDevice?){
         Thread {
             try {
-
                 try {
                     closeConnections()
-
                 } catch (e: UninitializedPropertyAccessException) {
                     //non fare niente se le variaibli non sono state inizializzate
                 }
-
                 unBondBluetoothDevice(device)
                 activity.runOnUiThread {
-
                     MotionToast.createColorToast(
                         activity,
                         activity.resources.getString(R.string.successo),
@@ -243,9 +255,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                     holder.message.visibility = View.GONE
                     holder.share.visibility = View.GONE
                     holder.disconnect.visibility = View.GONE
-
                     you_are_connected.value = false
-
                 }
             }
             catch (e: IOException) {
@@ -263,7 +273,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             // Se non è accoppiato, inizia il processo di accoppiamento
             device.createBond()
             pairedDevice = device
-            // Registra un BroadcastReceiver per gestire l'evento di accoppiamento
+            // definisci un BroadcastReceiver per gestire l'evento di accoppiamento
             val bondReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     val action = intent.action
@@ -286,7 +296,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 }
             }
 
-            // Registra il BroadcastReceiver
+            // Registra il BroadcastReceiver definito prima con l'intentFilter di vedere solo gli intent associati allo stato del cambio di accoppiamento
             val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
             activity.registerReceiver(bondReceiver, filter)
         } else {
@@ -347,13 +357,13 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         Thread {
             try {
                 val inputStream = socket?.inputStream
-                val buffer = ByteArray(1024)  // buffer store for the stream
-                var bytes: Int // bytes returned from read()
+                val buffer = ByteArray(1024)
+                var bytes: Int
                 var jsonString = ""
 
-                // Keep listening to the InputStream until an exception occurs
+                // ascolta dall'inputStream
                 while (true) {
-                    // Read from the InputStream
+                    // leggi dall' InputStream
                     bytes = inputStream!!.read(buffer)
                     val incomingMessage = String(buffer, 0, bytes)
 
@@ -466,6 +476,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeAdapter())
                 .create()
             val activitiesJson = gson.toJson(otherActivities)
+
             // Passa all'UI thread per mostrare il toast se non ci sono attività
             if (activitiesJson == "[]") {
                 SocialInterface.getActivity().runOnUiThread {

@@ -82,7 +82,7 @@ object Utils {
         val okButton = layout.findViewById<Button>(R.id.okButton)
         if (fileShared) {
 
-            // Show the OK button and create a Dialog
+            // mostra L'OK button e crea ill dialog
             val dialog = Dialog(context)
             okButton.visibility = View.VISIBLE
             okButton.setOnClickListener {
@@ -113,7 +113,7 @@ object Utils {
             // Mostra il dialogo
             dialog.show()
         } else {
-            // Hide the OK button and show a Toast
+            // nascondi l'OK button e mostra un toast
             okButton.visibility = View.GONE
             layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
             val toast = Toast(context)
@@ -241,6 +241,7 @@ object Utils {
         }
     }
 
+    //creo un worker che si attiva ogni 24 ore
     fun scheduleDailyNotification(context: Context) {
         val currentDate = Calendar.getInstance()
 
@@ -254,7 +255,7 @@ object Utils {
 
         val timeDiff = dueDate.timeInMillis - currentDate.timeInMillis
 
-        // Usa solo il PeriodicWorkRequest
+        // Uso il PeriodicWorkRequest
         val dailyWorkRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(timeDiff, TimeUnit.MILLISECONDS)
             .addTag("daily_notification")
@@ -267,7 +268,7 @@ object Utils {
         )
     }
 
-
+    //creo un worker che si attiva ogni 4 ore
     fun scheduleReminder(context: Context) {
         val reminderWorkRequest = PeriodicWorkRequestBuilder<ReminderWorker>(4, TimeUnit.HOURS)
             .addTag("reminder_notification")

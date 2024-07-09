@@ -253,6 +253,7 @@ class Social : AppCompatActivity(), SocialInterface {
             gifImageView.colorFilter = filter
 
             // Crea un Handler e un Runnable per riabilitare il bottone dopo 1 minuto
+            //un Runnable e diciamo un codice gestito da un Handler che viene lanciato un thread specifico, in questo caso il Main Thread
             val handler = Handler(Looper.getMainLooper())
             handler.postDelayed({
                 gifImageView.isEnabled = true
