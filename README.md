@@ -1,5 +1,5 @@
 # FitnessTracker
-*FitnessTracker* is an Android application developed for the "Laboratory of Mobile Applications" course, Academic Year 2023/2024, at the University of Bologna. 
+**FitnessTracker** is an Android application developed for the "Laboratory of Mobile Applications" course, Academic Year 2023/2024, at the University of Bologna. 
 The app allows users to track various daily activities and monitor the time spent at places of interest. The main features are:
 
 Activity Tracking: Allows users to monitor daily activities such as walking, running, driving, and periods of inactivity.
