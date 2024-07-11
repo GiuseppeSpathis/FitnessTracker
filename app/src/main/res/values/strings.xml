@@ -204,5 +204,6 @@
     <string name="home">Home</string>
     <string name="users">Users</string>
     <string name="geofence">geoFence</string>
+    <string name="faccia">faccia</string>
 
 </resources>

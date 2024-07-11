@@ -146,19 +146,7 @@ class Social : AppCompatActivity(), SocialInterface {
     }
 
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        // Ripristina lo stato delle variabili nel SocialHandler
-        socialHandler.socket = savedInstanceState.getBluetoothSocket("socketInfo", uuid, this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
-        }
-        else {
-            socialHandler.pairedDevice = savedInstanceState.getParcelable("pairedDevice")
-        }
 
-
-    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -169,7 +157,7 @@ class Social : AppCompatActivity(), SocialInterface {
         val db = AppDatabase.getDatabase(this)
 
 
-        socialHandler = if (savedInstanceState != null) {
+        socialHandler = if (savedInstanceState != null) { //potevo mettere il restore dello state pure con la callback onRestoreInstanceState pero' vabbe' non cambia niente
             // Ripristina lo stato
             val socket = savedInstanceState.getBluetoothSocket("socket", uuid, this)
 
