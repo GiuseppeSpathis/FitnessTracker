@@ -40,6 +40,10 @@ class Model {
         return false
     }
 
+    fun restoreList(newPersonList: List<Person>){
+        personList = newPersonList.toMutableList()
+    }
+
     fun filterList(filter: String): List<Person> {
         return personList.filter { person ->
             person.name.contains(filter, ignoreCase = true)

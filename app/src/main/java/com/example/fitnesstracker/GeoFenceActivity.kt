@@ -201,7 +201,7 @@ class GeoFenceActivity : AppCompatActivity() {
     }
 
     private fun addGeofenceAtLocation(location: GeoPoint, placeName: String) {
-        val geofenceRadius = 10.0
+        val geofenceRadius = 100.0
         val circle = Polygon().apply {
             points = Polygon.pointsAsCircle(location, geofenceRadius)
             fillPaint?.apply {

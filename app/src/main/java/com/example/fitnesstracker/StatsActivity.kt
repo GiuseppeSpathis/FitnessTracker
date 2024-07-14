@@ -272,8 +272,14 @@ class StatsActivity : AppCompatActivity() {
             }
             return "Not tracked"
         }
-         private fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>) {
-            val filteredActivities = activities.filter { it.userId == LoggedUser.id }
+         private fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>, isDialog: Boolean = false) {
+             var filteredActivities =  if(!isDialog){
+                 activities.filter { it.userId == LoggedUser.id }
+             } else {
+                 activities
+             }
+
+
             val activityColors = mapOf(
                 "Passeggiata" to ContextCompat.getColor(context, R.color.passeggiata),
                 "Corsa" to ContextCompat.getColor(context, R.color.corsa),
@@ -485,6 +491,7 @@ class StatsActivity : AppCompatActivity() {
                 try {
                     val activities: List<Attività> = if (isDialog) {
                             val othersActivities = model.getOtherActivitiesForDate(year, month, day, db)
+
                             convertToActivities(othersActivities)
                         } else {
                             model.getActivitiesForDate(year, month, day, db)
@@ -497,10 +504,11 @@ class StatsActivity : AppCompatActivity() {
                             }
                         }
                         withContext(Dispatchers.Main){
-                            displayActivitiesForDate(context, activityChartContainer, activities)
+
+                            displayActivitiesForDate(context, activityChartContainer, activities, isDialog)
                         }
                 } catch (e: Exception) {
-                    Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                 //   Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
                 }
             }
         }
@@ -684,6 +692,7 @@ class StatsActivity : AppCompatActivity() {
         }
 
         container.addView(legendLayout)
+        insertFakeWalkActivities()
     }
 
     private fun showGeofenceInfoDialog(geofence: timeGeofence) {
@@ -997,6 +1006,72 @@ class StatsActivity : AppCompatActivity() {
     }
 
 
+    private fun insertFakeWalkActivities() {
+        val activitiesToInsert = listOf(
+            createActivity("14/07/2024", 15, 0, 15, 30, 5000,null,"Corsa", null, null ),
+            createActivity("14/07/2024", 16, 0, 16, 30, 5000,null,"Passeggiata", null, null ),
+            createActivity("14/07/2024", 11, 0, 11, 30, 5000,3f,"Corsa", null, null ),
+            createActivity("14/07/2024", 12, 0, 12, 30, null,null,"Guidare", 35.5, 53.5 ),
+            createActivity("14/07/2024", 14, 0, 14, 30, null,null,"Stare fermo", null, null ),
+            createActivity("14/07/2024", 11, 0, 11, 30, 2000,null,"Passeggiata", null, null ),
+            createActivity("14/07/2024", 11, 0, 11, 30, 1500,null,"Passeggiata", null, null ),
+            createActivity("14/07/2024", 11, 0, 11, 30, 2800,null,"Passeggiata", null, null ),
+            createActivity("14/07/2024", 11, 0, 11, 30, 4000,null,"Passeggiata", null, null ),
+            //  createActivity("03/07/2024", 10, 0, 10, 30, 1500),
+            // createActivity("02/07/2024", 10, 0, 10, 30, 3500),
+            // createActivity("01/07/2024", 10, 0, 10, 30, 1000),
+            // createActivity("05/07/2024", 10, 0, 10, 30, 1000)
+        )
+
+        for (activity in activitiesToInsert) {
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    attivitàDao.insertActivity(activity)
+                    Log.d("FakeData", "Attività fittizia salvata: $activity")
+                }
+                // Aggiungi eventuali operazioni sulla Main Thread dopo l'inserimento
+                withContext(Dispatchers.Main) {
+                    // Esempio: aggiornare l'UI se necessario
+                }
+            }
+        }
+    }
+
+    private fun createActivity(
+        date: String,
+        startHour: Int,
+        startMinute: Int,
+        endHour: Int,
+        endMinute: Int,
+        stepCount: Int?,
+        pace: Float?,
+        activityType: String,
+        avgSpeed: Double?,
+        maxSpeed: Double?
+    ): Attività {
+        val startTime = LocalDateTime.of(2024, 7, date.split('/')[0].toInt(), startHour, startMinute)
+        val endTime = LocalDateTime.of(2024, 7, date.split('/')[0].toInt(), endHour, endMinute)
+        val stepLengthInMeters = 0.8f
+        var distanceInKm = 0F
+        if(stepCount != null){
+            distanceInKm = stepCount * stepLengthInMeters / 1000
+        }
+
+
+
+        return Attività(
+            userId = LoggedUser.id,
+            startTime = startTime,
+            endTime = endTime,
+            stepCount = stepCount,
+            distance = distanceInKm,
+            date = date,
+            pace = pace,
+            activityType = activityType,
+            avgSpeed = avgSpeed,
+            maxSpeed = maxSpeed
+        )
+    }
 
 
 

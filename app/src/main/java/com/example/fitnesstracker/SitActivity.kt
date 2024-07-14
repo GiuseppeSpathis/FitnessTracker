@@ -39,7 +39,7 @@ class SitActivity : AppCompatActivity() {
     private var lastStandTime = 0L
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var notificationManager: NotificationManagerCompat
-    private var maxSitTime = 10
+    private var maxSitTime = 1800
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
     private  val Model : Model = Model()

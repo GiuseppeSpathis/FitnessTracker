@@ -117,7 +117,7 @@ object Utils {
         } else {
             // nascondi l'OK button e mostra un toast
             okButton.visibility = View.GONE
-            layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
+            //layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
 
             val parentView = (context as Activity).findViewById<View>(android.R.id.content)
 
@@ -129,6 +129,7 @@ object Utils {
             textView.visibility = View.INVISIBLE
 
             snackbarLayout.addView(layout, 0)
+            snackbar.setBackgroundTint(context.getResources().getColor(R.color.mainColor))
 
             snackbar.show()
 

@@ -217,7 +217,16 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             try {
                 val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
                 val tmpSocket = serverSocket?.accept()
-
+                withContext(Dispatchers.Main){
+                    MotionToast.createColorToast(
+                        SocialInterface.getActivity(),
+                        SocialInterface.getActivity().resources.getString(R.string.successo),
+                        "aperta connessione con successo",
+                        MotionToastStyle.SUCCESS,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(SocialInterface.getActivity(), www.sanju.motiontoast.R.font.helvetica_regular))
+                }
                 if (tmpSocket != null) {
                     socket = tmpSocket
                     val remoteDeviceName = socket?.remoteDevice!!.name
@@ -400,6 +409,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
     }
 
     private fun handleReceivedJSON(jsonString: String) {
+        println("json string: $jsonString")
         try {
             // Esegui il parsing del JSON
             val gson = GsonBuilder()
@@ -407,18 +417,15 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 .create()
 
             val activities: List<OthersActivity> = gson.fromJson(jsonString, object : TypeToken<List<OthersActivity>>() {}.type)
-            CoroutineScope(Dispatchers.Main).launch {
-                // Inserisci prima tutte le attività nel database
-
+            CoroutineScope(Dispatchers.IO).launch {
                 activities.forEach { attivita ->
                     model.insertOthActivities(database, attivita)
                 }
                 // Poi ottieni l'utente e chiama receiveMessage
                 val user = Utils.getUser(activities[0].username)
-                CoroutineScope(Dispatchers.Main).launch {
+                withContext(Dispatchers.Main) {
                     receiveMessage(SocialInterface.getActivity(), user!!.name, user.name + " " + SocialInterface.getActivity().resources.getString(R.string.messageShared), user.gender, true)
                 }
-
             }
         } catch (e: Exception) {
             // Gestisci l'eccezione
@@ -471,9 +478,11 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             val activities = attivitaDao.getAllActivitites()
             // Converti le Attività in OthersActivity con username di LoggedUser
             val username = LoggedUser.username
+
             val otherActivities = activities.map { attività ->
                 OthersActivity(username, attività)
             }
+
 
             // Converti la lista di attività in JSON usando Gson
             val gson = GsonBuilder()
@@ -513,6 +522,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         return model.getPersonsList()
     }
 
+    fun restoreList(personList: List<Person>) {
+       model.restoreList(personList)
+    }
     fun filterList(filter: String): List<Person> {
         return model.filterList(filter)
     }

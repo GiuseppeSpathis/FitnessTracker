@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -27,6 +28,7 @@ import androidx.core.content.res.ResourcesCompat
 import com.example.fitnesstracker.AppDatabase
 import com.example.fitnesstracker.SocialHandler
 import com.example.fitnesstracker.StatsActivity
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -74,21 +76,31 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
             val dialog = Dialog(it.context)
             dialog.setContentView(R.layout.dialog_stats)
             dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            val calendarView = dialog.findViewById<CalendarView>(R.id.calendarView)
+            val calendarView = dialog.findViewById<MaterialCalendarView>(R.id.calendarView)
             val textView = dialog.findViewById<TextView>(R.id.title)
             textView.text = "Attività di ${holder.name.text}"
 
-            calendarView?.setOnDateChangeListener { _, year, month, dayOfMonth ->
-                dialog.dismiss()
-                val db = AppDatabase.getDatabase(it.context)
-                StatsActivity.showDateDialog(it.context, year, month + 1, dayOfMonth,db, true)
-
+            calendarView.setOnDateChangedListener { _, date, selected ->
+                if (selected) {
+                    val year = date.year
+                    val month = date.month
+                    val dayOfMonth = date.day
+                    val db = AppDatabase.getDatabase(it.context)
+                    val context = it.context as Activity
+                    println("context: $context")
+                    if (context is Activity) {
+                        println("entered in here")
+                        StatsActivity.showDateDialog(context, year, month, dayOfMonth, db, true)
+                    } else {
+                        Log.e("MyViewHolder", "Context is not an instance of Activity")
+                    }
+                }
             }
 
             dialog.show()
         }
         holder.message.setOnClickListener{
-            showDialog(it.context, holder.name.text.toString())
+                showDialog(it.context, holder.name.text.toString())
         }
         holder.share.setOnClickListener{
             val builder = AlertDialog.Builder(it.context)

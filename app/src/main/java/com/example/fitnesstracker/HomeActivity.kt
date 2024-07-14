@@ -108,10 +108,6 @@ class HomeActivity : AppCompatActivity(), MapListener {
         spinnerActivity.adapter = adapter
     }
 
-
-
-
-
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
