@@ -11,11 +11,10 @@
         android:id="@+id/scrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="56dp"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -36,15 +35,14 @@
 
             <Spinner
                 android:id="@+id/filtro"
+                style="@style/MySpinnerStyle"
                 android:layout_width="372dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.487"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/filtraTesto"
-                style="@style/MySpinnerStyle" />
-
+                app:layout_constraintTop_toBottomOf="@id/filtraTesto" />
 
 
             <com.prolificinteractive.materialcalendarview.MaterialCalendarView
@@ -52,75 +50,75 @@
                 android:id="@+id/calendarView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/filtro"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:mcv_showOtherDates="none"
-                app:mcv_selectionColor="@color/mainColor" />
+                app:layout_constraintTop_toBottomOf="@id/filtro"
+                app:mcv_selectionColor="@color/mainColor"
+                app:mcv_showOtherDates="none" />
 
             <TextView
                 android:id="@+id/statisticaAttivita"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:gravity="center_horizontal"
                 android:text="@string/statistiche_attivita_svolte"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:gravity="center_horizontal"
-                app:layout_constraintTop_toBottomOf="@id/calendarView"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/calendarView" />
 
             <LinearLayout
                 android:id="@+id/time_period_buttons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginTop="16dp"
                 android:gravity="center_horizontal"
-                app:layout_constraintTop_toBottomOf="@id/statisticaAttivita"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+                app:layout_constraintTop_toBottomOf="@id/statisticaAttivita">
 
                 <Button
                     android:id="@+id/btn_day"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/day"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/day"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_week"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/week"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/week"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_month"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/month"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/month"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_year"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/year"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/year"
+                    android:textColor="@color/white" />
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.PieChart
@@ -128,9 +126,10 @@
                 android:layout_width="0dp"
                 android:layout_height="300dp"
                 android:layout_marginTop="16dp"
-                app:layout_constraintTop_toBottomOf="@id/periodMessageActivities"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/periodMessageActivities" />
+
             <TextView
                 android:id="@+id/no_data_message"
                 android:layout_width="wrap_content"
@@ -138,12 +137,12 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/no_data"
                 android:textColor="@android:color/black"
-                android:visibility="gone"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/pie_chart"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/pie_chart" />
 
 
             <TextView
@@ -151,109 +150,109 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:gravity="center_horizontal"
                 android:text="@string/dati_attivita_svolte"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:gravity="center_horizontal"
-                app:layout_constraintTop_toBottomOf="@id/no_data_message"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/no_data_message" />
 
             <Spinner
                 android:id="@+id/activity_type_spinner"
+                style="@style/MySpinnerStyle"
                 android:layout_width="372dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.487"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/variazioniAttività"
-                style="@style/MySpinnerStyle" />
+                app:layout_constraintTop_toBottomOf="@id/variazioniAttività" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/line_chart"
                 android:layout_width="0dp"
                 android:layout_height="300dp"
                 android:layout_marginTop="16dp"
-                app:layout_constraintTop_toBottomOf="@id/activity_type_spinner"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/activity_type_spinner" />
 
             <TextView
                 android:id="@+id/periodMessageActivities"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text=""
                 android:textColor="@android:color/black"
-                android:layout_marginTop="16dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/time_period_buttons"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/time_period_buttons" />
 
             <TextView
                 android:id="@+id/statisticaGeofences"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:gravity="center_horizontal"
                 android:text="@string/statistiche_geofences"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:gravity="center_horizontal"
-                app:layout_constraintTop_toBottomOf="@id/line_chart"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/line_chart" />
 
             <LinearLayout
                 android:id="@+id/geofence_time_period_buttons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_marginTop="16dp"
                 android:gravity="center_horizontal"
-                app:layout_constraintTop_toBottomOf="@id/statisticaGeofences"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
+                app:layout_constraintTop_toBottomOf="@id/statisticaGeofences">
 
                 <Button
                     android:id="@+id/btn_geofence_day"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/day"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/day"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_geofence_week"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/week"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/week"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_geofence_month"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/month"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/month"
+                    android:textColor="@color/white" />
 
                 <Button
                     android:id="@+id/btn_geofence_year"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/year"
-                    android:textColor="@color/white"
                     android:background="@drawable/rounded_button"
                     android:padding="0dp"
-                    style="?android:attr/buttonBarButtonStyle" />
+                    android:text="@string/year"
+                    android:textColor="@color/white" />
             </LinearLayout>
 
             <com.github.mikephil.charting.charts.PieChart
@@ -261,9 +260,9 @@
                 android:layout_width="0dp"
                 android:layout_height="300dp"
                 android:layout_marginTop="8dp"
-                app:layout_constraintTop_toBottomOf="@id/periodMessage"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/periodMessage" />
 
             <TextView
                 android:id="@+id/no_data_geofence_message"
@@ -272,23 +271,23 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/no_data"
                 android:textColor="@android:color/black"
-                android:visibility="gone"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/geofence_pie_chart"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/geofence_pie_chart" />
 
             <TextView
                 android:id="@+id/periodMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text=""
                 android:textColor="@android:color/black"
-                android:layout_marginTop="16dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/geofence_time_period_buttons"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/geofence_time_period_buttons" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
