@@ -42,7 +42,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : Worker(contex
         val notification = NotificationCompat.Builder(applicationContext, "reminder_channel")
             .setContentTitle(applicationContext.getString(R.string.ReminderNotifyTitle))
             .setContentText(applicationContext.getString(R.string.ReminderNotifyContent))
-            .setSmallIcon(R.drawable.reminder_notify) // Sostituisci con la tua icona
+            .setSmallIcon(R.drawable.reminder_notify)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 

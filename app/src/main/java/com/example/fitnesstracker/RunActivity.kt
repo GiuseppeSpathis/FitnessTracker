@@ -16,6 +16,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -49,13 +50,13 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
 
     private var stepLengthInMeters = 0.762f
     private var startTime = System.currentTimeMillis()
-    private var distanceGoal = 5.0f // esempio di distanza in km
+    private var distanceGoal = 5.0f
     private lateinit var distanceGoalTextView: TextView
     private lateinit var db: AppDatabase
     private lateinit var attivitàDao: ActivityDao
     private var pace = 0.0f
-    private val Model : Model = Model()
-    private var timerHandler: Handler = Handler()
+    private val model: Model = Model()
+    private var timerHandler: Handler = Handler(Looper.getMainLooper())
 
     private var timerRunnable: Runnable = object : Runnable {
         override fun run() {
@@ -63,11 +64,11 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             val seconds = millis / 1000
             val minutes = seconds / 60
             val remainingSeconds = seconds % 60
-            timeCounterText.setText(String.format(Locale.getDefault(), getString(R.string.tempo), minutes, remainingSeconds))
+            timeCounterText.text = String.format(Locale.getDefault(), getString(R.string.tempo), minutes, remainingSeconds)
             timerHandler.postDelayed(this, 1000)
 
             val distanceInKm = stepCount * stepLengthInMeters / 1000
-            if (distanceInKm > 0) {
+            if (distanceInKm > 0 && minutes > 0) {
                 pace = minutes / distanceInKm
                 paceText.text = String.format(Locale.getDefault(), getString(R.string.passo), pace)
             } else {
@@ -75,6 +76,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -205,7 +207,7 @@ class RunActivity : AppCompatActivity(), SensorEventListener {
         val distanceInKm = stepCount * 0.762f / 1000
 
         lifecycleScope.launch {
-            val success = Model.saveActivity(
+            val success = model.saveActivity(
                 userId,
                 startTime,
                 endTime,

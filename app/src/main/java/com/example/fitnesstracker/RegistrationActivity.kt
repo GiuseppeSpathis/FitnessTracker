@@ -169,23 +169,16 @@ class RegistrationActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.ACCESS_WIFI_STATE, android.Manifest.permission.ACCESS_NETWORK_STATE), REQUEST_WIFI_PERMISSION_CODE)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_WIFI_PERMISSION_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        } else {
-            println("No access")
-        }
-    }
 
-    data class User(val id: String?,
-                    val email: String?,
-                    val username: String?,
-                    val gender: String?,
-                    val lastLatitude: Double = 0.0,
-                    val lastLongitude: Double = 0.0,
-                    val lastUpdated: Long = System.currentTimeMillis()){
-            constructor() : this(null, null, null, null, 0.0, 0.0, 0)
+    data class User(
+        val id: String? = null,
+        val email: String? = null,
+        val username: String? = null,
+        val gender: String? = null,
+        val lastLatitude: Double = 0.0,
+        val lastLongitude: Double = 0.0,
+        val lastUpdated: Long = System.currentTimeMillis()
+    )
 
-    }
 }
 

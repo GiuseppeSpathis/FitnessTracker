@@ -53,6 +53,7 @@ class GeoFenceActivity : AppCompatActivity() {
         val bottomNavigationView = findViewById<NavigationBarView>(R.id.bottom_navigation)
         setupBottomNavigationView(this, "geofence", bottomNavigationView)
     }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,8 +88,6 @@ class GeoFenceActivity : AppCompatActivity() {
             }
         })
 
-
-
         findViewById<Button>(R.id.btnViewGeofences).setOnClickListener {
             viewGeofences()
         }
@@ -115,17 +114,17 @@ class GeoFenceActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
                 REQUEST_LOCATION_PERMISSION)
-            if(!isServiceRunning(LocationUpdatesService::class.java)){
-                Log.d("GeoFence", "Service not running, started")
-                startLocationService()
-            } else {
-                Log.d("Geofence", "Service already running, not started")
-            }
+            LocationUpdatesService.startServiceIfNotRunning(this)
+        } else {
+            LocationUpdatesService.startServiceIfNotRunning(this)
         }
+
         findViewById<ImageButton>(R.id.infoButton).setOnClickListener {
             showInfoDialog()
         }
     }
+
+
 
 
     private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {

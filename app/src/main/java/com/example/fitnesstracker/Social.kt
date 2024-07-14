@@ -2,13 +2,9 @@ package com.example.fitnesstracker
 
 import MyAdapter
 import Utils.setupBottomNavigationView
-import android.Manifest
+
 import android.app.AlertDialog
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
-import android.content.Context
-import android.content.pm.PackageManager
+
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.os.Build
@@ -28,7 +24,7 @@ import android.os.Looper
 import android.text.Html
 import android.widget.Button
 import android.widget.ImageButton
-import androidx.core.app.ActivityCompat
+
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationBarView
@@ -60,7 +56,7 @@ class Social : AppCompatActivity(), SocialInterface {
 
 
     private lateinit var socialHandler: SocialHandler
-    private val uuid =  UUID.fromString("79c16f25-a50b-450e-9d10-fc267964b3aa")
+    private val uuid =  UUID.fromString("f8a51872-8d35-4e07-b352-508e7681d33a")
 
 
     private lateinit var gifDrawable: GifDrawable
@@ -140,22 +136,6 @@ class Social : AppCompatActivity(), SocialInterface {
     }
 
 
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        // Salva lo stato delle variabili nel SocialHandler
-
-        socialHandler.socket?.let { outState.putBluetoothSocket("socket", it) }
-        socialHandler.pairedDevice?.let { outState.putParcelable("pairedDevice", it) }
-        outState.putBoolean("isSocialLayout", isSocialLayout)
-        val personList = socialHandler.getPersonlist()
-        outState.putParcelableArrayList("personList", ArrayList(personList))
-    }
-
-
-
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -164,37 +144,8 @@ class Social : AppCompatActivity(), SocialInterface {
         val db = AppDatabase.getDatabase(this)
 
 
-        socialHandler = if (savedInstanceState != null) { //potevo mettere il restore dello state pure con la callback onRestoreInstanceState pero' vabbe' non cambia niente
-            // Ripristina lo stato
+        socialHandler = SocialHandler(this, db, uuid)
 
-            isSocialLayout = savedInstanceState.getBoolean("isSocialLayout", false)
-
-            val socket = savedInstanceState.getBluetoothSocket("socket", uuid, this)
-
-                val pairedDevice = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-                    savedInstanceState.getParcelable("pairedDevice", BluetoothDevice::class.java)
-                }
-            else {
-                    savedInstanceState.getParcelable("pairedDevice") as BluetoothDevice?
-                }
-
-                SocialHandler(this, db, uuid, socket, pairedDevice)
-
-        } else {
-            SocialHandler(this, db, uuid)
-
-        }
-        if (savedInstanceState != null) {
-            val tempList: ArrayList<Person>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getParcelableArrayList("personList", Person::class.java)
-            } else {
-                savedInstanceState.getParcelableArrayList("personList")
-            }
-
-            if (tempList != null) {
-                socialHandler.restoreList(tempList)
-            }
-        }
 
         myAdapter = MyAdapter(socialHandler.getPersonlist(), socialHandler )
         if(isSocialLayout){
@@ -284,30 +235,6 @@ class Social : AppCompatActivity(), SocialInterface {
     override fun onDestroy() {
         super.onDestroy()
         socialHandler.closeConnections()
-    }
-
-    private fun Bundle.putBluetoothSocket(key: String, socket: BluetoothSocket) {
-        val deviceAddress = socket.remoteDevice.address
-        putString("$key-deviceAddress", deviceAddress)
-    }
-
-
-
-    private fun Bundle.getBluetoothSocket(key: String, uuid: UUID, context: Context): BluetoothSocket? {
-        val deviceAddress = getString("$key-deviceAddress") ?: return null
-        val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothManager.adapter ?: return null
-        val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
-
-        return if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            device.createRfcommSocketToServiceRecord(uuid)
-        } else {
-            null
-        }
     }
 
 

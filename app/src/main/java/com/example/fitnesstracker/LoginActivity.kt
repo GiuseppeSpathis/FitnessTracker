@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -27,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import www.sanju.motiontoast.MotionToast
+import www.sanju.motiontoast.MotionToastStyle
 
 class LoginActivity : AppCompatActivity() {
 
@@ -59,7 +62,14 @@ class LoginActivity : AppCompatActivity() {
                     finish()
                 } else {
                     Log.e("LoginActivity", "Error while saving user data")
-                    showToast(R.string.errore_login)
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.errore_login),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
                 }
             }
             return
@@ -126,41 +136,103 @@ class LoginActivity : AppCompatActivity() {
         when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
                 when (e.errorCode) {
-                    "ERROR_INVALID_EMAIL" -> showToast(R.string.email_errata)
-                    "ERROR_WRONG_PASSWORD" -> showToast(R.string.password_errata)
-                    else -> showToast(R.string.wrong_credentials)
+                    "ERROR_INVALID_EMAIL" ->
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.email_errata),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
+                    "ERROR_WRONG_PASSWORD" ->
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.password_errata),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
+                    else ->
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.wrong_credentials),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
                 }
             }
             is FirebaseAuthInvalidUserException -> {
                 when (e.errorCode) {
-                    "ERROR_USER_NOT_FOUND" -> showToast(R.string.user_not_found)
-                    else -> showToast(R.string.not_valid_user)
+                    "ERROR_USER_NOT_FOUND" ->
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.user_not_found),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
+                    else ->
+                    MotionToast.createColorToast(
+                        this@LoginActivity,
+                        this@LoginActivity.resources.getString(R.string.error),
+                        this@LoginActivity.resources.getString(R.string.not_valid_user),
+                        MotionToastStyle.ERROR,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
                 }
             }
             else -> {
-                showToast(R.string.errore_login)
+                MotionToast.createColorToast(
+                    this@LoginActivity,
+                    this@LoginActivity.resources.getString(R.string.error),
+                    this@LoginActivity.resources.getString(R.string.errore_login),
+                    MotionToastStyle.ERROR,
+                    MotionToast.GRAVITY_BOTTOM,
+                    MotionToast.LONG_DURATION,
+                    ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
             }
         }
         Log.e("LoginActivity", "Error during sign-in", e)
     }
 
-    private fun showToast(message: Int) {
-
-            Toast.makeText(baseContext, message, Toast.LENGTH_SHORT).show()
-
-
-    }
 
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
-            showToast(R.string.successo_login)
+            MotionToast.createColorToast(
+                this@LoginActivity,
+                this@LoginActivity.resources.getString(R.string.successo),
+                this@LoginActivity.resources.getString(R.string.successo_login),
+                MotionToastStyle.SUCCESS,
+                MotionToast.GRAVITY_BOTTOM,
+                MotionToast.LONG_DURATION,
+                ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
+
 
             Handler(Looper.getMainLooper()).postDelayed({
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
             }, 2000)
         } else {
-            showToast(R.string.errore_login)
+            MotionToast.createColorToast(
+                this@LoginActivity,
+                this@LoginActivity.resources.getString(R.string.error),
+                this@LoginActivity.resources.getString(R.string.errore_login),
+                MotionToastStyle.ERROR,
+                MotionToast.GRAVITY_BOTTOM,
+                MotionToast.LONG_DURATION,
+                ResourcesCompat.getFont(this@LoginActivity, www.sanju.motiontoast.R.font.helvetica_regular))
         }
     }
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)

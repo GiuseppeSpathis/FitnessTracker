@@ -33,7 +33,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         val notification = NotificationCompat.Builder(applicationContext, "stats_channel")
             .setContentTitle(applicationContext.getString(R.string.StatsNotifyTitle))
             .setContentText(applicationContext.getString(R.string.StatsNotifyContent))
-            .setSmallIcon(R.drawable.stats_notify) // Sostituisci con la tua icona
+            .setSmallIcon(R.drawable.stats_notify)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
 

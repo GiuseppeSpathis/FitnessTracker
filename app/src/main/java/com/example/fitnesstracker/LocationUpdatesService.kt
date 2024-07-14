@@ -75,6 +75,8 @@ class LocationUpdatesService : Service() {
     private fun startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Assicurati di registrare la callback solo una volta
+            fusedLocationClient.removeLocationUpdates(locationCallback)
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
         }
     }
@@ -96,6 +98,7 @@ class LocationUpdatesService : Service() {
                 val geofences = db.attivitàDao().getAllGeofences()
                 var foundGeofence = false
                 var isInside = inside
+                println("checking if in geofences")
 
                 for (geofence in geofences) {
                     val distance = FloatArray(2)
@@ -106,9 +109,11 @@ class LocationUpdatesService : Service() {
                     )
 
                     if (distance[0] < geofence.radius) {
+                        println("is in geofence")
                         foundGeofence = true
 
                         if (!isInside) {
+                            println("entered")
                             isInside = true
                             val enterTime = System.currentTimeMillis()
                             withContext(Dispatchers.Main) {
@@ -131,6 +136,7 @@ class LocationUpdatesService : Service() {
                 }
 
                 if (!foundGeofence && isInside) {
+                    println("exited")
                     isInside = false
                     val exitTime = System.currentTimeMillis()
                     withContext(Dispatchers.Main) {
@@ -141,7 +147,7 @@ class LocationUpdatesService : Service() {
                         val timeGeofence = db.attivitàDao().getLastTimeGeofenceByCoordinates(
                             geofence.latitude, geofence.longitude, geofence.radius
                         )
-                        timeGeofence.let {
+                        timeGeofence?.let {
                             it.exitTime = exitTime
                             db.attivitàDao().updateTimeGeofence(it)
                         }
@@ -169,7 +175,8 @@ class LocationUpdatesService : Service() {
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify((System.currentTimeMillis() % 10000).toInt(), notification)
+        // Usa un ID costante per le notifiche per evitare duplicati
+        notificationManager.notify(channelId.hashCode(), notification)
     }
 
     override fun onDestroy() {
@@ -186,14 +193,30 @@ class LocationUpdatesService : Service() {
         }
     }
 
-
     companion object {
-        fun stopLocationService(context: Context) {
+        @Volatile
+        private var isServiceRunning: Boolean = false
+
+        fun startServiceIfNotRunning(context: Context) {
+            val sharedPref = context.getSharedPreferences("ServiceState", Context.MODE_PRIVATE)
+            if (!sharedPref.getBoolean("LocationUpdatesServiceRunning", false)) {
+                println("lanciato servizio")
+                isServiceRunning = true
+                val startIntent = Intent(context, LocationUpdatesService::class.java)
+                context.startService(startIntent)
+            } else {
+                println("non lanciato servizio")
+            }
+        }
+
+        fun stopService(context: Context) {
+            isServiceRunning = false
             val stopIntent = Intent(context, LocationUpdatesService::class.java)
             context.stopService(stopIntent)
         }
     }
 }
+
 
 
 

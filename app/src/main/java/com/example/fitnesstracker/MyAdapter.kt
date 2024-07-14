@@ -19,8 +19,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
-import android.widget.CalendarView
 import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
@@ -60,13 +58,14 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        println("person list position: ${personList[position]}")
         if(socialHandler.alreadyConnected(personList[position].device)){
+            println("in here")
             holder.connect.visibility = View.GONE
             holder.message.visibility = View.VISIBLE
             holder.share.visibility = View.VISIBLE
             holder.disconnect.visibility = View.VISIBLE
             you_are_connected.value = true
-
         }
 
         val person = personList[position]
@@ -87,13 +86,7 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
                     val dayOfMonth = date.day
                     val db = AppDatabase.getDatabase(it.context)
                     val context = it.context as Activity
-                    println("context: $context")
-                    if (context is Activity) {
-                        println("entered in here")
-                        StatsActivity.showDateDialog(context, year, month, dayOfMonth, db, true)
-                    } else {
-                        Log.e("MyViewHolder", "Context is not an instance of Activity")
-                    }
+                    StatsActivity.showDateDialog(context, year, month, dayOfMonth, db, true)
                 }
             }
 
@@ -151,8 +144,7 @@ class MyAdapter(private var personList: List<Person>, private var socialHandler:
                 socialHandler.disconnectDevice(
                     it.context as Activity,
                     holder,
-                    you_are_connected,
-                    personList[position].device
+                    you_are_connected
                 )
             }
         }

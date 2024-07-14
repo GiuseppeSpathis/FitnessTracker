@@ -273,7 +273,7 @@ class StatsActivity : AppCompatActivity() {
             return "Not tracked"
         }
          private fun displayActivitiesForDate(context: Context, container: LinearLayout, activities: List<Attività>, isDialog: Boolean = false) {
-             var filteredActivities =  if(!isDialog){
+             val filteredActivities =  if(!isDialog){
                  activities.filter { it.userId == LoggedUser.id }
              } else {
                  activities
@@ -378,8 +378,7 @@ class StatsActivity : AppCompatActivity() {
                         colors.add(activityColors[activityType] ?: Color.GRAY)
                         totalDuration += duration
 
-                        // Aggiungi una barra nera di separazione
-                        durations.add(1f) // Puoi regolare lo spessore della barra nera cambiando questo valore
+                        durations.add(1f)
                         colors.add(Color.BLACK)
                     }
                     if (totalDuration < 60) {
@@ -477,7 +476,7 @@ class StatsActivity : AppCompatActivity() {
             dialog.show()
             dialog.window?.setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                1200 // Altezza in pixel
+                1200
             )
 
             val closeButton: ImageButton = dialogView.findViewById(R.id.close_button)
@@ -508,7 +507,7 @@ class StatsActivity : AppCompatActivity() {
                             displayActivitiesForDate(context, activityChartContainer, activities, isDialog)
                         }
                 } catch (e: Exception) {
-                 //   Snackbar.make(activity!!.binding.root, "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                    Log.e("StatsActivity", "Error: $e")
                 }
             }
         }
@@ -614,7 +613,7 @@ class StatsActivity : AppCompatActivity() {
                     colors.add(geofenceColors[geofence.placeName] ?: Color.GRAY)
                     totalDuration += duration
 
-                    durations.add(1f) // Separation line
+                    durations.add(1f)
                     colors.add(Color.BLACK)
                 }
                 if (totalDuration < 60) {
@@ -692,7 +691,6 @@ class StatsActivity : AppCompatActivity() {
         }
 
         container.addView(legendLayout)
-        insertFakeWalkActivities()
     }
 
     private fun showGeofenceInfoDialog(geofence: timeGeofence) {
@@ -1004,81 +1002,6 @@ class StatsActivity : AppCompatActivity() {
 
         return dailyStationaryTime.toList().sortedBy { (key, _) -> LocalDate.parse(key, formatter) }
     }
-
-
-    private fun insertFakeWalkActivities() {
-        val activitiesToInsert = listOf(
-            createActivity("14/07/2024", 15, 0, 15, 30, 5000,null,"Corsa", null, null ),
-            createActivity("14/07/2024", 16, 0, 16, 30, 5000,null,"Passeggiata", null, null ),
-            createActivity("14/07/2024", 11, 0, 11, 30, 5000,3f,"Corsa", null, null ),
-            createActivity("14/07/2024", 12, 0, 12, 30, null,null,"Guidare", 35.5, 53.5 ),
-            createActivity("14/07/2024", 14, 0, 14, 30, null,null,"Stare fermo", null, null ),
-            createActivity("14/07/2024", 11, 0, 11, 30, 2000,null,"Passeggiata", null, null ),
-            createActivity("14/07/2024", 11, 0, 11, 30, 1500,null,"Passeggiata", null, null ),
-            createActivity("14/07/2024", 11, 0, 11, 30, 2800,null,"Passeggiata", null, null ),
-            createActivity("14/07/2024", 11, 0, 11, 30, 4000,null,"Passeggiata", null, null ),
-            //  createActivity("03/07/2024", 10, 0, 10, 30, 1500),
-            // createActivity("02/07/2024", 10, 0, 10, 30, 3500),
-            // createActivity("01/07/2024", 10, 0, 10, 30, 1000),
-            // createActivity("05/07/2024", 10, 0, 10, 30, 1000)
-        )
-
-        for (activity in activitiesToInsert) {
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    attivitàDao.insertActivity(activity)
-                    Log.d("FakeData", "Attività fittizia salvata: $activity")
-                }
-                // Aggiungi eventuali operazioni sulla Main Thread dopo l'inserimento
-                withContext(Dispatchers.Main) {
-                    // Esempio: aggiornare l'UI se necessario
-                }
-            }
-        }
-    }
-
-    private fun createActivity(
-        date: String,
-        startHour: Int,
-        startMinute: Int,
-        endHour: Int,
-        endMinute: Int,
-        stepCount: Int?,
-        pace: Float?,
-        activityType: String,
-        avgSpeed: Double?,
-        maxSpeed: Double?
-    ): Attività {
-        val startTime = LocalDateTime.of(2024, 7, date.split('/')[0].toInt(), startHour, startMinute)
-        val endTime = LocalDateTime.of(2024, 7, date.split('/')[0].toInt(), endHour, endMinute)
-        val stepLengthInMeters = 0.8f
-        var distanceInKm = 0F
-        if(stepCount != null){
-            distanceInKm = stepCount * stepLengthInMeters / 1000
-        }
-
-
-
-        return Attività(
-            userId = LoggedUser.id,
-            startTime = startTime,
-            endTime = endTime,
-            stepCount = stepCount,
-            distance = distanceInKm,
-            date = date,
-            pace = pace,
-            activityType = activityType,
-            avgSpeed = avgSpeed,
-            maxSpeed = maxSpeed
-        )
-    }
-
-
-
-
-
-
-
 
 
 

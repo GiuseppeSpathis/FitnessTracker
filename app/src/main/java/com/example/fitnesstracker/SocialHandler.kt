@@ -18,6 +18,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,8 +41,8 @@ import java.time.LocalDateTime
 
 class SocialHandler (private val SocialInterface: SocialInterface, private val database: AppDatabase,
                      private var uuid: UUID,
-                     var socket: BluetoothSocket? = null,
-                     var pairedDevice: BluetoothDevice? = null,
+                     private var socket: BluetoothSocket? = null,
+                     private var pairedDevice: BluetoothDevice? = null,
 ) {
 
     companion object {
@@ -160,9 +161,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 ActivityCompat.requestPermissions(SocialInterface.getActivity(), arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH_CONNECT)
-
             }
-
         }
         if(!hasPermission(Manifest.permission.BLUETOOTH_ADMIN, SocialInterface.getActivity()))
         {
@@ -179,7 +178,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
         if (bluetoothAdapter?.isEnabled == false && hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity())) {
             enableBluetooth()
-
         }
     }
 
@@ -216,7 +214,9 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         withContext(Dispatchers.IO) {
             try {
                 val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
+                println("server socket: $serverSocket")
                 val tmpSocket = serverSocket?.accept()
+                println("tmp socket: $tmpSocket")
                 withContext(Dispatchers.Main){
                     MotionToast.createColorToast(
                         SocialInterface.getActivity(),
@@ -240,7 +240,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         }
     }
 
-    suspend fun disconnectDevice(activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>, device: BluetoothDevice?) {
+    suspend fun disconnectDevice(activity: Activity, holder: MyAdapter.MyViewHolder, you_are_connected: MyAdapter.Ref<Boolean>) {
         withContext(Dispatchers.IO) {
             try {
                 try {
@@ -248,7 +248,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 } catch (e: UninitializedPropertyAccessException) {
                     // non fare niente se le variabili non sono state inizializzate
                 }
-                unBondBluetoothDevice(device)
 
                 withContext(Dispatchers.Main) {
                     MotionToast.createColorToast(
@@ -269,6 +268,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 }
             } catch (e: IOException) {
                 withContext(Dispatchers.Main) {
+
                     socketError(e, activity)
                 }
             }
@@ -284,6 +284,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             // Se non è accoppiato, inizia il processo di accoppiamento
             device.createBond()
             pairedDevice = device
+            println("device received: $pairedDevice")
             // definisci un BroadcastReceiver per gestire l'evento di accoppiamento
             val bondReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -347,6 +348,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 }
             } catch (e: IOException) {
                 withContext(Dispatchers.Main) {
+                    println("error: $e")
                     socketError(e, activity)
                 }
             }
@@ -428,7 +430,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                 }
             }
         } catch (e: Exception) {
-            // Gestisci l'eccezione
+            Log.e("SocialHandler", "errore: $e")
         }
     }
 
@@ -437,11 +439,14 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
 
     @SuppressLint("MissingPermission")
     fun alreadyConnected(device: BluetoothDevice?): Boolean {
+        println("device: $device, bondState: ${device?.bondState}, bluetooth device bonded: ${BluetoothDevice.BOND_BONDED}")
         return device?.bondState == BluetoothDevice.BOND_BONDED
     }
 
     private fun unBondBluetoothDevice(device: BluetoothDevice?) {
+        println("removing the bound")
         val pair = device?.javaClass?.getMethod("removeBond")
+
         if (pair != null) {
             pair.invoke(device)
         }
@@ -452,10 +457,12 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         try {
             if (hasPermission(Manifest.permission.BLUETOOTH_CONNECT, SocialInterface.getActivity())
             ) {
+                println("pairedDevice: $pairedDevice")
                 if(pairedDevice!= null) {
                     if (pairedDevice!!.bondState == BluetoothDevice.BOND_BONDED) {
-                        unBondBluetoothDevice(pairedDevice)
-                        pairedDevice = null
+                        println("in close connection")
+                            unBondBluetoothDevice(pairedDevice)
+                            pairedDevice = null
                     }
                 }
             }
@@ -463,10 +470,12 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             val inputStream = socket?.inputStream
             val outputStream = socket?.outputStream
             inputStream?.close()
-            outputStream?.close()
-            val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
-            serverSocket?.close()
-            socket?.close()
+                outputStream?.close()
+                val serverSocket = bluetoothAdapter!!.listenUsingRfcommWithServiceRecord("FitnessTrackerService", uuid)
+                serverSocket?.close()
+                socket?.close()
+
+
         } catch (e: IOException) {
             println("Errore durante la chiusura delle connessioni: ${e.message}")
         }
@@ -491,7 +500,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
             val activitiesJson = gson.toJson(otherActivities)
 
             withContext(Dispatchers.Main) {
-                // Passa all'UI thread per mostrare il toast se non ci sono attività
                 if (activitiesJson == "[]") {
                     MotionToast.createColorToast(
                         SocialInterface.getActivity(),
@@ -506,7 +514,6 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
                         )
                     )
                 } else {
-                    // Invia il JSON delle attività tramite Bluetooth
                     sendMessage("#$activitiesJson")
                 }
             }
@@ -522,9 +529,7 @@ class SocialHandler (private val SocialInterface: SocialInterface, private val d
         return model.getPersonsList()
     }
 
-    fun restoreList(personList: List<Person>) {
-       model.restoreList(personList)
-    }
+
     fun filterList(filter: String): List<Person> {
         return model.filterList(filter)
     }

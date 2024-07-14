@@ -181,7 +181,7 @@
     <string name="scegli_username">Scegli uno username</string>
     <string name="scegli_password">Scegli una password</string>
     <string name="torna_indietro">Torna indietro</string>
-    <string name="no_pace_data">N/A</string>
+    <string name="no_pace_data">Continua a correre</string>
     <string name="ReminderNotifyTitle">Ricordati di tracciare attività</string>
     <string name="ReminderNotifyContent">È da un po\' di tempo che non usi l\'app, vuoi tracciare attività?</string>
     <string name="StatsNotifyTitle">Revisione Attività</string>

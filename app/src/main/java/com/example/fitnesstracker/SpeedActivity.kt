@@ -43,7 +43,7 @@ class SpeedActivity : AppCompatActivity(), SensorEventListener {
 
     private var speed = 0.0
     private var avgSpeed = 0.0
-    private var maxSpeed = 50.0 // Default max speed in km/h
+    private var maxSpeed = 50.0
     private var totalSpeed = 0.0
     private var speedCount = 0
 

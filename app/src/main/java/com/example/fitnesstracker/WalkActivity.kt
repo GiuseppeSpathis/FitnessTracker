@@ -16,6 +16,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -49,12 +50,12 @@ class WalkActivity : AppCompatActivity(), SensorEventListener {
     private var stepCountTarget = 8000
     private lateinit var stepCounterTargetTextView : TextView
     private val Model: Model = Model()
-    private var timerHandler : Handler = Handler()
+    private var timerHandler: Handler = Handler(Looper.getMainLooper())
 
-    private var timerRunnable : Runnable = object : Runnable {
+    private var timerRunnable: Runnable = object : Runnable {
         override fun run() {
-            val milis = System.currentTimeMillis() - startTime
-            var seconds = milis / 1000
+            val millis = System.currentTimeMillis() - startTime
+            var seconds = millis / 1000
             val min = seconds / 60
             seconds %= 60
             timeCounterText.text = getString(R.string.tempo, min, seconds)

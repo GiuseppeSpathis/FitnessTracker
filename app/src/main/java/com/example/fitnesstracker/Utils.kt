@@ -110,14 +110,11 @@ object Utils {
 
             }
 
-            // Imposta il layout personalizzato nel dialogo
             dialog.setContentView(layout)
-            // Mostra il dialogo
+
             dialog.show()
         } else {
-            // nascondi l'OK button e mostra un toast
             okButton.visibility = View.GONE
-            //layout.background = ContextCompat.getDrawable(context, R.drawable.custom_toast_borders)
 
             val parentView = (context as Activity).findViewById<View>(android.R.id.content)
 
@@ -133,11 +130,6 @@ object Utils {
 
             snackbar.show()
 
-/*
-            val toast = Toast(context)
-            toast.duration = Toast.LENGTH_LONG
-            toast.view = layout
-            toast.show()*/
         }
     }
 

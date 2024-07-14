@@ -15,16 +15,15 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.ActivityCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         if (checkPermissions()) {
-            startLocationService()
+            LocationUpdatesService.startServiceIfNotRunning(this)
             startCheckNearbyUsersWorker()
-
-
         }
         val sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -56,12 +55,11 @@ class MainActivity : ComponentActivity() {
             neededPermissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        return neededPermissions.isEmpty()
-    }
-
-    private fun startLocationService() {
-        val intent = Intent(this, LocationUpdatesService::class.java)
-        ContextCompat.startForegroundService(this, intent)
+        if (neededPermissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, neededPermissions.toTypedArray(), REQUEST_PERMISSIONS_REQUEST_CODE)
+            return false
+        }
+        return true
     }
 
     private fun startCheckNearbyUsersWorker() {
@@ -72,6 +70,10 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.REPLACE,
             checkNearbyUsersRequest
         )
+    }
+
+    companion object {
+        private const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
     }
 }
 

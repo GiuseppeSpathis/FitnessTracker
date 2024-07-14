@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Start Time Field -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,7 +25,7 @@
             android:text="@string/ora_inizio" />
     </LinearLayout>
 
-    <!-- End Time Field -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,7 +49,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Step Count Field -->
+
     <LinearLayout
         android:id="@+id/step_count_layout"
         android:layout_width="match_parent"
@@ -75,7 +74,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Distance Field -->
+
     <LinearLayout
         android:id="@+id/distance_layout"
         android:layout_width="match_parent"
@@ -100,7 +99,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Pace Field -->
+
     <LinearLayout
         android:id="@+id/pace_layout"
         android:layout_width="match_parent"
@@ -125,7 +124,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Avg Speed Field -->
+
     <LinearLayout
         android:id="@+id/avg_speed_layout"
         android:layout_width="match_parent"
@@ -150,7 +149,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Max Speed Field -->
+
     <LinearLayout
         android:id="@+id/max_speed_layout"
         android:layout_width="match_parent"
@@ -175,7 +174,7 @@
             tools:ignore="RtlSymmetry" />
     </LinearLayout>
 
-    <!-- Date Field -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
